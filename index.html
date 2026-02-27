@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huang Super Awesome Cool Bible Plan Generator Pro 2.0 💪</title>
+    <style>
+        :root {
+            /* Elegant Light Pastel Theme */
+            --bg-body: #f4f2ee;       /* Soft linen/cream */
+            --bg-panel: #ffffff;
+            --primary: #8aa293;       /* Muted sage green */
+            --primary-hover: #738a7c;
+            --text-main: #33312e;     /* Soft black/charcoal */
+            --text-muted: #8c8984;
+            --border: #e6e4df;
+            
+            --success: #8aa293;
+            --warning: #d9b8a2;       /* Soft peach/tan */
+            --warning-hover: #c9a58d;
+            
+            --today-bg: #f9fbf9;
+            --today-border: #b9c9c0;
+            --row-hover: #faf9f6;
+            
+            --completed-bg: #fcfdfc;
+            --completed-text: #a8a5a0;
+            
+            --skipped-bg: #fdfaf9;    /* Very faint blush */
+            --skip-btn-bg: #f2e6e6;   /* Dusty rose background */
+            --skip-btn-text: #8c5a5a;
+            --skip-btn-border: #e6d1d1;
+            
+            --unskip-btn-bg: #eef2f0; /* Pale sage background */
+            --unskip-btn-text: #5a7364;
+            --unskip-btn-border: #d4e0d9;
+        }
+
+        /* Elegant Dark Theme */
+        [data-theme="dark"] {
+            --bg-body: #1c1b1a;
+            --bg-panel: #262524;
+            --primary: #9bb3a4;
+            --primary-hover: #b4ccbe;
+            --text-main: #e8e6e3;
+            --text-muted: #9c9994;
+            --border: #3d3b3a;
+            
+            --success: #9bb3a4;
+            --warning: #c2a895;
+            --warning-hover: #d1bba9;
+            
+            --today-bg: #2d2f2d;
+            --today-border: #5d7065;
+            --row-hover: #2a2928;
+            
+            --completed-bg: #21201f;
+            --completed-text: #6e6b68;
+            
+            --skipped-bg: #2e2626;
+            --skip-btn-bg: #4a3838;
+            --skip-btn-text: #e6baba;
+            --skip-btn-border: #6b5252;
+            
+            --unskip-btn-bg: #2a332f;
+            --unskip-btn-text: #a8c2b3;
+            --unskip-btn-border: #46574e;
+        }
+
+        body {
+            font-family: 'Georgia', 'Cambria', 'Times New Roman', serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            font-size: 1rem;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        h1, h2, h3 { 
+            font-weight: normal; 
+            margin-top: 0; 
+            letter-spacing: 0.5px;
+        }
+        
+        h1 { 
+            font-size: 1.75rem; 
+            background: var(--bg-panel); 
+            padding: 20px 32px; 
+            border-radius: 4px; 
+            margin: 0;
+            border: 1px solid var(--border);
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            transition: background-color 0.4s, border-color 0.4s;
+        }
+
+        h2 { font-size: 1.25rem; margin-bottom: 12px; color: var(--text-main); }
+
+        .main-wrapper { display: flex; gap: 24px; align-items: flex-start; }
+        
+        .panel {
+            background: var(--bg-panel); 
+            padding: 24px 32px; 
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            transition: background-color 0.4s, border-color 0.4s;
+        }
+
+        .settings-panel {
+            flex: 0 0 320px; 
+            position: sticky; 
+            top: 20px;
+            max-height: calc(100vh - 40px); 
+            overflow-y: auto; 
+        }
+        
+        label { 
+            display: block; 
+            font-family: system-ui, -apple-system, sans-serif;
+            font-weight: 600; 
+            margin-bottom: 6px; 
+            font-size: 0.75rem; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        input[type="date"], select, button {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 10px 12px; 
+            border: 1px solid var(--border); 
+            border-radius: 2px;
+            font-size: 0.9rem; 
+            width: 100%; 
+            box-sizing: border-box;
+            background-color: var(--bg-body); 
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        
+        input[type="date"]:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .col { flex: 1; min-width: 140px; }
+
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; }
+        .checkbox-label { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-weight: normal; 
+            font-size: 0.85rem; 
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--text-main);
+            cursor: pointer; 
+            margin: 0; 
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        button { 
+            background-color: var(--bg-body); 
+            cursor: pointer; 
+            font-weight: 500; 
+            border: 1px solid var(--border);
+            letter-spacing: 0.5px;
+        }
+        button:hover { background-color: var(--border); }
+        
+        button.primary { 
+            background-color: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+            padding: 14px; 
+            font-size: 1rem; 
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 10px;
+        }
+        button.primary:hover { background-color: var(--primary-hover); }
+
+        .btn-export {
+            background-color: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+            padding: 6px 12px; 
+            font-size: 0.75rem; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            border-radius: 4px;
+            width: auto;
+        }
+        .btn-export:hover { background-color: var(--primary-hover); color: white; }
+
+        .preset-btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: -8px; 
+        }
+        .preset-btn {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 8px 10px;
+            font-weight: 600;
+        }
+        .preset-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        #theme-toggle { 
+            background: transparent; border: none; font-size: 1.3rem; padding: 4px 8px; width: auto; 
+        }
+        #theme-toggle:hover { transform: scale(1.1); background: transparent; }
+        #toggle-settings-btn { display: none; }
+
+        .books-container { display: flex; flex-direction: column; gap: 16px; }
+        .testament-col { width: 100%; }
+        .testament-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;}
+        .testament-header strong { font-family: system-ui, sans-serif; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .book-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 6px; 
+            max-height: 160px; overflow-y: auto; padding: 4px 0; 
+        }
+        .book-actions button { padding: 2px 8px; font-size: 0.7rem; width: auto; text-transform: uppercase; background: transparent; border: 1px solid var(--border); }
+
+        .plan-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+        .progress-wrapper { margin-bottom: 8px; }
+        .progress-container { width: 100%; background-color: var(--bg-body); border-radius: 2px; overflow: hidden; height: 6px; margin-bottom: 8px; }
+        .progress-bar { height: 100%; background-color: var(--success); width: 0%; transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+        .progress-info { display: flex; justify-content: space-between; align-items: center; }
+        .progress-text { font-family: system-ui, sans-serif; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;}
+        .plan-stats-badge { font-family: system-ui, sans-serif; font-size: 0.75rem; background: var(--bg-body); padding: 4px 10px; border-radius: 12px; color: var(--text-muted); border: 1px solid var(--border);}
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .filters { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .filters select { width: auto; padding: 6px 10px; font-size: 0.85rem; }
+
+        .view-toggle { display: flex; background: var(--bg-body); padding: 3px; border-radius: 4px; border: 1px solid var(--border); }
+        .view-toggle label { padding: 4px 16px; font-size: 0.75rem; cursor: pointer; border-radius: 2px; user-select: none; font-weight: 600; color: var(--text-muted); margin: 0;}
+        .view-toggle input { display: none; }
+        .view-toggle input:checked + span { color: var(--text-main); }
+        .view-toggle label:has(input:checked) { background: var(--bg-panel); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .plan-table { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
+        .plan-table th, .plan-table td { padding: 14px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+        .plan-table th { 
+            font-family: system-ui, sans-serif; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            position: sticky; top: 0; background: var(--bg-panel); z-index: 10;
+            border-bottom: 2px solid var(--border);
+        }
+        .plan-table tr:hover td { background-color: var(--row-hover); }
+        .plan-table tr.completed td { background-color: var(--completed-bg); color: var(--completed-text); text-decoration: line-through; }
+        .plan-table tr.completed a { pointer-events: none; opacity: 0.3; }
+        .plan-table tr.skipped td { background-color: var(--skipped-bg); color: var(--text-muted); font-style: italic; }
+        .plan-table tr.today td { background-color: var(--today-bg); font-weight: normal;}
+        .plan-table tr.today td:first-child { box-shadow: inset 4px 0 0 0 var(--primary); }
+        
+        .date-col { font-family: system-ui, sans-serif; font-size: 0.95rem; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+
+        #calendar-container { display: flex; flex-direction: column; gap: 32px; margin-top: 10px; }
+        .cal-month { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--bg-panel); }
+        .cal-header { background: var(--bg-body); padding: 12px; text-align: center; font-family: system-ui, sans-serif; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid var(--border); color: var(--text-main); }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); }
+        .cal-day-name { background: var(--bg-body); text-align: center; font-family: system-ui, sans-serif; font-weight: 600; padding: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .cal-cell { background: var(--bg-panel); min-height: 100px; padding: 10px; display: flex; flex-direction: column; font-size: 0.95rem; }
+        .cal-cell.empty { background: var(--bg-body); }
+        .cal-cell.has-plan { border-top: 3px solid var(--primary); }
+        .cal-cell.completed { background-color: var(--completed-bg); color: var(--completed-text); text-decoration: line-through; border-top-color: var(--border); }
+        .cal-cell.completed a { pointer-events: none; opacity: 0.3; text-decoration: none; }
+        .cal-cell.skipped { background-color: var(--skipped-bg); color: var(--text-muted); font-style: italic; border-top-color: var(--warning); }
+        .cal-cell.today { background-color: var(--today-bg); border: none; box-shadow: inset 0 0 0 2px var(--primary); }
+        
+        .cal-date-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; font-family: system-ui, sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        .cal-reading { flex: 1; margin-bottom: 12px; word-break: break-word; line-height: 1.5; }
+        .cal-actions { text-align: right; margin-top: auto; }
+
+        .btn-skip, .btn-unskip { 
+            font-family: system-ui, sans-serif; 
+            padding: 4px 10px; 
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            border-radius: 2px; 
+            width: auto; 
+            font-weight: 600;
+        }
+        .btn-skip { background: var(--skip-btn-bg); color: var(--skip-btn-text); border: 1px solid var(--skip-btn-border); }
+        .btn-unskip { background: var(--unskip-btn-bg); color: var(--unskip-btn-text); border: 1px solid var(--unskip-btn-border); }
+        
+        .audio-link { text-decoration: none; margin-left: 4px; font-size: 0.9em; filter: grayscale(100%) opacity(60%); transition: filter 0.2s; }
+        .audio-link:hover { filter: grayscale(0%) opacity(100%); transform: scale(1.1); display: inline-block; }
+
+        #message-box { 
+            padding: 12px 20px; border-radius: 4px; font-family: system-ui, sans-serif; font-weight: 500; font-size: 0.9rem;
+            display: none; text-align: center; margin-bottom: 16px; letter-spacing: 0.5px;
+        }
+        .msg-success { background: #e6efe9; color: #3b5947; border: 1px solid #c8dbc1;}
+        .msg-error { background: #f9ebeb; color: #8c4040; border: 1px solid #ebd6d6;}
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        @media (max-width: 900px) {
+            .main-wrapper { flex-direction: column; }
+            h1 { font-size: 1.25rem; padding: 16px; }
+            .panel { padding: 16px; }
+            #toggle-settings-btn { display: block; font-family: system-ui, sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border: none; background: transparent; color: var(--text-muted); padding: 0;}
+            .settings-panel { flex: none; width: 100%; position: static; max-height: none; box-sizing: border-box; }
+            .settings-panel.mobile-hidden { display: none; }
+            .cal-grid { grid-template-columns: repeat(1, 1fr); }
+            .cal-day-name { display: none; }
+            .cal-cell { min-height: auto; flex-direction: row; gap: 16px; align-items: center; border-top: none; border-bottom: 1px solid var(--border); }
+            .cal-cell.empty { display: none; } /* Mobile Bug Fix applied */
+            .cal-cell.has-plan { border-top: none; border-left: 3px solid var(--primary); }
+            .cal-reading { margin: 0; }
+            .cal-actions { margin-top: 0; }
+        }
+
+        @media print {
+            body { background: white; padding: 0; font-size: 11pt; color: black; }
+            .container { max-width: 100%; gap: 0; display: block; }
+            h1 { box-shadow: none; border: none; border-bottom: 1px solid black; padding: 0 0 16px 0; margin-bottom: 16px; border-radius: 0; background: white; }
+            #theme-toggle, #toggle-settings-btn, .settings-panel, .top-bar .filters, .cal-actions, td:last-child, th:last-child, .audio-link, .progress-wrapper, input[type="checkbox"], .btn-export { display: none !important; }
+            .plan-panel { width: 100%; box-shadow: none; border: none; padding: 0; display: block; }
+            .plan-table th, .plan-table td { padding: 8px 4px; border-bottom: 1px solid #eee; }
+            .cal-month { page-break-inside: avoid; border: 1px solid #ccc; margin-bottom: 20px; }
+            .cal-cell.has-plan { border-top: 1px solid #ccc; }
+            .cal-cell.completed { text-decoration: line-through; opacity: 0.6; }
+            .cal-cell.empty { display: none; } 
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        <span>📖 Huang Super Awesome Cool Bible Plan Generator Pro 2.0 💪</span>
+        <div style="display:flex; align-items:center; gap: 12px;">
+            <button id="toggle-settings-btn">⚙️ Settings</button>
+            <button id="theme-toggle" title="Toggle Dark/Light Mode">🌙</button>
+        </div>
+    </h1>
+    <div id="message-box"></div>
+
+    <div class="main-wrapper">
+        <div class="panel settings-panel" id="settings-section">
+            <div class="row">
+                <div class="col"><label>Start Date</label><input type="date" id="start-date"></div>
+                <div class="col"><label>End Date</label><input type="date" id="end-date"></div>
+            </div>
+
+            <div class="row">
+                <div class="col" style="flex: 100%;">
+                    <label>Balancing Strategy</label>
+                    <select id="balance-strategy">
+                        <option value="even">Even Chapters</option>
+                        <option value="verses">Precision (By Verse Count)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col" style="flex: 100%;">
+                    <label>Reading Days</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="0"> Su</label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="1" checked> Mo</label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="2" checked> Tu</label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="3" checked> We</label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="4" checked> Th</label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="5" checked> Fr</label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-cb" value="6"> Sa</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col" style="flex: 100%;">
+                    <label>Reading Order</label>
+                    <select id="reading-order">
+                        <option value="mix">Mix Old & New Testament Daily</option>
+                        <option value="sequential">Strict Biblical Order</option>
+                        <option value="chronological">Chronological (Book-by-Book)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col preset-btn-group" style="flex: 100%;">
+                    <button id="btn-kevins-plan" class="preset-btn">🎉 Kevin's Plan</button>
+                    <button id="btn-new-plan" class="preset-btn">✨ Fresh Plan</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <label style="border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px;">Included Books</label>
+                <div class="books-container">
+                    <div class="testament-col">
+                        <div class="testament-header">
+                            <strong>Old Testament</strong>
+                            <div class="book-actions">
+                                <button onclick="toggleBooks('OT', true)">All</button>
+                                <button onclick="toggleBooks('OT', false)">None</button>
+                            </div>
+                        </div>
+                        <div class="book-grid" id="ot-books"></div>
+                    </div>
+                    <div class="testament-col">
+                        <div class="testament-header">
+                            <strong>New Testament</strong>
+                            <div class="book-actions">
+                                <button onclick="toggleBooks('NT', true)">All</button>
+                                <button onclick="toggleBooks('NT', false)">None</button>
+                            </div>
+                        </div>
+                        <div class="book-grid" id="nt-books"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="primary" id="btn-generate">Generate Plan</button>
+        </div>
+
+        <div class="panel plan-panel" id="plan-section" style="display: none;">
+            
+            <div class="progress-wrapper">
+                <div class="progress-container"><div class="progress-bar" id="progress-fill"></div></div>
+                <div class="progress-info">
+                    <div class="progress-text" id="progress-text">0 of 0 days completed (0%)</div>
+                    <div class="plan-stats-badge" id="plan-stats" style="display: none;">Avg: 0 verses/day</div>
+                </div>
+            </div>
+
+            <div class="top-bar">
+                <h2 style="margin: 0;">Your Reading Schedule</h2>
+                
+                <div class="filters">
+                    <button id="btn-export-ics" class="btn-export">📅 Export (.ics)</button>
+                    <div class="view-toggle">
+                        <label><input type="radio" name="view-mode" value="list" checked> <span>List</span></label>
+                        <label><input type="radio" name="view-mode" value="calendar"> <span>Calendar</span></label>
+                    </div>
+                    <select id="filter-time">
+                        <option value="all">Show All Days</option>
+                        <option value="7">Next 7 Days</option>
+                        <option value="14">Next 14 Days</option>
+                        <option value="30">Next 30 Days</option>
+                    </select>
+                    <label class="checkbox-label" style="font-family: system-ui, sans-serif; font-size: 0.8rem;"><input type="checkbox" id="filter-completed" checked> Hide Done</label>
+                    <label class="checkbox-label" style="font-family: system-ui, sans-serif; font-size: 0.8rem;"><input type="checkbox" id="filter-skipped" checked> Hide Skipped</label>
+                </div>
+            </div>
+
+            <table class="plan-table" id="table-container">
+                <thead>
+                    <tr>
+                        <th width="30"></th>
+                        <th width="120">Date</th>
+                        <th>Assigned Reading</th>
+                        <th width="70" style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="plan-tbody"></tbody>
+            </table>
+
+            <div id="calendar-container" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- 1. DATA (Embedded Verse Counts & Abbreviations) ---
+const rawData = [
+    ["Genesis", "OT", "Gen", "31,25,24,26,32,22,24,22,29,32,32,20,18,24,21,16,27,33,38,18,34,24,20,67,34,35,46,22,35,43,55,32,20,31,29,43,36,30,23,23,57,38,34,34,28,34,31,22,33,26"],
+    ["Exodus", "OT", "Exod", "22,25,22,31,23,30,25,32,35,29,10,51,22,31,27,36,16,27,25,26,36,31,33,18,40,37,21,43,46,38,18,35,23,35,35,38,29,31,43,38"],
+    ["Leviticus", "OT", "Lev", "17,16,17,35,19,30,38,36,24,20,47,8,59,57,33,34,16,30,37,27,24,33,44,23,55,46,34"],
+    ["Numbers", "OT", "Num", "54,34,51,49,31,27,89,26,23,36,35,16,33,45,41,50,13,32,22,29,35,41,30,25,18,65,23,31,40,16,54,42,56,29,34,13"],
+    ["Deuteronomy", "OT", "Deut", "46,37,29,49,33,25,26,20,29,22,32,32,18,29,23,22,20,22,21,20,23,30,25,22,19,19,26,68,29,20,30,52,29,12"],
+    ["Joshua", "OT", "Josh", "18,24,17,24,15,27,26,35,27,43,23,24,33,15,63,10,18,28,51,9,45,34,16,33"],
+    ["Judges", "OT", "Judg", "36,23,31,24,31,40,25,35,57,18,40,15,25,20,20,31,13,31,30,48,25"],
+    ["Ruth", "OT", "Ruth", "22,23,18,22"],
+    ["1 Samuel", "OT", "1Sam", "28,36,21,22,12,21,17,22,27,27,15,25,23,52,35,23,58,30,24,42,15,23,29,22,44,25,12,25,11,31,13"],
+    ["2 Samuel", "OT", "2Sam", "27,32,39,12,25,23,29,18,13,19,27,31,39,33,37,23,29,33,43,26,22,51,39,25"],
+    ["1 Kings", "OT", "1Kgs", "53,46,28,34,18,38,51,66,28,29,43,33,34,31,34,34,24,46,21,43,29,53"],
+    ["2 Kings", "OT", "2Kgs", "18,25,27,44,27,33,20,29,37,36,21,21,25,29,38,20,41,37,37,21,26,20,37,20,30"],
+    ["1 Chronicles", "OT", "1Chr", "54,55,24,43,26,81,40,40,44,14,47,40,14,17,29,43,27,17,19,8,30,19,32,31,31,32,34,21,30"],
+    ["2 Chronicles", "OT", "2Chr", "17,18,17,22,14,42,22,18,31,19,23,16,22,15,19,14,19,34,11,37,20,12,21,27,28,23,9,27,36,27,21,33,25,33,27,23"],
+    ["Ezra", "OT", "Ezra", "11,70,13,24,17,22,28,36,15,44"],
+    ["Nehemiah", "OT", "Neh", "11,20,32,23,19,19,73,18,38,39,36,47,31"],
+    ["Esther", "OT", "Esth", "22,23,15,17,14,14,10,17,32,3"],
+    ["Job", "OT", "Job", "22,13,26,21,27,30,21,22,35,22,20,25,28,22,35,22,16,21,29,29,34,30,17,25,6,14,23,28,25,31,40,22,33,37,16,33,24,41,30,24,34,17"],
+    ["Psalm", "OT", "Ps", "6,12,8,8,12,10,17,9,20,18,7,8,6,7,5,11,15,50,14,9,13,31,6,10,22,12,14,9,11,12,24,11,22,22,28,12,40,22,13,17,13,11,5,26,17,11,9,14,20,23,19,9,6,7,23,13,11,11,17,12,8,12,11,10,13,20,7,35,36,5,24,20,28,23,10,12,20,72,13,19,16,8,18,12,13,17,7,18,52,17,16,15,5,23,11,13,12,9,9,5,8,28,22,35,45,48,43,13,31,7,10,10,9,8,18,19,2,29,176,7,8,9,4,8,5,6,5,6,8,8,3,18,3,3,21,26,9,8,24,13,10,7,12,15,21,10,20,14,9,6"],
+    ["Proverbs", "OT", "Prov", "33,22,35,27,23,35,27,36,18,32,31,28,25,35,33,33,28,24,29,30,31,29,35,34,28,28,27,28,27,33,31"],
+    ["Ecclesiastes", "OT", "Eccl", "18,26,22,16,20,12,29,17,18,20,10,14"],
+    ["Song of Solomon", "OT", "Song", "17,17,11,16,16,13,13,14"],
+    ["Isaiah", "OT", "Isa", "31,22,26,6,30,13,25,22,21,34,16,6,22,32,9,14,14,7,25,6,17,25,18,23,12,21,13,29,24,33,9,20,24,17,10,22,38,22,8,31,29,25,28,28,25,13,15,22,26,11,23,15,12,17,13,12,21,14,21,22,11,12,19,12,25,24"],
+    ["Jeremiah", "OT", "Jer", "19,37,25,31,31,30,34,22,26,25,17,17,27,22,21,21,27,23,15,18,14,30,40,10,38,24,22,17,32,24,40,44,26,22,19,32,21,28,18,16,18,22,13,30,5,28,7,47,39,46,64,34"],
+    ["Lamentations", "OT", "Lam", "22,22,66,22,22"],
+    ["Ezekiel", "OT", "Ezek", "28,10,27,17,17,14,27,18,11,22,25,28,23,23,8,63,24,32,14,49,32,31,49,27,17,21,36,26,21,26,18,32,33,31,15,38,28,23,29,49,26,20,27,31,25,24,23,35"],
+    ["Daniel", "OT", "Dan", "21,49,30,37,31,28,28,27,27,21,45,13"],
+    ["Hosea", "OT", "Hos", "11,23,5,19,15,11,16,14,17,15,12,14,16,9"],
+    ["Joel", "OT", "Joel", "20,32,21"],
+    ["Amos", "OT", "Amos", "15,16,15,13,27,14,17,14,15"],
+    ["Obadiah", "OT", "Obad", "21"],
+    ["Jonah", "OT", "Jonah", "17,10,10,11"],
+    ["Micah", "OT", "Mic", "16,13,12,13,15,16,20"],
+    ["Nahum", "OT", "Nah", "15,13,19"],
+    ["Habakkuk", "OT", "Hab", "17,20,19"],
+    ["Zephaniah", "OT", "Zeph", "18,15,20"],
+    ["Haggai", "OT", "Hag", "15,23"],
+    ["Zechariah", "OT", "Zech", "21,13,10,14,11,15,14,23,17,12,17,14,9,21"],
+    ["Malachi", "OT", "Mal", "14,17,18,6"],
+    ["Matthew", "NT", "Matt", "25,23,17,25,48,34,29,34,38,42,30,50,58,36,39,28,27,35,30,34,46,46,39,51,46,75,66,20"],
+    ["Mark", "NT", "Mark", "45,28,35,41,43,56,37,38,50,52,33,44,37,72,47,20"],
+    ["Luke", "NT", "Luke", "80,52,38,44,39,49,50,56,62,42,54,59,35,35,32,31,37,43,48,47,38,71,56,53"],
+    ["John", "NT", "John", "51,25,36,54,47,71,53,59,41,42,57,50,38,31,27,33,26,40,42,31,25"],
+    ["Acts", "NT", "Acts", "26,47,26,37,42,15,60,40,43,48,30,25,52,28,41,40,34,28,41,38,40,30,35,27,27,32,44,31"],
+    ["Romans", "NT", "Rom", "32,29,31,25,21,23,25,39,33,21,36,21,14,23,33,27"],
+    ["1 Corinthians", "NT", "1Cor", "31,16,23,21,13,20,40,13,27,33,34,31,13,40,58,24"],
+    ["2 Corinthians", "NT", "2Cor", "24,17,18,18,21,18,16,24,15,18,33,21,14"],
+    ["Galatians", "NT", "Gal", "24,21,29,31,26,18"],
+    ["Ephesians", "NT", "Eph", "23,22,21,32,33,24"],
+    ["Philippians", "NT", "Phil", "30,30,21,23"],
+    ["Colossians", "NT", "Col", "29,23,25,18"],
+    ["1 Thessalonians", "NT", "1Thess", "10,20,13,18,28"],
+    ["2 Thessalonians", "NT", "2Thess", "12,17,18"],
+    ["1 Timothy", "NT", "1Tim", "20,15,16,16,25,21"],
+    ["2 Timothy", "NT", "2Tim", "18,26,17,22"],
+    ["Titus", "NT", "Titus", "16,15,15"],
+    ["Philemon", "NT", "Phlm", "25"],
+    ["Hebrews", "NT", "Heb", "14,18,19,16,14,20,28,13,28,39,40,29,25"],
+    ["James", "NT", "Jas", "27,26,18,17,20"],
+    ["1 Peter", "NT", "1Pet", "25,25,22,19,14"],
+    ["2 Peter", "NT", "2Pet", "21,22,18"],
+    ["1 John", "NT", "1John", "10,29,24,21,21"],
+    ["2 John", "NT", "2John", "13"],
+    ["3 John", "NT", "3John", "15"],
+    ["Jude", "NT", "Jude", "25"],
+    ["Revelation", "NT", "Rev", "20,29,22,11,14,17,17,13,21,11,19,17,18,20,8,21,18,24,21,15,27,21"]
+];
+
+const books = rawData.map(row => ({
+    name: row[0], testament: row[1], abbr: row[2],
+    chapters: row[3].split(',').map(Number)
+}));
+
+const chronoOrderMap = { "Gen": 1, "Job": 2, "Exod": 3, "Lev": 4, "Num": 5, "Deut": 6, "Josh": 7, "Judg": 8, "Ruth": 9, "1Sam": 10, "2Sam": 11, "1Chr": 12, "Ps": 13, "Song": 14, "Prov": 15, "Eccl": 16, "1Kgs": 17, "2Kgs": 18, "2Chr": 19, "Obad": 20, "Joel": 21, "Jonah": 22, "Amos": 23, "Hos": 24, "Isa": 25, "Mic": 26, "Nah": 27, "Zeph": 28, "Jer": 29, "Lam": 30, "Hab": 31, "Dan": 32, "Ezek": 33, "Ezra": 34, "Hag": 35, "Zech": 36, "Esth": 37, "Neh": 38, "Mal": 39, "Matt": 40, "Mark": 41, "Luke": 42, "John": 43, "Acts": 44, "Jas": 45, "Gal": 46, "1Thess": 47, "2Thess": 48, "1Cor": 49, "2Cor": 50, "Rom": 51, "Eph": 52, "Phil": 53, "Col": 54, "Phlm": 55, "1Tim": 56, "Titus": 57, "1Pet": 58, "2Pet": 59, "2Tim": 60, "Heb": 61, "Jude": 62, "1John": 63, "2John": 64, "3John": 65, "Rev": 66 };
+
+// --- 2. STATE & DOM ELEMENTS ---
+let planState = { settings: {}, days: [] };
+const DOM = {
+    start: document.getElementById('start-date'), end: document.getElementById('end-date'),
+    balance: document.getElementById('balance-strategy'), order: document.getElementById('reading-order'),
+    daysCb: document.querySelectorAll('.day-cb'), otBooks: document.getElementById('ot-books'),
+    ntBooks: document.getElementById('nt-books'), btnGen: document.getElementById('btn-generate'),
+    kevinsPlanBtn: document.getElementById('btn-kevins-plan'),
+    newPlanBtn: document.getElementById('btn-new-plan'),
+    exportIcsBtn: document.getElementById('btn-export-ics'),
+    planSection: document.getElementById('plan-section'), tableContainer: document.getElementById('table-container'),
+    calendarContainer: document.getElementById('calendar-container'), tbody: document.getElementById('plan-tbody'),
+    filters: ['filter-time', 'filter-completed', 'filter-skipped'].map(id => document.getElementById(id)),
+    viewRadios: document.querySelectorAll('input[name="view-mode"]'), msg: document.getElementById('message-box'),
+    toggleSettingsBtn: document.getElementById('toggle-settings-btn'), settingsSection: document.getElementById('settings-section'),
+    themeToggle: document.getElementById('theme-toggle')
+};
+
+// --- 3. INIT & SETUP ---
+function init() {
+    books.forEach((b, idx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<label class="checkbox-label" title="${b.name}"><input type="checkbox" class="book-cb" value="${idx}" checked> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:85px;">${b.name}</span></label>`;
+        (b.testament === 'OT' ? DOM.otBooks : DOM.ntBooks).appendChild(div);
+    });
+
+    const today = new Date();
+    DOM.start.value = getLocalISODate(today);
+    const nextYear = new Date(today);
+    nextYear.setFullYear(today.getFullYear() + 1);
+    DOM.end.value = getLocalISODate(nextYear);
+
+    DOM.btnGen.addEventListener('click', generateInitialPlan);
+    DOM.kevinsPlanBtn.addEventListener('click', applyKevinsPlan);
+    DOM.newPlanBtn.addEventListener('click', applyNewPlan);
+    DOM.exportIcsBtn.addEventListener('click', exportToICS);
+    
+    DOM.toggleSettingsBtn.addEventListener('click', () => { DOM.settingsSection.classList.toggle('mobile-hidden'); });
+    DOM.themeToggle.addEventListener('click', toggleTheme);
+    
+    DOM.filters.forEach(el => el.addEventListener('change', saveFiltersAndRender));
+    DOM.viewRadios.forEach(radio => radio.addEventListener('change', saveFiltersAndRender));
+
+    if (localStorage.getItem('huangTheme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        DOM.themeToggle.textContent = '☀️';
+    }
+
+    const saved = localStorage.getItem('huangBiblePlan');
+    if (saved) {
+        try {
+            planState = JSON.parse(saved);
+            applySettingsToUI(planState.settings);
+            if (planState.days && planState.days.length) {
+                DOM.planSection.style.display = 'flex';
+                DOM.settingsSection.classList.add('mobile-hidden'); 
+                loadSavedFilters(); 
+                calculateProgressAndStats();
+                renderPlan();
+            }
+        } catch (e) { console.error("Could not parse saved plan", e); }
+    } else {
+        generateInitialPlan();
+    }
+}
+
+function loadSavedFilters() {
+    const savedFilters = localStorage.getItem('huangBibleFilters');
+    if (savedFilters) {
+        try {
+            const filters = JSON.parse(savedFilters);
+            document.getElementById('filter-time').value = filters.timeFilter || 'all';
+            document.getElementById('filter-completed').checked = filters.hideCompleted !== false; 
+            document.getElementById('filter-skipped').checked = filters.hideSkipped !== false; 
+            if (filters.viewMode) {
+                document.querySelector(`input[name="view-mode"][value="${filters.viewMode}"]`).checked = true;
+            }
+        } catch(e) {}
+    }
+}
+
+function saveFiltersAndRender() {
+    const filters = {
+        timeFilter: document.getElementById('filter-time').value,
+        hideCompleted: document.getElementById('filter-completed').checked,
+        hideSkipped: document.getElementById('filter-skipped').checked,
+        viewMode: document.querySelector('input[name="view-mode"]:checked').value
+    };
+    localStorage.setItem('huangBibleFilters', JSON.stringify(filters));
+    renderPlan();
+}
+
+function toggleTheme() {
+    const root = document.documentElement;
+    if (root.getAttribute('data-theme') === 'dark') {
+        root.removeAttribute('data-theme');
+        localStorage.setItem('huangTheme', 'light');
+        DOM.themeToggle.textContent = '🌙';
+    } else {
+        root.setAttribute('data-theme', 'dark');
+        localStorage.setItem('huangTheme', 'dark');
+        DOM.themeToggle.textContent = '☀️';
+    }
+}
+
+function showMsg(text, type='success') {
+    DOM.msg.textContent = text; DOM.msg.className = type === 'success' ? 'msg-success' : 'msg-error';
+    DOM.msg.style.display = 'block'; setTimeout(() => DOM.msg.style.display = 'none', 3000);
+}
+
+function toggleBooks(testament, check) {
+    const container = testament === 'OT' ? DOM.otBooks : DOM.ntBooks;
+    container.querySelectorAll('input').forEach(cb => cb.checked = check);
+}
+
+function getLocalISODate(dObj) {
+    const y = dObj.getFullYear();
+    const m = String(dObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+// --- ICS EXPORT LOGIC ---
+function getPlainTextChapters(chapters) {
+    if (!chapters || chapters.length === 0) return "No reading assigned";
+    let ranges = []; let currBook = chapters[0].book;
+    let start = chapters[0].chapter; let end = chapters[0].chapter;
+    const pushRange = () => { ranges.push(start === end ? `${currBook} ${start}` : `${currBook} ${start}-${end}`); };
+    
+    for (let i = 1; i < chapters.length; i++) {
+        if (chapters[i].book === currBook && chapters[i].chapter === end + 1) { end = chapters[i].chapter; } 
+        else { pushRange(); currBook = chapters[i].book; start = chapters[i].chapter; end = chapters[i].chapter; }
+    }
+    pushRange(); return ranges.join(", ");
+}
+
+function exportToICS() {
+    if (!planState || !planState.days || planState.days.length === 0) {
+        return showMsg("No plan to export!", "error");
+    }
+    
+    let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Huang Bible Plan Generator//EN\r\nCALSCALE:GREGORIAN\r\n";
+    
+    planState.days.forEach((day, i) => {
+        if (day.skipped || day.chapters.length === 0) return; 
+        
+        const plainTextReading = getPlainTextChapters(day.chapters);
+        const dtStart = getLocalISODate(new Date(day.date + 'T00:00:00')).replace(/-/g, '');
+        
+        let d = new Date(day.date + 'T00:00:00');
+        d.setDate(d.getDate() + 1);
+        const dtEnd = getLocalISODate(d).replace(/-/g, '');
+        
+        icsContent += "BEGIN:VEVENT\r\n";
+        icsContent += `UID:huang-bible-plan-${day.date}-${i}@generator\r\n`;
+        icsContent += `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z\r\n`;
+        icsContent += `DTSTART;VALUE=DATE:${dtStart}\r\n`;
+        icsContent += `DTEND;VALUE=DATE:${dtEnd}\r\n`;
+        icsContent += `SUMMARY:📖 Reading: ${plainTextReading}\r\n`;
+        icsContent += `DESCRIPTION:Today's assigned Bible reading: ${plainTextReading}\\n\\nGenerated by Huang Super Awesome Cool Bible Plan Generator Pro 2.0\r\n`;
+        icsContent += "END:VEVENT\r\n";
+    });
+    
+    icsContent += "END:VCALENDAR";
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Bible_Reading_Plan.ics';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showMsg("Calendar export complete! 📅");
+}
+
+// --- QUICK PLANS LOGIC ---
+function applyKevinsPlan() {
+    DOM.start.value = '2026-01-12';
+    DOM.end.value = '2026-12-22';
+    DOM.balance.value = 'verses';
+    DOM.order.value = 'mix';
+    
+    DOM.daysCb.forEach(cb => {
+        const val = parseInt(cb.value);
+        cb.checked = (val >= 1 && val <= 5); 
+    });
+    
+    document.querySelectorAll('.book-cb').forEach(cb => cb.checked = true); 
+    
+    generateInitialPlan();
+    showMsg("Loaded Kevin's Plan! 🎉");
+}
+
+function applyNewPlan() {
+    const today = new Date();
+    DOM.start.value = getLocalISODate(today); 
+    // Dynamically calculate End Date to be Dec 31 of current year
+    DOM.end.value = `${today.getFullYear()}-12-31`;
+    DOM.balance.value = 'verses';
+    DOM.order.value = 'mix';
+    
+    DOM.daysCb.forEach(cb => {
+        const val = parseInt(cb.value);
+        cb.checked = (val >= 1 && val <= 5); 
+    });
+    
+    document.querySelectorAll('.book-cb').forEach(cb => cb.checked = true); 
+    
+    generateInitialPlan();
+    showMsg("Loaded a Fresh Plan! ✨");
+}
+
+// --- 4. GENERATION & LOGIC ---
+function gatherSettings() {
+    const selectedBooks = Array.from(document.querySelectorAll('.book-cb:checked')).map(cb => parseInt(cb.value));
+    const selectedDays = Array.from(DOM.daysCb).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+    return {
+        start: DOM.start.value, end: DOM.end.value, balance: DOM.balance.value,
+        readingOrder: DOM.order.value, days: selectedDays, books: selectedBooks
+    };
+}
+
+function applySettingsToUI(settings) {
+    if(!settings) return;
+    if(settings.start) DOM.start.value = settings.start;
+    if(settings.end) DOM.end.value = settings.end;
+    if(settings.balance) DOM.balance.value = settings.balance;
+    if(settings.readingOrder) DOM.order.value = settings.readingOrder;
+    else if(settings.mixTestaments !== undefined) DOM.order.value = settings.mixTestaments ? 'mix' : 'sequential'; 
+    if(settings.days) DOM.daysCb.forEach(cb => cb.checked = settings.days.includes(parseInt(cb.value)));
+    if(settings.books) document.querySelectorAll('.book-cb').forEach(cb => cb.checked = settings.books.includes(parseInt(cb.value)));
+}
+
+function getValidDates(startStr, endStr, allowedDaysOfWeek) {
+    const dates = []; let curr = new Date(startStr + 'T00:00:00'); const end = new Date(endStr + 'T00:00:00');
+    while (curr <= end) {
+        if (allowedDaysOfWeek.includes(curr.getDay())) dates.push(getLocalISODate(curr));
+        curr.setDate(curr.getDate() + 1);
+    }
+    return dates;
+}
+
+function generateInitialPlan() {
+    const settings = gatherSettings();
+    if (settings.books.length === 0) return showMsg("Please select at least one book.", "error");
+    if (settings.days.length === 0) return showMsg("Please select at least one day of the week.", "error");
+    if (settings.start > settings.end) return showMsg("Start date must be before end date.", "error");
+
+    const validDates = getValidDates(settings.start, settings.end, settings.days);
+    if (validDates.length === 0) return showMsg("No valid reading days in that date range.", "error");
+
+    let allPool = [], otPool = [], ntPool = [];
+    settings.books.forEach(bIdx => {
+        const b = books[bIdx];
+        b.chapters.forEach((verses, cIdx) => {
+            const chapterObj = { book: b.name, abbr: b.abbr, chapter: cIdx + 1, verses: verses, testament: b.testament };
+            allPool.push(chapterObj);
+            if (b.testament === 'OT') otPool.push(chapterObj); else ntPool.push(chapterObj);
+        });
+    });
+
+    let distributions = [];
+    if (settings.readingOrder === 'mix') {
+        const otDist = distributeLogic(otPool, validDates.length, settings.balance);
+        const ntDist = distributeLogic(ntPool, validDates.length, settings.balance);
+        for (let i = 0; i < validDates.length; i++) distributions.push([...otDist[i], ...ntDist[i]]);
+    } else {
+        if (settings.readingOrder === 'chronological') {
+            allPool.sort((a, b) => {
+                if (chronoOrderMap[a.abbr] !== chronoOrderMap[b.abbr]) return chronoOrderMap[a.abbr] - chronoOrderMap[b.abbr];
+                return a.chapter - b.chapter;
+            });
+        }
+        distributions = distributeLogic(allPool, validDates.length, settings.balance);
+    }
+
+    planState = { settings, days: [] };
+    validDates.forEach((dateStr, i) => {
+        planState.days.push({ date: dateStr, chapters: distributions[i] || [], completed: false, skipped: false });
+    });
+
+    DOM.settingsSection.classList.add('mobile-hidden');
+    saveAndRender();
+    if (DOM.msg.style.display !== 'block') {
+        showMsg("Plan generated successfully!");
+    }
+}
+
+function distributeLogic(chaptersPool, numDays, strategy) {
+    if (numDays === 0 || chaptersPool.length === 0) return Array.from({length: numDays}, () => []);
+    let result = Array.from({length: numDays}, () => []);
+    let pool = [...chaptersPool];
+
+    if (strategy === 'even') {
+        const rate = pool.length / numDays; let accum = 0;
+        for (let i = 0; i < numDays; i++) {
+            accum += rate; let count = Math.floor(accum); accum -= count;
+            if (i === numDays - 1) count = pool.length; 
+            for(let j=0; j<count && pool.length > 0; j++) result[i].push(pool.shift());
+        }
+    } else {
+        const totalVerses = pool.reduce((sum, c) => sum + c.verses, 0);
+        let remainingVerses = totalVerses; let remainingDays = numDays;
+
+        for (let i = 0; i < numDays; i++) {
+            const target = remainingVerses / remainingDays; let dayVerses = 0;
+            if (pool.length > 0 && pool.length >= remainingDays) {
+                const c = pool.shift(); result[i].push(c); dayVerses += c.verses;
+            } else if (pool.length > 0 && pool.length < remainingDays && dayVerses === 0) {
+                 result[i].push(pool.shift()); remainingVerses -= result[i][0].verses; remainingDays--; continue;
+            }
+            while (pool.length > remainingDays - 1) { 
+                const nextVerses = pool[0].verses;
+                const distWithout = Math.abs(dayVerses - target); const distWith = Math.abs((dayVerses + nextVerses) - target);
+                if (distWith <= distWithout) {
+                    const c = pool.shift(); result[i].push(c); dayVerses += c.verses;
+                } else { break; }
+            }
+            remainingVerses -= dayVerses; remainingDays--;
+        }
+        while(pool.length > 0) result[numDays - 1].push(pool.shift());
+    }
+    return result;
+}
+
+// --- 5. REDISTRIBUTION (Skip / Unskip) ---
+function recalculatePlan() {
+    let fullPool = [];
+    planState.settings.books.forEach(bIdx => {
+        const b = books[bIdx];
+        b.chapters.forEach((verses, cIdx) => { fullPool.push({ book: b.name, abbr: b.abbr, chapter: cIdx + 1, verses: verses, testament: b.testament }); });
+    });
+
+    let readChapters = new Set();
+    planState.days.forEach(d => { if (d.completed) d.chapters.forEach(c => readChapters.add(c.book + c.chapter)); });
+    let unreadPool = fullPool.filter(c => !readChapters.has(c.book + c.chapter));
+    
+    let availableDayIndices = [];
+    planState.days.forEach((d, i) => {
+        if (!d.completed && !d.skipped) availableDayIndices.push(i);
+        if (!d.completed) d.chapters = []; 
+    });
+
+    let newDist = [];
+    if (planState.settings.readingOrder === 'mix') {
+        let unreadOT = unreadPool.filter(c => c.testament === 'OT'); let unreadNT = unreadPool.filter(c => c.testament === 'NT');
+        const otDist = distributeLogic(unreadOT, availableDayIndices.length, planState.settings.balance);
+        const ntDist = distributeLogic(unreadNT, availableDayIndices.length, planState.settings.balance);
+        for (let i = 0; i < availableDayIndices.length; i++) newDist.push([...otDist[i], ...ntDist[i]]);
+    } else {
+        if (planState.settings.readingOrder === 'chronological') {
+            unreadPool.sort((a, b) => {
+                if (chronoOrderMap[a.abbr] !== chronoOrderMap[b.abbr]) return chronoOrderMap[a.abbr] - chronoOrderMap[b.abbr];
+                return a.chapter - b.chapter;
+            });
+        }
+        newDist = distributeLogic(unreadPool, availableDayIndices.length, planState.settings.balance);
+    }
+    
+    availableDayIndices.forEach((idx, i) => { planState.days[idx].chapters = newDist[i] || []; });
+    saveAndRender();
+}
+
+function toggleComplete(idx) { 
+    planState.days[idx].completed = !planState.days[idx].completed; 
+    saveAndRender(); 
+}
+
+function toggleSkip(idx) { 
+    planState.days[idx].skipped = !planState.days[idx].skipped; 
+    recalculatePlan(); 
+}
+
+// --- 6. RENDER & UI ---
+function formatChapters(chapters) {
+    if (!chapters || chapters.length === 0) return "<i style='color:var(--text-muted);'>No reading assigned</i>";
+    let htmlRanges = []; let currBook = chapters[0].book; let currAbbr = chapters[0].abbr;
+    let start = chapters[0].chapter; let end = chapters[0].chapter;
+
+    const pushRange = () => {
+        let text = start === end ? `${currBook} ${start}` : `${currBook} ${start}–${end}`;
+        let url = `https://www.biblegateway.com/audio/heath/esv/${currAbbr}.${start}`;
+        htmlRanges.push(`${text} <a href="${url}" target="_blank" class="audio-link" title="Listen">🎧</a>`);
+    };
+
+    for (let i = 1; i < chapters.length; i++) {
+        if (chapters[i].book === currBook && chapters[i].chapter === end + 1) { end = chapters[i].chapter; } 
+        else { pushRange(); currBook = chapters[i].book; currAbbr = chapters[i].abbr; start = chapters[i].chapter; end = chapters[i].chapter; }
+    }
+    pushRange(); return htmlRanges.join("<br>");
+}
+
+function calculateProgressAndStats() {
+    let totalActive = 0, completed = 0, totalVerses = 0, totalChapters = 0;
+    planState.days.forEach(d => {
+        if (!d.skipped) {
+            totalActive++;
+            if (d.completed) completed++;
+            d.chapters.forEach(c => { totalVerses += c.verses; totalChapters++; });
+        }
+    });
+
+    const pct = totalActive === 0 ? 0 : Math.round((completed / totalActive) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').innerText = `${completed} of ${totalActive} days completed (${pct}%)`;
+
+    const statsBadge = document.getElementById('plan-stats');
+    if (totalActive > 0) {
+        let avgVerses = Math.round(totalVerses / totalActive);
+        let avgChapters = (totalChapters / totalActive).toFixed(1);
+        statsBadge.innerText = `AVG: ${avgChapters} CHS (${avgVerses} VRS) / DAY`;
+        statsBadge.style.display = 'block';
+    } else {
+        statsBadge.style.display = 'none';
+    }
+}
+
+function saveAndRender() {
+    localStorage.setItem('huangBiblePlan', JSON.stringify(planState));
+    DOM.planSection.style.display = 'flex';
+    calculateProgressAndStats();
+    renderPlan();
+}
+
+function getFilterParams() {
+    const timeFilter = document.getElementById('filter-time').value;
+    const hideCompleted = document.getElementById('filter-completed').checked;
+    const hideSkipped = document.getElementById('filter-skipped').checked;
+    let cutoffDate = null;
+    if (timeFilter !== 'all') {
+        cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() + parseInt(timeFilter));
+        cutoffDate = getLocalISODate(cutoffDate);
+    }
+    const todayStr = getLocalISODate(new Date());
+    return { timeFilter, hideCompleted, hideSkipped, cutoffDate, todayStr };
+}
+
+function renderPlan() {
+    if (!planState || !planState.days || planState.days.length === 0) return;
+    const activeView = document.querySelector('input[name="view-mode"]:checked').value;
+    
+    if (activeView === 'list') {
+        DOM.tableContainer.style.display = 'table'; DOM.calendarContainer.style.display = 'none';
+        renderPlanList();
+    } else {
+        DOM.tableContainer.style.display = 'none'; DOM.calendarContainer.style.display = 'flex';
+        renderPlanCalendar();
+    }
+}
+
+function renderPlanList() {
+    DOM.tbody.innerHTML = '';
+    const { hideCompleted, hideSkipped, cutoffDate, todayStr } = getFilterParams();
+
+    planState.days.forEach((day, idx) => {
+        if (hideCompleted && day.completed) return;
+        if (hideSkipped && day.skipped) return;
+        if (cutoffDate && day.date > cutoffDate && day.date >= todayStr) return;
+
+        const tr = document.createElement('tr');
+        if (day.completed) tr.classList.add('completed');
+        if (day.skipped) tr.classList.add('skipped');
+        if (day.date === todayStr && !day.completed) tr.classList.add('today');
+
+        const dObj = new Date(day.date + 'T00:00:00');
+        const dateDisplay = dObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+        let actionsHtml = '';
+        if (!day.completed) {
+            actionsHtml = day.skipped ? `<button class="btn-unskip" onclick="toggleSkip(${idx})">Unskip</button>` : `<button class="btn-skip" onclick="toggleSkip(${idx})">Skip</button>`;
+        }
+        let cbHtml = day.skipped ? '' : `<input type="checkbox" ${day.completed ? 'checked' : ''} onchange="toggleComplete(${idx})">`;
+        let readingHtml = formatChapters(day.chapters).replace(/<br>/g, ' <span style="color:var(--text-muted); opacity:0.5; margin:0 4px;">|</span> '); 
+
+        tr.innerHTML = `
+            <td>${cbHtml}</td>
+            <td class="date-col">${dateDisplay}</td>
+            <td>${readingHtml}</td>
+            <td style="text-align: right;">${actionsHtml}</td>
+        `;
+        DOM.tbody.appendChild(tr);
+    });
+}
+
+function renderPlanCalendar() {
+    DOM.calendarContainer.innerHTML = '';
+    const { hideCompleted, hideSkipped, cutoffDate, todayStr } = getFilterParams();
+    const dayLookup = {}; planState.days.forEach((d, idx) => { dayLookup[d.date] = { ...d, originalIdx: idx }; });
+
+    const startD = new Date(planState.days[0].date + 'T00:00:00');
+    const endD = new Date(planState.days[planState.days.length - 1].date + 'T00:00:00');
+    let currMonth = new Date(startD.getFullYear(), startD.getMonth(), 1);
+    const lastMonth = new Date(endD.getFullYear(), endD.getMonth(), 1);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    while (currMonth <= lastMonth) {
+        const y = currMonth.getFullYear(); const m = currMonth.getMonth();
+        const monthName = currMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+        
+        const monthWrapper = document.createElement('div'); monthWrapper.className = 'cal-month';
+        monthWrapper.innerHTML = `<div class="cal-header">${monthName}</div>`;
+        
+        const grid = document.createElement('div'); grid.className = 'cal-grid';
+        dayNames.forEach(name => { grid.innerHTML += `<div class="cal-day-name">${name}</div>`; });
+
+        const firstDayOfWeek = new Date(y, m, 1).getDay();
+        for (let i = 0; i < firstDayOfWeek; i++) { grid.innerHTML += `<div class="cal-cell empty"></div>`; }
+
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateStr = getLocalISODate(new Date(y, m, i));
+            const cell = document.createElement('div'); cell.className = 'cal-cell';
+            const planData = dayLookup[dateStr];
+            
+            let isFilteredOut = false;
+            if (planData) {
+                if (hideCompleted && planData.completed) isFilteredOut = true;
+                if (hideSkipped && planData.skipped) isFilteredOut = true;
+                if (cutoffDate && dateStr > cutoffDate && dateStr >= todayStr) isFilteredOut = true;
+            }
+
+            if (!planData || isFilteredOut) {
+                cell.classList.add('empty'); cell.innerHTML = `<div class="cal-date-row" style="color:var(--text-muted); opacity:0.5;">${i}</div>`;
+            } else {
+                cell.classList.add('has-plan');
+                if (planData.completed) cell.classList.add('completed');
+                if (planData.skipped) cell.classList.add('skipped');
+                if (dateStr === todayStr && !planData.completed) cell.classList.add('today');
+
+                let cbHtml = planData.skipped ? '' : `<input type="checkbox" ${planData.completed ? 'checked' : ''} onchange="toggleComplete(${planData.originalIdx})">`;
+                let actionsHtml = '';
+                if (!planData.completed) {
+                    actionsHtml = planData.skipped ? `<button class="btn-unskip" onclick="toggleSkip(${planData.originalIdx})">Unskip</button>` : `<button class="btn-skip" onclick="toggleSkip(${planData.originalIdx})">Skip</button>`;
+                }
+                cell.innerHTML = `
+                    <div class="cal-date-row"><span>${cbHtml}</span><span>${i}</span></div>
+                    <div class="cal-reading">${formatChapters(planData.chapters)}</div>
+                    <div class="cal-actions">${actionsHtml}</div>
+                `;
+            }
+            grid.appendChild(cell);
+        }
+
+        const remainder = (firstDayOfWeek + daysInMonth) % 7;
+        if (remainder !== 0) { for (let i = 0; i < (7 - remainder); i++) { grid.innerHTML += `<div class="cal-cell empty"></div>`; } }
+        
+        monthWrapper.appendChild(grid); DOM.calendarContainer.appendChild(monthWrapper);
+        currMonth.setMonth(currMonth.getMonth() + 1);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
