@@ -3,62 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESV Verse Memory Vault</title>
+    <title>Verse Vault | Minimalist Scripture Memory</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --gold: #f1c40f; --light: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); padding: 20px; color: #333; line-height: 1.6; }
-        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .stats-bar { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 10px; margin-bottom: 25px; }
-        .input-section, .quiz-section { background: #fff; border: 2px solid #edf2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        textarea { width: 100%; height: 80px; margin: 10px 0; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 1rem; resize: none; }
-        button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        button:hover { background: #2980b9; transform: translateY(-1px); }
-        .verse-list { margin-top: 20px; max-height: 300px; overflow-y: auto; }
-        .verse-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #edf2f7; }
-        .verse-item:last-child { border-bottom: none; }
-        #display-area { font-size: 1.4rem; font-weight: 500; text-align: center; margin: 30px 0; min-height: 80px; color: var(--primary); }
-        .letter-box { width: 100%; font-size: 1.8rem; text-align: center; border: 2px solid var(--accent); border-radius: 8px; padding: 10px; text-transform: uppercase; letter-spacing: 5px; }
+        :root {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --mint: #f0fff4;
+            --mint-dark: #c6f6d5;
+            --slate: #4a5568;
+            --accent: #9f7aea; /* Pastel Lavender */
+            --danger: #feb2b2;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--slate); height: 100vh; overflow: hidden; }
+
+        /* Layout */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+        }
+
+        @media (max-width: 768px) {
+            .app-grid { grid-template-columns: 1fr; overflow-y: auto; height: auto; }
+            body { overflow: auto; }
+        }
+
+        /* Sidebar / Left Pane */
+        .sidebar {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        /* Main / Right Pane */
+        .main-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--bg);
+        }
+
+        .card {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        /* Elements */
+        h1 { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+        h2 { font-size: 1rem; margin-bottom: 8px; }
+
+        .stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .stat-pill { background: var(--mint); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #2d3748; }
+
+        textarea { width: 100%; height: 60px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 0.9rem; margin-bottom: 8px; outline: none; transition: border 0.2s; }
+        textarea:focus { border-color: var(--accent); }
+
+        select, button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 0.85rem; border: none; }
+        select { width: 100%; padding: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
+        
+        .btn-primary { background: var(--accent); color: white; padding: 10px; width: 100%; }
+        .btn-ghost { background: transparent; color: var(--slate); border: 1px solid var(--border); padding: 4px 8px; }
+        .btn-danger { color: #c53030; font-size: 0.75rem; background: transparent; }
+
+        .verse-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--bg);
+            transition: background 0.2s;
+        }
+        .verse-item:hover { background: var(--bg); border-radius: 8px; }
+
+        /* Practice Area */
+        #practice-box {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #display-text { font-size: 1.5rem; color: var(--slate); margin-bottom: 24px; line-height: 1.4; max-width: 600px; }
+        .typer-input {
+            width: 100%;
+            max-width: 400px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: none;
+            border-bottom: 2px solid var(--accent);
+            background: transparent;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
         .hidden { display: none; }
-        .badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="stats-bar">
-        <span>🔥 Streak: <strong id="streak-val">0</strong> days</span>
-        <span class="badge">Awards: <span id="awards-list">None</span></span>
-    </div>
-
-    <div id="home-view">
-        <div class="input-section">
-            <h3>Add New Verses</h3>
-            <p style="font-size: 0.85rem; color: #666;">Enter references (e.g., <i>Philippians 4:13</i>) one per line:</p>
-            <textarea id="ref-list" placeholder="John 1:1&#10;Ephesians 2:8-9"></textarea>
-            <button onclick="fetchVerses()" id="fetch-btn">Import ESV Verses</button>
+<div class="app-grid">
+    <aside class="sidebar">
+        <div>
+            <h1>Verse Vault</h1>
+            <div class="stats-row">
+                <div class="stat-pill">🔥 <span id="streak-val">0</span> Day Streak</div>
+                <div class="stat-pill">🏆 <span id="awards-list">---</span></div>
+            </div>
         </div>
 
-        <div class="input-section">
-            <h3>Verse List</h3>
-            <div id="verse-list-container" class="verse-list"></div>
+        <div class="card">
+            <h2>Add Verses</h2>
+            <select id="collections" onchange="loadCollection()">
+                <option value="">-- Choose a Collection --</option>
+                <option value="romans">Romans Road</option>
+                <option value="iam">"I AM" Statements (John)</option>
+                <option value="gospel">Key Gospel Verses</option>
+                <option value="peace">Peace & Anxiety</option>
+            </select>
+            <textarea id="ref-list" placeholder="Or enter references...&#10;Romans 12:1&#10;Psalm 23"></textarea>
+            <button class="btn-primary" onclick="fetchVerses()" id="fetch-btn">Import ESV</button>
         </div>
-    </div>
 
-    <div id="quiz-view" class="quiz-section hidden">
-        <h2 id="current-ref" style="text-align:center; color: var(--accent);"></h2>
-        <div id="display-area"></div>
-        <div id="interaction-area"></div>
-        <div style="text-align:center; margin-top: 20px;">
-            <button style="background: #95a5a6;" onclick="exitQuiz()">Exit</button>
+        <div class="card" style="flex-grow: 1; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <h2>My List</h2>
+                <button class="btn-danger" onclick="clearAll()">Clear All</button>
+            </div>
+            <div id="verse-list-container"></div>
         </div>
-    </div>
+    </aside>
+
+    <main class="main-content">
+        <div id="welcome-msg" class="card" style="text-align: center; padding: 40px;">
+            <p>Select a verse from your list to begin memorizing.</p>
+        </div>
+
+        <div id="practice-area" class="card hidden" style="flex-grow: 1; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content: space-between; align-items: flex-start;">
+                <h2 id="current-ref" style="color: var(--accent); font-size: 1.2rem;"></h2>
+                <button class="btn-ghost" onclick="resetPractice()">Reset</button>
+            </div>
+            
+            <div id="practice-box">
+                <div id="display-text">Click below and start typing first letters...</div>
+                <input type="text" id="typer" class="typer-input" autocomplete="off" autofocus>
+                <div id="success-msg" class="hidden" style="margin-top: 20px; color: #38a169; font-weight: bold;">
+                    Well done! Verse Complete.
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
 <script>
     const API_TOKEN = 'ffa5803ef5933fd9ddf379532b748f1b45e9db69';
-    let verses = JSON.parse(localStorage.getItem('verses')) || [];
-    let stats = JSON.parse(localStorage.getItem('memStats')) || { streak: 0, lastDate: null, awards: [] };
+    let verses = JSON.parse(localStorage.getItem('vv_verses')) || [];
+    let stats = JSON.parse(localStorage.getItem('vv_stats')) || { streak: 0, lastDate: null, awards: [] };
     let currentVerse = null;
+
+    const collections = {
+        romans: "Romans 3:23\nRomans 6:23\nRomans 5:8\nRomans 10:9\nRomans 8:1",
+        iam: "John 6:35\nJohn 8:12\nJohn 10:9\nJohn 10:11\nJohn 11:25\nJohn 14:6\nJohn 15:1",
+        gospel: "John 3:16\nEphesians 2:8-9\n1 Corinthians 15:3-4\n2 Corinthians 5:21",
+        peace: "Philippians 4:6-7\nIsaiah 26:3\nJohn 14:27\n1 Peter 5:7"
+    };
+
+    function loadCollection() {
+        const key = document.getElementById('collections').value;
+        if (key) document.getElementById('ref-list').value = collections[key];
+    }
 
     async function fetchVerses() {
         const input = document.getElementById('ref-list');
@@ -67,117 +194,113 @@
 
         const btn = document.getElementById('fetch-btn');
         btn.innerText = "Fetching...";
-        btn.disabled = true;
-
+        
         for (let ref of refs) {
             try {
-                const response = await fetch(`https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(ref)}&include-headings=false&include-footnotes=false&include-verse-numbers=false&include-short-copyright=false`, {
+                const res = await fetch(`https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(ref)}&include-headings=false&include-footnotes=false&include-verse-numbers=false&include-short-copyright=false`, {
                     headers: { 'Authorization': `Token ${API_TOKEN}` }
                 });
-                const data = await response.json();
+                const data = await res.json();
                 if (data.passages?.length) {
-                    verses.push({ ref: data.canonical, text: data.passages[0].trim() });
+                    verses.push({ ref: data.canonical, text: data.passages[0].trim(), id: Date.now() + Math.random() });
                 }
-            } catch (e) { console.error("Error:", e); }
+            } catch (e) { console.error(e); }
         }
-
-        localStorage.setItem('verses', JSON.stringify(verses));
+        saveAndRender();
         input.value = '';
-        btn.innerText = "Import ESV Verses";
-        btn.disabled = false;
+        btn.innerText = "Import ESV";
+    }
+
+    function deleteVerse(id) {
+        verses = verses.filter(v => v.id !== id);
+        saveAndRender();
+    }
+
+    function clearAll() {
+        if(confirm("Clear all saved verses?")) { verses = []; saveAndRender(); }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('vv_verses', JSON.stringify(verses));
         renderList();
     }
 
     function renderList() {
         const container = document.getElementById('verse-list-container');
-        container.innerHTML = verses.length ? '' : '<p style="color:#999">No verses added yet.</p>';
-        verses.forEach((v, i) => {
+        container.innerHTML = '';
+        verses.forEach((v) => {
             const div = document.createElement('div');
             div.className = 'verse-item';
-            div.innerHTML = `<strong>${v.ref}</strong> <button onclick="startPractice(${i})">Memorize</button>`;
+            div.innerHTML = `
+                <div style="cursor:pointer; flex-grow:1" onclick="startPractice('${v.id}')">
+                    <strong style="font-size:0.9rem">${v.ref}</strong>
+                </div>
+                <button class="btn-danger" onclick="deleteVerse(${v.id})">✕</button>
+            `;
             container.appendChild(div);
         });
     }
 
-    function startPractice(index) {
-        currentVerse = verses[index];
-        document.getElementById('home-view').classList.add('hidden');
-        document.getElementById('quiz-view').classList.remove('hidden');
+    function startPractice(id) {
+        currentVerse = verses.find(v => v.id == id);
+        document.getElementById('welcome-msg').classList.add('hidden');
+        document.getElementById('practice-area').classList.remove('hidden');
         document.getElementById('current-ref').innerText = currentVerse.ref;
-        initFirstLetterMode();
+        resetPractice();
     }
 
-    function initFirstLetterMode() {
-        const display = document.getElementById('display-area');
-        const interaction = document.getElementById('interaction-area');
+    function resetPractice() {
+        const display = document.getElementById('display-text');
+        const typer = document.getElementById('typer');
+        const success = document.getElementById('success-msg');
         
-        // Split text and get target first letters
         const words = currentVerse.text.split(/\s+/).filter(w => w.length > 0);
         const targets = words.map(w => w.replace(/[^a-zA-Z]/g, '')[0].toUpperCase());
         
-        display.innerHTML = `<span style="color:#95a5a6">Type the first letter of each word...</span>`;
-        interaction.innerHTML = `<input type="text" class="letter-box" id="typer" autocomplete="off">`;
-        
-        const typer = document.getElementById('typer');
+        display.innerHTML = `<span style="color:#a0aec0; font-size:1.1rem">Type first letters of:</span><br>${currentVerse.ref}`;
+        typer.value = '';
+        typer.disabled = false;
+        typer.classList.remove('hidden');
+        success.classList.add('hidden');
         typer.focus();
 
         typer.oninput = () => {
-            const inputVal = typer.value.toUpperCase();
-            let correctCount = 0;
-            
-            // Check letters typed so far
-            for (let i = 0; i < inputVal.length; i++) {
-                if (inputVal[i] === targets[i]) {
-                    correctCount++;
-                } else {
-                    typer.value = inputVal.substring(0, i);
+            const val = typer.value.toUpperCase();
+            for (let i = 0; i < val.length; i++) {
+                if (val[i] !== targets[i]) {
+                    typer.value = val.substring(0, i);
                     return;
                 }
             }
-
-            // Show progress
-            display.innerText = words.slice(0, correctCount).join(' ');
-
-            if (correctCount === targets.length) {
-                display.style.color = 'var(--success)';
-                typer.disabled = true;
-                handleWin();
-            }
+            display.innerText = words.slice(0, val.length).join(' ');
+            if (val.length === targets.length) handleWin();
         };
     }
 
     function handleWin() {
+        document.getElementById('typer').disabled = true;
+        document.getElementById('success-msg').classList.remove('hidden');
+        
         const today = new Date().toDateString();
-        const yesterday = new Date(Date.now() - 86400000).toDateString();
-
         if (stats.lastDate !== today) {
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
             stats.streak = (stats.lastDate === yesterday) ? stats.streak + 1 : 1;
             stats.lastDate = today;
+            
+            if (stats.streak === 3) stats.awards.push('🥉');
+            if (stats.streak === 7) stats.awards.push('🥈');
+            localStorage.setItem('vv_stats', JSON.stringify(stats));
+            renderStats();
         }
-
-        // Award System
-        const newAwards = [];
-        if (stats.streak >= 3) newAwards.push('🔥');
-        if (stats.streak >= 7) newAwards.push('🛡️');
-        if (verses.length >= 10) newAwards.push('📜');
-        stats.awards = [...new Set([...stats.awards, ...newAwards])];
-
-        localStorage.setItem('memStats', JSON.stringify(stats));
-        updateStatsUI();
     }
 
-    function updateStatsUI() {
+    function renderStats() {
         document.getElementById('streak-val').innerText = stats.streak;
-        document.getElementById('awards-list').innerText = stats.awards.length ? stats.awards.join(' ') : 'None';
-    }
-
-    function exitQuiz() {
-        document.getElementById('quiz-view').classList.add('hidden');
-        document.getElementById('home-view').classList.remove('hidden');
+        document.getElementById('awards-list').innerText = stats.awards.length ? stats.awards.join('') : '---';
     }
 
     renderList();
-    updateStatsUI();
+    renderStats();
 </script>
 </body>
 </html>
