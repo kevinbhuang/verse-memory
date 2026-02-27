@@ -3,114 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verse Vault | Minimalist Scripture Memory</title>
+    <title>Kevin's Devastating Verse Memory Tool 3.0 🔥</title>
     <style>
         :root {
-            --bg: #f8fafc;
-            --panel: #ffffff;
-            --mint: #f0fff4;
-            --mint-dark: #c6f6d5;
-            --slate: #4a5568;
-            --accent: #9f7aea; /* Pastel Lavender */
-            --danger: #feb2b2;
-            --border: #e2e8f0;
+            --bg: #f8fafc; --panel: #ffffff; --mint: #f0fff4;
+            --slate: #4a5568; --accent: #9f7aea; --border: #e2e8f0;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--slate); height: 100vh; overflow: hidden; }
-
-        /* Layout */
-        .app-grid {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            height: 100vh;
-        }
-
-        @media (max-width: 768px) {
-            .app-grid { grid-template-columns: 1fr; overflow-y: auto; height: auto; }
-            body { overflow: auto; }
-        }
-
-        /* Sidebar / Left Pane */
-        .sidebar {
-            background: var(--panel);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-            gap: 12px;
-            overflow-y: auto;
-        }
-
-        /* Main / Right Pane */
-        .main-content {
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            background: var(--bg);
-        }
-
-        .card {
-            background: var(--panel);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border: 1px solid var(--border);
-        }
-
-        /* Elements */
-        h1 { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
-        h2 { font-size: 1rem; margin-bottom: 8px; }
-
-        .stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .stat-pill { background: var(--mint); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #2d3748; }
-
-        textarea { width: 100%; height: 60px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 0.9rem; margin-bottom: 8px; outline: none; transition: border 0.2s; }
-        textarea:focus { border-color: var(--accent); }
-
-        select, button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 0.85rem; border: none; }
-        select { width: 100%; padding: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--slate); height: 100vh; overflow: hidden; }
         
-        .btn-primary { background: var(--accent); color: white; padding: 10px; width: 100%; }
-        .btn-ghost { background: transparent; color: var(--slate); border: 1px solid var(--border); padding: 4px 8px; }
-        .btn-danger { color: #c53030; font-size: 0.75rem; background: transparent; }
-
-        .verse-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid var(--bg);
-            transition: background 0.2s;
-        }
-        .verse-item:hover { background: var(--bg); border-radius: 8px; }
-
-        /* Practice Area */
-        #practice-box {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        #display-text { font-size: 1.5rem; color: var(--slate); margin-bottom: 24px; line-height: 1.4; max-width: 600px; }
-        .typer-input {
-            width: 100%;
-            max-width: 400px;
-            font-size: 1.5rem;
-            text-align: center;
-            border: none;
-            border-bottom: 2px solid var(--accent);
-            background: transparent;
-            outline: none;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-        }
-
+        /* Layout */
+        .app-grid { display: grid; grid-template-columns: 320px 1fr; height: 100vh; }
+        @media (max-width: 768px) { .app-grid { grid-template-columns: 1fr; overflow-y: auto; height: auto; } body { overflow: auto; } }
+        
+        .sidebar { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px; gap: 12px; overflow-y: auto; }
+        .main-content { padding: 24px; display: flex; flex-direction: column; gap: 16px; background: var(--bg); position: relative; }
+        
+        /* UI Components */
+        .card { background: var(--panel); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        h1 { font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; cursor: default; }
+        #fire-emoji { cursor: pointer; display: inline-block; transition: transform 0.2s; }
+        #fire-emoji:active { transform: scale(1.5); }
+        
+        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #a0aec0; margin-bottom: 10px; }
+        .stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .stat-pill { background: var(--mint); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        
+        textarea { width: 100%; height: 60px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 0.9rem; margin-bottom: 8px; outline: none; }
+        select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: white; }
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        
+        .verse-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        .verse-item:hover { background: #fdfbff; }
+        .del-btn { color: #fc8181; background: none; border: none; cursor: pointer; padding: 5px; font-weight: bold; }
+        
+        /* Practice Elements */
+        #practice-box { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #display-text { font-size: 1.6rem; color: var(--slate); margin-bottom: 30px; line-height: 1.5; max-width: 650px; }
+        .typer-input { width: 100%; max-width: 400px; font-size: 1.8rem; text-align: center; border: none; border-bottom: 2px solid var(--accent); background: transparent; outline: none; text-transform: uppercase; letter-spacing: 8px; }
         .hidden { display: none; }
+        
+        /* Easter Egg Particles */
+        .particle {
+            position: fixed;
+            top: -50px;
+            font-size: 2rem;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        .hint-btn { background: none; border: 1px solid var(--border); color: #a0aec0; padding: 4px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
+        .hint-char-bubble { background: #ebf8ff; color: #3182ce; padding: 8px 16px; border-radius: 8px; font-weight: bold; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); animation: hintFade 1.5s forwards; }
+        @keyframes hintFade { 0% { opacity: 1; top: -50px; } 100% { opacity: 0; top: -60px; } }
     </style>
 </head>
 <body>
@@ -118,7 +66,7 @@
 <div class="app-grid">
     <aside class="sidebar">
         <div>
-            <h1>Verse Vault</h1>
+            <h1>Kevin's Devastating Tool <span id="fire-emoji">🔥</span></h1>
             <div class="stats-row">
                 <div class="stat-pill">🔥 <span id="streak-val">0</span> Day Streak</div>
                 <div class="stat-pill">🏆 <span id="awards-list">---</span></div>
@@ -128,42 +76,45 @@
         <div class="card">
             <h2>Add Verses</h2>
             <select id="collections" onchange="loadCollection()">
-                <option value="">-- Choose a Collection --</option>
+                <option value="">-- Quick Collections --</option>
                 <option value="romans">Romans Road</option>
-                <option value="iam">"I AM" Statements (John)</option>
-                <option value="gospel">Key Gospel Verses</option>
-                <option value="peace">Peace & Anxiety</option>
+                <option value="iam">"I AM" (John)</option>
+                <option value="armor">Armor of God</option>
             </select>
-            <textarea id="ref-list" placeholder="Or enter references...&#10;Romans 12:1&#10;Psalm 23"></textarea>
+            <textarea id="ref-list" placeholder="Enter references (e.g. John 1:1)"></textarea>
             <button class="btn-primary" onclick="fetchVerses()" id="fetch-btn">Import ESV</button>
         </div>
 
-        <div class="card" style="flex-grow: 1; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <div class="card" style="flex-grow: 1;">
+            <div style="display: flex; justify-content: space-between;">
                 <h2>My List</h2>
-                <button class="btn-danger" onclick="clearAll()">Clear All</button>
+                <button onclick="clearAll()" style="font-size: 0.7rem; border: none; background: none; color: #a0aec0; cursor: pointer;">CLEAR ALL</button>
             </div>
             <div id="verse-list-container"></div>
         </div>
     </aside>
 
-    <main class="main-content">
-        <div id="welcome-msg" class="card" style="text-align: center; padding: 40px;">
-            <p>Select a verse from your list to begin memorizing.</p>
+    <main class="main-content" id="main-area">
+        <div id="welcome-msg" class="card" style="text-align: center; padding: 60px;">
+            <p style="color: #a0aec0;">Select a verse to begin your session.</p>
         </div>
 
         <div id="practice-area" class="card hidden" style="flex-grow: 1; display: flex; flex-direction: column;">
-            <div style="display:flex; justify-content: space-between; align-items: flex-start;">
-                <h2 id="current-ref" style="color: var(--accent); font-size: 1.2rem;"></h2>
-                <button class="btn-ghost" onclick="resetPractice()">Reset</button>
+            <div style="display:flex; justify-content: space-between;">
+                <h2 id="current-ref" style="color: var(--accent); font-size: 1.1rem; border-bottom: 2px solid var(--accent);"></h2>
+                <div>
+                  <button class="hint-btn" onclick="showLetterHint()">Hint (H)</button>
+                  <button onclick="resetPractice()" style="background: none; border: 1px solid var(--border); padding: 4px 12px; border-radius: 6px; cursor: pointer;">Restart</button>
+                </div>
             </div>
             
             <div id="practice-box">
-                <div id="display-text">Click below and start typing first letters...</div>
-                <input type="text" id="typer" class="typer-input" autocomplete="off" autofocus>
-                <div id="success-msg" class="hidden" style="margin-top: 20px; color: #38a169; font-weight: bold;">
-                    Well done! Verse Complete.
+                <div id="display-text"></div>
+                <div style="position: relative; width: 100%; max-width: 400px; display: flex; justify-content: center;">
+                  <div id="hint-bubble-anchor"></div>
+                  <input type="text" id="typer" class="typer-input" autocomplete="off" autofocus placeholder="...">
                 </div>
+                <div id="success-msg" class="hidden" style="color: #48bb78; font-weight: bold; margin-top: 20px;">✨ VERSE MEMORIZED</div>
             </div>
         </div>
     </main>
@@ -171,15 +122,43 @@
 
 <script>
     const API_TOKEN = 'ffa5803ef5933fd9ddf379532b748f1b45e9db69';
-    let verses = JSON.parse(localStorage.getItem('vv_verses')) || [];
-    let stats = JSON.parse(localStorage.getItem('vv_stats')) || { streak: 0, lastDate: null, awards: [] };
+    let verses = JSON.parse(localStorage.getItem('vv_v3_verses')) || [];
+    let stats = JSON.parse(localStorage.getItem('vv_v3_stats')) || { streak: 0, lastDate: null, awards: [] };
     let currentVerse = null;
+    let targets = [];
+
+    // Easter Egg Logic
+    let fireClicks = 0;
+    let clickTimer;
+    document.getElementById('fire-emoji').addEventListener('click', () => {
+        fireClicks++;
+        clearTimeout(clickTimer);
+        if (fireClicks === 3) {
+            triggerFireRain();
+            fireClicks = 0;
+        }
+        clickTimer = setTimeout(() => { fireClicks = 0; }, 500);
+    });
+
+    function triggerFireRain() {
+        const emojis = ['🔥', '📖', '🔥', '📜', '🔥'];
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 3000);
+            }, i * 50);
+        }
+    }
 
     const collections = {
-        romans: "Romans 3:23\nRomans 6:23\nRomans 5:8\nRomans 10:9\nRomans 8:1",
-        iam: "John 6:35\nJohn 8:12\nJohn 10:9\nJohn 10:11\nJohn 11:25\nJohn 14:6\nJohn 15:1",
-        gospel: "John 3:16\nEphesians 2:8-9\n1 Corinthians 15:3-4\n2 Corinthians 5:21",
-        peace: "Philippians 4:6-7\nIsaiah 26:3\nJohn 14:27\n1 Peter 5:7"
+        romans: "Romans 3:23\nRomans 6:23\nRomans 5:8\nRomans 10:9",
+        iam: "John 6:35\nJohn 8:12\nJohn 10:11\nJohn 14:6\nJohn 15:1",
+        armor: "Ephesians 6:14\nEphesians 6:15\nEphesians 6:16\nEphesians 6:17"
     };
 
     function loadCollection() {
@@ -188,12 +167,10 @@
     }
 
     async function fetchVerses() {
-        const input = document.getElementById('ref-list');
-        const refs = input.value.split('\n').filter(r => r.trim() !== '');
+        const refs = document.getElementById('ref-list').value.split('\n').filter(r => r.trim() !== '');
         if (!refs.length) return;
-
         const btn = document.getElementById('fetch-btn');
-        btn.innerText = "Fetching...";
+        btn.innerText = "Devastating Import...";
         
         for (let ref of refs) {
             try {
@@ -206,40 +183,54 @@
                 }
             } catch (e) { console.error(e); }
         }
-        saveAndRender();
-        input.value = '';
+        save();
+        document.getElementById('ref-list').value = '';
         btn.innerText = "Import ESV";
     }
 
-    function deleteVerse(id) {
+    function deleteVerse(e, id) {
+        e.stopPropagation();
         verses = verses.filter(v => v.id !== id);
-        saveAndRender();
+        save();
     }
 
-    function clearAll() {
-        if(confirm("Clear all saved verses?")) { verses = []; saveAndRender(); }
-    }
+    function clearAll() { if(confirm("Delete all?")) { verses = []; save(); } }
 
-    function saveAndRender() {
-        localStorage.setItem('vv_verses', JSON.stringify(verses));
+    function save() {
+        localStorage.setItem('vv_v3_verses', JSON.stringify(verses));
         renderList();
     }
 
     function renderList() {
         const container = document.getElementById('verse-list-container');
-        container.innerHTML = '';
-        verses.forEach((v) => {
+        container.innerHTML = verses.length ? '' : '<p style="color:#cbd5e0; font-size: 0.8rem; margin-top: 10px;">Empty list.</p>';
+        verses.forEach(v => {
             const div = document.createElement('div');
             div.className = 'verse-item';
-            div.innerHTML = `
-                <div style="cursor:pointer; flex-grow:1" onclick="startPractice('${v.id}')">
-                    <strong style="font-size:0.9rem">${v.ref}</strong>
-                </div>
-                <button class="btn-danger" onclick="deleteVerse(${v.id})">✕</button>
-            `;
+            div.onclick = () => startPractice(v.id);
+            div.innerHTML = `<span>${v.ref}</span><button class="del-btn" onclick="deleteVerse(event, ${v.id})">×</button>`;
             container.appendChild(div);
         });
     }
+
+    function showLetterHint() {
+        const typer = document.getElementById('typer');
+        const anchor = document.getElementById('hint-bubble-anchor');
+        const currentInput = typer.value;
+        if (targets[currentInput.length]) {
+            anchor.innerHTML = `<div class="hint-char-bubble">${targets[currentInput.length]}</div>`;
+            typer.focus();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (!document.getElementById('practice-area').classList.contains('hidden')) {
+            if (e.key.toUpperCase() === 'H' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                showLetterHint();
+            }
+        }
+    });
 
     function startPractice(id) {
         currentVerse = verses.find(v => v.id == id);
@@ -252,16 +243,15 @@
     function resetPractice() {
         const display = document.getElementById('display-text');
         const typer = document.getElementById('typer');
-        const success = document.getElementById('success-msg');
-        
         const words = currentVerse.text.split(/\s+/).filter(w => w.length > 0);
-        const targets = words.map(w => w.replace(/[^a-zA-Z]/g, '')[0].toUpperCase());
-        
-        display.innerHTML = `<span style="color:#a0aec0; font-size:1.1rem">Type first letters of:</span><br>${currentVerse.ref}`;
+        targets = words.map(w => {
+            const match = w.match(/[a-zA-Z]/);
+            return match ? match[0].toUpperCase() : null;
+        });
+        display.innerHTML = `<span style="color:#cbd5e0">Ready to devastate this verse? Type...</span>`;
         typer.value = '';
         typer.disabled = false;
-        typer.classList.remove('hidden');
-        success.classList.add('hidden');
+        document.getElementById('success-msg').classList.add('hidden');
         typer.focus();
 
         typer.oninput = () => {
@@ -280,16 +270,12 @@
     function handleWin() {
         document.getElementById('typer').disabled = true;
         document.getElementById('success-msg').classList.remove('hidden');
-        
         const today = new Date().toDateString();
         if (stats.lastDate !== today) {
-            const yesterday = new Date(Date.now() - 86400000).toDateString();
-            stats.streak = (stats.lastDate === yesterday) ? stats.streak + 1 : 1;
+            stats.streak = (stats.lastDate === new Date(Date.now() - 86400000).toDateString()) ? stats.streak + 1 : 1;
             stats.lastDate = today;
-            
-            if (stats.streak === 3) stats.awards.push('🥉');
-            if (stats.streak === 7) stats.awards.push('🥈');
-            localStorage.setItem('vv_stats', JSON.stringify(stats));
+            if (stats.streak >= 3) stats.awards.push('🥉');
+            localStorage.setItem('vv_v3_stats', JSON.stringify(stats));
             renderStats();
         }
     }
