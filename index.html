@@ -6,56 +6,53 @@
     <title>Kevin's Devastating Verse Memory Tool 3.0 🔥</title>
     <style>
         :root {
-            --bg-dark: #0b0e14;
-            --sidebar-bg: #11141d;
-            --card-bg: #161b26;
-            --accent: #9f7aea;
-            --success: #00f5a0;
-            --text-main: #e2e8f0;
-            --text-muted: #718096;
-            --border: #2d3748;
-            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --bg-dark: #0b0e14; --sidebar-bg: #11141d; --card-bg: #161b26;
+            --accent: #9f7aea; --success: #00f5a0; --text-main: #e2e8f0;
+            --text-muted: #718096; --border: #2d3748; --font-mono: 'JetBrains Mono', monospace;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; }
-
         .app-grid { display: grid; grid-template-columns: 340px 1fr; height: 100vh; }
         @media (max-width: 768px) { .app-grid { grid-template-columns: 1fr; overflow-y: auto; height: auto; } body { overflow: auto; } }
-
+        
         /* Sidebar */
         .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 16px; gap: 20px; overflow-y: auto; }
         h1 { font-size: 0.9rem; font-family: var(--font-mono); color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        #fire-emoji { cursor: pointer; display: inline-block; filter: drop-shadow(0 0 5px orange); transition: 0.2s; }
         .stat-pill { background: #1a202c; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--success); }
-
-        /* Components */
         .card { background: var(--card-bg); border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
         h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-mono); }
         textarea, select { width: 100%; background: #0b0e14; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 0.85rem; color: var(--text-main); font-family: var(--font-mono); outline: none; }
         .btn-primary { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; font-family: var(--font-mono); margin-top: 8px; }
 
-        /* Verse List with View Action */
+        /* Verse List */
         .verse-item { display: flex; align-items: center; padding: 10px; margin-bottom: 8px; background: #11141d; border: 1px solid var(--border); border-radius: 6px; gap: 8px; }
-        .verse-item .ref-name { flex-grow: 1; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .verse-item .ref-name:hover { color: var(--accent); }
+        .ref-name { flex-grow: 1; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; color: var(--text-main); }
         .action-btn { background: #1a202c; border: 1px solid var(--border); color: var(--text-main); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-family: var(--font-mono); }
-        .action-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .del-btn { color: #f56565; background: none; border: none; cursor: pointer; padding: 0 5px; font-weight: bold; }
+        .del-btn { color: #f56565; background: none; border: none; cursor: pointer; padding: 0 5px; }
 
         /* Main Content */
-        .main-content { padding: 32px; display: flex; flex-direction: column; gap: 20px; background: var(--bg-dark); justify-content: center; align-items: center; position: relative; }
-        #display-text { font-size: 1.8rem; color: var(--text-main); margin-bottom: 40px; text-align: center; max-width: 800px; font-family: var(--font-mono); }
-        .typer-input { width: 100%; max-width: 500px; font-size: 2rem; text-align: center; border: none; border-bottom: 2px solid var(--accent); background: transparent; outline: none; text-transform: uppercase; letter-spacing: 10px; color: var(--success); font-family: var(--font-mono); }
+        .main-content { padding: 32px; display: flex; flex-direction: column; background: var(--bg-dark); align-items: center; position: relative; }
+        #practice-box { width: 100%; max-width: 800px; margin-top: 80px; text-align: center; }
         
-        /* Modal Style for Viewing Verse */
+        #display-text { 
+            font-size: 1.6rem; font-family: var(--font-mono); line-height: 1.8; 
+            margin-bottom: 50px; color: var(--text-main); min-height: 150px;
+        }
+        .placeholder { color: var(--border); margin: 0 4px; border-bottom: 2px solid var(--border); display: inline-block; min-width: 20px; }
+        .revealed-word { color: var(--text-main); border-bottom: 2px solid transparent; }
+        .hint-flash { color: var(--accent) !important; font-weight: bold; }
+
+        .typer-input { 
+            width: 100%; max-width: 500px; font-size: 2.5rem; text-align: center; 
+            border: none; border-bottom: 3px solid var(--accent); background: transparent; 
+            outline: none; text-transform: uppercase; letter-spacing: 12px; color: var(--success); font-family: var(--font-mono); 
+        }
+
+        /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; visibility: hidden; opacity: 0; transition: 0.2s; }
         .modal.active { visibility: visible; opacity: 1; }
-        .modal-content { background: var(--card-bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 0 30px rgba(159, 122, 234, 0.2); }
-        .modal-text { font-family: var(--font-mono); line-height: 1.6; margin-bottom: 20px; font-size: 1.1rem; }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 500px; text-align: center; }
 
-        .particle { position: fixed; top: -50px; font-size: 2rem; pointer-events: none; z-index: 9999; animation: fall linear forwards; }
-        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
         .hidden { display: none; }
     </style>
 </head>
@@ -64,7 +61,7 @@
 <div class="app-grid">
     <aside class="sidebar">
         <div>
-            <h1>Verse Arena <span id="fire-emoji">🔥</span></h1>
+            <h1 onclick="triggerFireRain()" style="cursor:pointer">Verse Arena <span id="fire-emoji">🔥</span></h1>
             <div class="stats-row" style="display:flex; gap:10px; margin-top:10px;">
                 <div class="stat-pill">STRK: <span id="streak-val">0</span></div>
                 <div class="stat-pill">RANK: <span id="rank-val">BRONZE</span></div>
@@ -72,78 +69,63 @@
         </div>
 
         <div class="card">
-            <h2>Import Sequence</h2>
+            <h2>Import</h2>
             <select id="collections" onchange="loadCollection()">
                 <option value="">-- Quick Modules --</option>
                 <option value="romans">Romans Road</option>
                 <option value="iam">"I AM" (John)</option>
                 <option value="armor">Armor of God</option>
             </select>
-            <textarea id="ref-list" placeholder="Enter references..."></textarea>
-            <button class="btn-primary" onclick="fetchVerses()" id="fetch-btn">EXECUTE IMPORT</button>
+            <textarea id="ref-list" placeholder="John 1:1..."></textarea>
+            <button class="btn-primary" onclick="fetchVerses()" id="fetch-btn">IMPORT DATA</button>
         </div>
 
         <div class="card" style="flex-grow: 1; overflow-y: auto;">
-            <h2>Vault Inventory</h2>
+            <h2>Vault</h2>
             <div id="verse-list-container"></div>
         </div>
     </aside>
 
     <main class="main-content">
-        <div id="welcome-msg" style="text-align: center; font-family: var(--font-mono); color: var(--text-muted);">
-            [SYSTEM IDLE] SELECT A VERSE OR IMPORT DATA
+        <div id="welcome-msg" style="text-align: center; font-family: var(--font-mono); color: var(--text-muted); margin-top: 100px;">
+            [SYSTEM IDLE] SELECT A VERSE
         </div>
 
-        <div id="practice-area" class="hidden" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <div style="width: 100%; display: flex; justify-content: space-between; position: absolute; top: 32px; padding: 0 32px;">
-                <h2 id="current-ref" style="color: var(--accent); font-size: 1.2rem; margin: 0;"></h2>
-                <button class="action-btn" onclick="resetPractice()">REBOOT PRACTICE</button>
+        <div id="practice-area" class="hidden" style="width: 100%;">
+            <div style="width: 100%; display: flex; justify-content: space-between; padding: 0 20px; margin-bottom: 20px;">
+                <h2 id="current-ref" style="color: var(--accent); font-size: 1.2rem;"></h2>
+                <div>
+                    <button class="action-btn" onclick="getHint()">GET HINT (H)</button>
+                    <button class="action-btn" onclick="resetPractice()" style="margin-left: 10px;">REBOOT</button>
+                </div>
             </div>
             
-            <div id="display-text"></div>
-            <input type="text" id="typer" class="typer-input" autocomplete="off" autofocus placeholder="TYPER">
-            <div id="success-msg" class="hidden" style="color: var(--success); font-weight: bold; margin-top: 20px; font-family: var(--font-mono);">> SEQUENCE COMPLETE</div>
+            <div id="practice-box">
+                <div id="display-text"></div>
+                <input type="text" id="typer" class="typer-input" autocomplete="off" autofocus placeholder="CODE">
+                <div id="success-msg" class="hidden" style="color: var(--success); font-weight: bold; margin-top: 30px; font-family: var(--font-mono);">> SUCCESS: COMPILED</div>
+            </div>
         </div>
     </main>
 </div>
 
 <div id="verse-modal" class="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h2 id="modal-ref" style="color: var(--accent);"></h2>
-        <div id="modal-body" class="modal-text"></div>
-        <button class="btn-primary" onclick="closeModal()">CLOSE DATA VIEW</button>
+        <h2 id="modal-ref" style="color: var(--accent); margin-bottom: 15px;"></h2>
+        <div id="modal-body" style="font-family: var(--font-mono); line-height: 1.6; margin-bottom: 20px;"></div>
+        <button class="btn-primary" onclick="closeModal()">CLOSE</button>
     </div>
 </div>
 
 <script>
     const API_TOKEN = 'ffa5803ef5933fd9ddf379532b748f1b45e9db69';
-    let verses = JSON.parse(localStorage.getItem('vv_v4_verses')) || [];
-    let stats = JSON.parse(localStorage.getItem('vv_v4_stats')) || { streak: 0, lastDate: null };
+    let verses = JSON.parse(localStorage.getItem('vv_v5_verses')) || [];
+    let stats = JSON.parse(localStorage.getItem('vv_v5_stats')) || { streak: 0, lastDate: null };
     let currentVerse = null;
-    let targets = [];
+    let verseWords = [];
+    let targetLetters = [];
 
-    // Easter Egg
-    let fireClicks = 0;
-    document.getElementById('fire-emoji').addEventListener('click', () => {
-        fireClicks++;
-        if (fireClicks === 3) { triggerFireRain(); fireClicks = 0; }
-        setTimeout(() => fireClicks = 0, 500);
-    });
-
-    function triggerFireRain() {
-        for (let i = 0; i < 50; i++) {
-            setTimeout(() => {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.innerText = ['🔥', '📖', '⚡'][Math.floor(Math.random()*3)];
-                p.style.left = Math.random() * 100 + 'vw';
-                p.style.animationDuration = (Math.random() * 2 + 1) + 's';
-                document.body.appendChild(p);
-                setTimeout(() => p.remove(), 2500);
-            }, i * 50);
-        }
-    }
-
+    // Collections
     const collections = {
         romans: "Romans 3:23\nRomans 6:23\nRomans 5:8\nRomans 10:9",
         iam: "John 6:35\nJohn 8:12\nJohn 10:11\nJohn 14:6\nJohn 15:1",
@@ -161,32 +143,110 @@
         btn.innerText = "IMPORTING...";
         for (let ref of refs) {
             try {
-                const res = await fetch(`https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(ref)}&include-headings=false&include-footnotes=false&include-short-copyright=false`, {
+                const res = await fetch(`https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(ref)}&include-headings=false&include-footnotes=false&include-verse-numbers=false&include-short-copyright=false`, {
                     headers: { 'Authorization': `Token ${API_TOKEN}` }
                 });
                 const data = await res.json();
-                if (data.passages?.length) verses.push({ ref: data.canonical, text: data.passages[0].trim(), id: Date.now() + Math.random() });
+                if (data.passages?.length) {
+                    verses.push({ ref: data.canonical, text: data.passages[0].trim(), id: Date.now() + Math.random() });
+                }
             } catch (e) { console.error(e); }
         }
-        localStorage.setItem('vv_v4_verses', JSON.stringify(verses));
+        localStorage.setItem('vv_v5_verses', JSON.stringify(verses));
         renderList();
         document.getElementById('ref-list').value = '';
-        btn.innerText = "EXECUTE IMPORT";
+        btn.innerText = "IMPORT DATA";
     }
 
     function renderList() {
         const container = document.getElementById('verse-list-container');
-        container.innerHTML = verses.length ? '' : '<p style="color:var(--text-muted); font-size:0.7rem;">[NO DATA]</p>';
+        container.innerHTML = verses.length ? '' : '<p style="color:var(--text-muted); font-size:0.7rem;">[EMPTY]</p>';
         verses.forEach(v => {
             const div = document.createElement('div');
             div.className = 'verse-item';
             div.innerHTML = `
                 <div class="ref-name" onclick="startPractice(${v.id})">${v.ref}</div>
-                <button class="action-btn" onclick="viewVerse(${v.id})">👁️ VIEW</button>
+                <button class="action-btn" onclick="viewVerse(${v.id})">👁️</button>
                 <button class="del-btn" onclick="deleteVerse(${v.id})">×</button>
             `;
             container.appendChild(div);
         });
+    }
+
+    function startPractice(id) {
+        currentVerse = verses.find(v => v.id == id);
+        document.getElementById('welcome-msg').classList.add('hidden');
+        document.getElementById('practice-area').classList.remove('hidden');
+        document.getElementById('current-ref').innerText = `EXECUTING: ${currentVerse.ref}`;
+        resetPractice();
+    }
+
+    function resetPractice() {
+        const display = document.getElementById('display-text');
+        const typer = document.getElementById('typer');
+        
+        // Split text and clean up whitespace
+        verseWords = currentVerse.text.split(/\s+/).filter(w => w.length > 0);
+        
+        // Extract first letter of each word (ignoring leading punctuation)
+        targetLetters = verseWords.map(w => {
+            const match = w.match(/[a-zA-Z]/);
+            return match ? match[0].toUpperCase() : null;
+        });
+
+        // Initialize display with underscores
+        display.innerHTML = verseWords.map((_, i) => `<span id="word-${i}" class="placeholder">_</span>`).join(' ');
+        
+        typer.value = '';
+        typer.disabled = false;
+        document.getElementById('success-msg').classList.add('hidden');
+        typer.focus();
+
+        typer.oninput = () => {
+            const val = typer.value.toUpperCase();
+            for (let i = 0; i < val.length; i++) {
+                if (val[i] !== targetLetters[i]) {
+                    typer.value = val.substring(0, i);
+                    return;
+                }
+                const wordSpan = document.getElementById(`word-${i}`);
+                wordSpan.innerText = verseWords[i];
+                wordSpan.className = 'revealed-word';
+            }
+            if (val.length === targetLetters.length) handleWin();
+        };
+    }
+
+    function getHint() {
+        const index = document.getElementById('typer').value.length;
+        if (index < verseWords.length) {
+            const wordSpan = document.getElementById(`word-${index}`);
+            wordSpan.innerText = verseWords[index];
+            wordSpan.classList.add('hint-flash');
+            setTimeout(() => {
+                if (document.getElementById('typer').value.length <= index) {
+                    wordSpan.innerText = '_';
+                    wordSpan.classList.remove('hint-flash');
+                }
+            }, 2000);
+        }
+    }
+
+    function handleWin() {
+        document.getElementById('typer').disabled = true;
+        document.getElementById('success-msg').classList.remove('hidden');
+        const today = new Date().toDateString();
+        if (stats.lastDate !== today) {
+            stats.streak = (stats.lastDate === new Date(Date.now() - 86400000).toDateString()) ? stats.streak + 1 : 1;
+            stats.lastDate = today;
+            localStorage.setItem('vv_v5_stats', JSON.stringify(stats));
+            renderStats();
+        }
+    }
+
+    function renderStats() {
+        document.getElementById('streak-val').innerText = stats.streak;
+        document.getElementById('rank-val').innerText = stats.streak > 7 ? "ELITE" : (stats.streak > 3 ? "SILVER" : "BRONZE");
     }
 
     function viewVerse(id) {
@@ -197,60 +257,11 @@
     }
 
     function closeModal() { document.getElementById('verse-modal').classList.remove('active'); }
+    function deleteVerse(id) { verses = verses.filter(v => v.id !== id); localStorage.setItem('vv_v5_verses', JSON.stringify(verses)); renderList(); }
 
-    function startPractice(id) {
-        currentVerse = verses.find(v => v.id == id);
-        document.getElementById('welcome-msg').classList.add('hidden');
-        document.getElementById('practice-area').classList.remove('hidden');
-        document.getElementById('current-ref').innerText = `RUNNING: ${currentVerse.ref}`;
-        resetPractice();
-    }
-
-    function resetPractice() {
-        const display = document.getElementById('display-text');
-        const typer = document.getElementById('typer');
-        const words = currentVerse.text.split(/\s+/).filter(w => w.length);
-        targets = words.map(w => {
-            const match = w.match(/[a-zA-Z]/);
-            return match ? match[0].toUpperCase() : null;
-        });
-        display.innerHTML = `<span style="color:var(--text-muted)">INITIALIZING TYPER...</span>`;
-        typer.value = ''; typer.disabled = false;
-        document.getElementById('success-msg').classList.add('hidden');
-        typer.focus();
-
-        typer.oninput = () => {
-            const val = typer.value.toUpperCase();
-            for (let i = 0; i < val.length; i++) {
-                if (val[i] !== targets[i]) { typer.value = val.substring(0, i); return; }
-            }
-            display.innerText = words.slice(0, val.length).join(' ');
-            if (val.length === targets.length) handleWin();
-        };
-    }
-
-    function handleWin() {
-        document.getElementById('typer').disabled = true;
-        document.getElementById('success-msg').classList.remove('hidden');
-        const today = new Date().toDateString();
-        if (stats.lastDate !== today) {
-            stats.streak = (stats.lastDate === new Date(Date.now() - 86400000).toDateString()) ? stats.streak + 1 : 1;
-            stats.lastDate = today;
-            localStorage.setItem('vv_v4_stats', JSON.stringify(stats));
-            renderStats();
-        }
-    }
-
-    function renderStats() {
-        document.getElementById('streak-val').innerText = stats.streak;
-        document.getElementById('rank-val').innerText = stats.streak > 7 ? "ELITE" : (stats.streak > 3 ? "SILVER" : "BRONZE");
-    }
-
-    function deleteVerse(id) { 
-        verses = verses.filter(v => v.id !== id); 
-        localStorage.setItem('vv_v4_verses', JSON.stringify(verses)); 
-        renderList(); 
-    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toUpperCase() === 'H' && document.activeElement.tagName !== 'INPUT') getHint();
+    });
 
     renderList();
     renderStats();
