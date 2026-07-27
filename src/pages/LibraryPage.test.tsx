@@ -104,7 +104,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
   it('filters the library to a single book', async () => {
     const { user } = await renderLibrary();
 
-    await user.selectOptions(screen.getByLabelText(/^book$/i), 'John');
+    await user.click(screen.getByRole('checkbox', { name: /^john\b/i }));
 
     await waitFor(() => {
       expect(sectionHeading('Law and History')).not.toBeInTheDocument();
@@ -172,7 +172,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     ).toBeInTheDocument();
   });
 
-  it('opens pre-filtered from a dashboard link', async () => {
+  it('opens pre-filtered from a progress link', async () => {
     renderWithProviders(<LibraryPage />, { route: '/verses?section=Acts' });
 
     expect(

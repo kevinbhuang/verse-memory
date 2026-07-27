@@ -39,8 +39,10 @@ export type SessionSource = (typeof SESSION_SOURCES)[number];
 export type SessionCriteria = {
   source: SessionSource;
   section?: Section | null;
-  /** Canonical book name, e.g. "Romans" or "John". */
+  /** Canonical book name, e.g. "Romans" or "John". Prefer `books` for multi-select. */
   book?: string | null;
+  /** One or more canonical book names. */
+  books?: string[] | null;
   verseIds?: string[];
   range?: { start: number; end: number };
   notReviewedInDays?: number;
@@ -91,10 +93,10 @@ export function selectVerseIds(
 
     // Optional scope filters (deck / book) apply on top of any source.
     if (criteria.section && verse.section !== criteria.section) return false;
-    if (
-      criteria.book &&
-      bookFromReference(verse.reference) !== criteria.book
-    ) {
+    const bookName = bookFromReference(verse.reference);
+    if (criteria.books && criteria.books.length > 0) {
+      if (!bookName || !criteria.books.includes(bookName)) return false;
+    } else if (criteria.book && bookName !== criteria.book) {
       return false;
     }
 

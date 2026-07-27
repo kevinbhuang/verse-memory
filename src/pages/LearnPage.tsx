@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Play, RotateCcw } from 'lucide-react';
+import { BookCheckboxList } from '@/components/BookCheckboxList';
+import { booksLabel, passageCountForBooks } from '@/lib/text/bookSelection';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { Field, Select } from '@/components/ui/Field';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
 import { DECKS, deckForSection } from '@/config/app';
-import { COLLECTION_BOOKS, collectionBook } from '@/lib/text/books';
+import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
 import { SECTIONS, type Section } from '@/types';
 import {
@@ -29,15 +30,12 @@ function initialSection(param: string | null): Section {
   return SECTIONS[0];
 }
 
-function initialBook(param: string | null): string {
+function initialBooks(param: string | null): string[] {
   if (param && COLLECTION_BOOKS.some((book) => book.name === param)) {
-    return param;
+    return [param];
   }
-  return (
-    COLLECTION_BOOKS.find((book) => book.name === 'Romans')?.name ??
-    COLLECTION_BOOKS[0]?.name ??
-    'John'
-  );
+  const romans = COLLECTION_BOOKS.find((book) => book.name === 'Romans');
+  return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? 'John'];
 }
 
 export function LearnPage() {
@@ -52,7 +50,7 @@ export function LearnPage() {
   const [section, setSection] = useState<Section>(() =>
     initialSection(searchParams.get('section')),
   );
-  const [book, setBook] = useState(() => initialBook(bookParam));
+  const [books, setBooks] = useState(() => initialBooks(bookParam));
   const [size, setSize] = useState<number | 'all'>(() => {
     const deck = deckForSection(initialSection(searchParams.get('section')));
     return deck && deck.passageCount <= 10 ? 'all' : 10;
@@ -60,11 +58,10 @@ export function LearnPage() {
   const [starting, setStarting] = useState(false);
 
   const selectedDeck = deckForSection(section) ?? DECKS[0];
-  const selectedBook = collectionBook(book);
   const matchingTotal =
     scope === 'deck'
       ? selectedDeck.passageCount
-      : (selectedBook?.passageCount ?? 0);
+      : passageCountForBooks(books);
 
   const criteria: SessionCriteria = useMemo(
     () =>
@@ -78,12 +75,12 @@ export function LearnPage() {
           }
         : {
             source: 'book',
-            book,
+            books,
             size,
             modeStrategy: 'fixed',
             fixedMode: 'learn',
           },
-    [book, scope, section, size],
+    [books, scope, section, size],
   );
 
   const preview = useMemo(
@@ -97,7 +94,7 @@ export function LearnPage() {
     setStarting(true);
     try {
       const scopeLabel =
-        scope === 'deck' ? selectedDeck.label : (selectedBook?.name ?? book);
+        scope === 'deck' ? selectedDeck.label : booksLabel(books);
       const session = await createSession(criteria, `Learn \u00b7 ${scopeLabel}`);
       if (!session) {
         notify('No passages match that choice.', 'error');
@@ -145,7 +142,7 @@ export function LearnPage() {
           <Card>
             <CardHeader
               title="What to learn"
-              description="Pick a deck or a single book."
+              description="Pick a deck or one or more books."
             />
             <CardBody className="space-y-4">
               <div className="flex flex-wrap gap-2">
@@ -159,9 +156,8 @@ export function LearnPage() {
                   variant={scope === 'book' ? 'primary' : 'secondary'}
                   onClick={() => {
                     setScope('book');
-                    if (selectedBook && selectedBook.passageCount <= 10) {
-                      setSize('all');
-                    }
+                    const count = passageCountForBooks(books);
+                    if (count > 0 && count <= 10) setSize('all');
                   }}
                 >
                   Book
@@ -202,25 +198,17 @@ export function LearnPage() {
                   })}
                 </div>
               ) : (
-                <Field label="Book" htmlFor="learn-book">
-                  <Select
-                    id="learn-book"
-                    value={book}
-                    onChange={(event) => {
-                      const next = event.target.value;
-                      setBook(next);
-                      const info = collectionBook(next);
-                      if (info && info.passageCount <= 10) setSize('all');
-                      else if (size === 'all') setSize(10);
-                    }}
-                  >
-                    {COLLECTION_BOOKS.map((item) => (
-                      <option key={item.name} value={item.name}>
-                        {`${item.name} (${item.passageCount})`}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
+                <BookCheckboxList
+                  idPrefix="learn-book"
+                  selected={books}
+                  onChange={(next) => {
+                    setBooks(next);
+                    const count = passageCountForBooks(next);
+                    if (count > 0 && count <= 10) setSize('all');
+                    else if (size === 'all' && count > 10) setSize(10);
+                  }}
+                  requireOne
+                />
               )}
             </CardBody>
           </Card>
@@ -242,6 +230,7 @@ export function LearnPage() {
                 <Button
                   variant={size === 'all' ? 'primary' : 'secondary'}
                   onClick={() => setSize('all')}
+                  disabled={matchingTotal === 0}
                 >
                   {`All (${matchingTotal})`}
                 </Button>

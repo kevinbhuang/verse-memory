@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Keyboard, Mic, Play, RotateCcw } from 'lucide-react';
+import {
+  BookCheckboxList,
+} from '@/components/BookCheckboxList';
+import { booksLabel } from '@/lib/text/bookSelection';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { Field, Select } from '@/components/ui/Field';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
 import { DECKS, deckForSection } from '@/config/app';
-import { COLLECTION_BOOKS, collectionBook } from '@/lib/text/books';
+import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
 import { SECTIONS, type ReviewMode, type Section } from '@/types';
 import {
@@ -60,15 +63,12 @@ function initialSection(param: string | null): Section {
   return SECTIONS[0];
 }
 
-function initialBook(param: string | null): string {
+function initialBooks(param: string | null): string[] {
   if (param && COLLECTION_BOOKS.some((book) => book.name === param)) {
-    return param;
+    return [param];
   }
-  return (
-    COLLECTION_BOOKS.find((book) => book.name === 'Romans')?.name ??
-    COLLECTION_BOOKS[0]?.name ??
-    'John'
-  );
+  const romans = COLLECTION_BOOKS.find((book) => book.name === 'Romans');
+  return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? 'John'];
 }
 
 function sourceForFilter(filter: ReviewFilter, scope: Scope): SessionSource {
@@ -99,12 +99,11 @@ export function ReviewSetupPage() {
   const [section, setSection] = useState<Section>(() =>
     initialSection(searchParams.get('section') ?? searchParams.get('deck')),
   );
-  const [book, setBook] = useState(() => initialBook(bookParam));
+  const [books, setBooks] = useState(() => initialBooks(bookParam));
   const [size, setSize] = useState<number | 'all'>(10);
   const [starting, setStarting] = useState(false);
 
   const selectedDeck = deckForSection(section) ?? DECKS[0];
-  const selectedBook = collectionBook(book);
 
   const criteria: SessionCriteria = useMemo(() => {
     const source = sourceForFilter(filter, scope);
@@ -113,10 +112,10 @@ export function ReviewSetupPage() {
       modeStrategy: 'fixed' as const,
       fixedMode: mode,
       section: scope === 'deck' ? section : null,
-      book: scope === 'book' ? book : null,
+      books: scope === 'book' ? books : null,
     };
     return { ...base, source };
-  }, [book, filter, mode, scope, section, size]);
+  }, [books, filter, mode, scope, section, size]);
 
   const preview = useMemo(
     () => (progressList ? selectVerseIds(criteria, progressList) : []),
@@ -137,7 +136,7 @@ export function ReviewSetupPage() {
     setStarting(true);
     try {
       const scopeLabel =
-        scope === 'deck' ? selectedDeck.label : (selectedBook?.name ?? book);
+        scope === 'deck' ? selectedDeck.label : booksLabel(books);
       const filterLabel =
         FILTER_OPTIONS.find((option) => option.id === filter)?.label ?? filter;
       const modeLabel = mode === 'first-letter' ? 'First letters' : 'Speak';
@@ -161,7 +160,7 @@ export function ReviewSetupPage() {
     <>
       <PageHeader
         title="Review"
-        description="Pick a deck or book, choose what to include, then practice with first letters or speak."
+        description="Pick a deck or books, choose what to include, then practice with first letters or speak."
       />
 
       {resumeIsReview ? (
@@ -189,7 +188,7 @@ export function ReviewSetupPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-5">
           <Card>
-            <CardHeader title="Deck or book" />
+            <CardHeader title="Deck or books" />
             <CardBody className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -236,19 +235,12 @@ export function ReviewSetupPage() {
                   })}
                 </div>
               ) : (
-                <Field label="Book" htmlFor="review-book">
-                  <Select
-                    id="review-book"
-                    value={book}
-                    onChange={(event) => setBook(event.target.value)}
-                  >
-                    {COLLECTION_BOOKS.map((item) => (
-                      <option key={item.name} value={item.name}>
-                        {`${item.name} (${item.passageCount})`}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
+                <BookCheckboxList
+                  idPrefix="review-book"
+                  selected={books}
+                  onChange={setBooks}
+                  requireOne
+                />
               )}
             </CardBody>
           </Card>
@@ -256,7 +248,7 @@ export function ReviewSetupPage() {
           <Card>
             <CardHeader
               title="Which passages"
-              description="Filter within the deck or book you chose."
+              description="Filter within the deck or books you chose."
             />
             <CardBody>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

@@ -73,8 +73,8 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
       </ul>
 
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <ButtonLink to="/" variant="primary">
-          Back to dashboard
+        <ButtonLink to="/verses" variant="primary">
+          Back to library
         </ButtonLink>
         <ButtonLink to="/review" variant="secondary">
           Build another session

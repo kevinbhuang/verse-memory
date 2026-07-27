@@ -21,6 +21,7 @@ import { recommendationReason } from '@/lib/scheduler';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ModeResult, Rating, ReviewMode } from '@/types';
 import { RatingPanel } from './RatingPanel';
+import { VerseAudioControls } from './VerseAudioControls';
 import { FlashcardMode } from './modes/FlashcardMode';
 import { LearnFlashcardMode } from './modes/LearnFlashcardMode';
 import { FirstLetterMode } from './modes/FirstLetterMode';
@@ -209,6 +210,12 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         {`Recommended because: ${recommendationReason(progress)}`}
       </p>
 
+      <VerseAudioControls
+        text={verse.text}
+        passageKey={cardKey}
+        className="mt-3 rounded-lg border border-line bg-surface px-3 py-2"
+      />
+
       <main className="flex-1 py-6">
         {session.modeStrategy === 'choose-each' && !chosenMode ? (
           <div className="space-y-4">
@@ -283,7 +290,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       <ConfirmDialog
         open={confirmExit}
         title="Leave this session?"
-        description="Your completed passages are already saved. You can resume this session from the dashboard."
+        description="Your completed passages are already saved. You can resume this session from Learn or Review."
         confirmLabel="Pause and leave"
         cancelLabel="Keep reviewing"
         onCancel={() => setConfirmExit(false)}
@@ -298,7 +305,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           </p>
           <p>
             <Link
-              to="/"
+              to="/verses"
               className="underline"
               onClick={() => void completeSession(session)}
             >

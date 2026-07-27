@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import { requireVerse } from '@/data/verses';
 import { getDataStore } from '@/repositories';
@@ -47,6 +47,42 @@ describe('SessionRunner', () => {
     expect(await screen.findByText(/passage 1 of 2/i)).toBeInTheDocument();
     expect(screen.getByText(/recommended because:/i)).toBeInTheDocument();
     expect(screen.getByText(first.reference)).toBeInTheDocument();
+  });
+
+  it('offers passage audio listen controls during review', async () => {
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speak: vi.fn(),
+        cancel: vi.fn(),
+        getVoices: () => [],
+      },
+    });
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      value: class {
+        text = '';
+        constructor(text: string) {
+          this.text = text;
+        }
+      },
+    });
+
+    const session = await startFlashcardSession();
+    await renderSession(session);
+
+    expect(
+      screen.getByRole('group', { name: /passage audio/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /play passage once/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /play passage 5 times/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /play passage 10 times/i }),
+    ).toBeInTheDocument();
   });
 
   it('asks for a rating only once the exercise is finished', async () => {

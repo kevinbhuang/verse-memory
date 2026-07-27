@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { SettingsProvider } from '@/hooks/useSettings';
 import { ToastProvider } from '@/components/ui/Toast';
-import { DashboardPage } from '@/pages/DashboardPage';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { VerseDetailPage } from '@/pages/VerseDetailPage';
 import { LearnPage } from '@/pages/LearnPage';
@@ -19,7 +18,7 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<DashboardPage />} />
+              <Route path="/" element={<Navigate to="/verses" replace />} />
               <Route path="/verses" element={<LibraryPage />} />
               <Route path="/verses/:verseId" element={<VerseDetailPage />} />
               <Route path="/learn" element={<LearnPage />} />
@@ -27,7 +26,7 @@ export function App() {
               <Route path="/review/session" element={<ReviewSessionPage />} />
               <Route path="/progress" element={<ProgressPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/index.html" element={<Navigate to="/" replace />} />
+              <Route path="/index.html" element={<Navigate to="/verses" replace />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

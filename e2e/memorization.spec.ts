@@ -23,14 +23,15 @@ test.describe('marking a passage memorized', () => {
     await expect(memorizedCheckbox(page, FIRST_PASSAGE)).toBeChecked();
   });
 
-  test('counts towards the dashboard total', async ({ page }) => {
+  test('counts towards the progress total', async ({ page }) => {
     await page.goto('/verses');
     await memorizedCheckbox(page, FIRST_PASSAGE).click();
     await expect(memorizedCheckbox(page, FIRST_PASSAGE)).toBeChecked();
 
-    await page.goto('/');
+    await page.goto('/progress');
 
-    await expect(page.getByText('1 of 171').first()).toBeVisible();
+    await expect(page.getByText('1').first()).toBeVisible();
+    await expect(page.getByText(/memorized/i).first()).toBeVisible();
   });
 
   test('can be undone without losing the passage', async ({ page }) => {

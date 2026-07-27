@@ -17,7 +17,8 @@ export type SortOption =
 export type LibraryFilterState = {
   search: string;
   section: Section | 'all';
-  book: string | 'all';
+  /** Empty means all books. */
+  books: string[];
   status: StatusFilter;
   memorized: MemorizedFilter;
   difficultOnly: boolean;
@@ -29,7 +30,7 @@ export type LibraryFilterState = {
 export const DEFAULT_FILTERS: LibraryFilterState = {
   search: '',
   section: 'all',
-  book: 'all',
+  books: [],
   status: 'all',
   memorized: 'all',
   difficultOnly: false,
@@ -42,7 +43,7 @@ export function isFilterActive(filters: LibraryFilterState): boolean {
   return (
     filters.search.trim() !== '' ||
     filters.section !== 'all' ||
-    filters.book !== 'all' ||
+    filters.books.length > 0 ||
     filters.status !== 'all' ||
     filters.memorized !== 'all' ||
     filters.difficultOnly ||
@@ -106,11 +107,9 @@ export function filterLibrary(
 
     if (!matchesSearch(verse, filters.search)) continue;
     if (filters.section !== 'all' && verse.section !== filters.section) continue;
-    if (
-      filters.book !== 'all' &&
-      bookFromReference(verse.reference) !== filters.book
-    ) {
-      continue;
+    if (filters.books.length > 0) {
+      const bookName = bookFromReference(verse.reference);
+      if (!bookName || !filters.books.includes(bookName)) continue;
     }
     if (filters.status !== 'all' && progress.status !== filters.status) continue;
 

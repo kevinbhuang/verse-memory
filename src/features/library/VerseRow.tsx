@@ -50,21 +50,31 @@ export function VerseRow({
       )}
     >
       <div className="flex items-start gap-2 px-2 py-1.5 sm:px-3">
-        <input
-          type="checkbox"
-          className="mt-1 size-3.5 shrink-0 accent-[var(--accent)]"
-          checked={selected}
-          onChange={(event) => onToggleSelected(verse.id, event.target.checked)}
-          aria-label={`Select ${verse.reference} for bulk actions`}
-        />
+        <label className="flex w-11 shrink-0 flex-col items-center gap-0.5 pt-0.5">
+          <input
+            type="checkbox"
+            className="size-3.5 accent-[var(--accent)]"
+            checked={selected}
+            onChange={(event) => onToggleSelected(verse.id, event.target.checked)}
+            aria-label={`Select ${verse.reference} for bulk actions`}
+          />
+          <span className="text-[9px] leading-none font-medium tracking-wide text-ink-subtle uppercase">
+            Select
+          </span>
+        </label>
 
-        <input
-          type="checkbox"
-          className="mt-1 size-3.5 shrink-0 accent-[var(--accent)]"
-          checked={progress.isMemorized}
-          onChange={(event) => onToggleMemorized(verse.id, event.target.checked)}
-          aria-label={`Mark ${verse.reference} as memorized`}
-        />
+        <label className="flex w-14 shrink-0 flex-col items-center gap-0.5 pt-0.5">
+          <input
+            type="checkbox"
+            className="size-3.5 accent-[var(--accent)]"
+            checked={progress.isMemorized}
+            onChange={(event) => onToggleMemorized(verse.id, event.target.checked)}
+            aria-label={`Mark ${verse.reference} as memorized`}
+          />
+          <span className="text-[9px] leading-none font-medium tracking-wide text-ink-subtle uppercase">
+            Memorized
+          </span>
+        </label>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -88,8 +98,7 @@ export function VerseRow({
           </div>
 
           <p
-            className="mt-0.5 line-clamp-2 font-serif text-xs leading-snug text-ink-muted"
-            title={verse.text}
+            className="mt-0.5 font-serif text-sm leading-relaxed text-ink-muted"
           >
             {verse.text}
           </p>
