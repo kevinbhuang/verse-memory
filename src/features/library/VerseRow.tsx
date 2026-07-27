@@ -3,20 +3,22 @@ import { Link } from 'react-router-dom';
 import {
   EllipsisVertical,
   Flag,
+  Keyboard,
+  Mic,
   NotebookPen,
-  Play,
   RotateCcw,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
+import { ScriptureText } from '@/components/ScriptureText';
 import {
   DifficultBadge,
   DueBadge,
   PinnedBadge,
   StatusBadge,
 } from '@/components/VerseBadges';
-import { formatRelativeDay, truncate } from '@/utils/format';
-import type { Verse, VerseProgress } from '@/types';
+import { formatRelativeDay } from '@/utils/format';
+import type { ReviewMode, Verse, VerseProgress } from '@/types';
 
 export function VerseRow({
   verse,
@@ -37,7 +39,10 @@ export function VerseRow({
   onToggleSelected: (verseId: string, selected: boolean) => void;
   onToggleMemorized: (verseId: string, memorized: boolean) => void;
   onToggleDifficult: (verseId: string, difficult: boolean) => void;
-  onQuickReview: (verseId: string) => void;
+  onQuickReview: (
+    verseId: string,
+    mode: Extract<ReviewMode, 'first-letter' | 'voice'>,
+  ) => void;
   onReset: (verseId: string) => void;
   onEditNote: (verseId: string) => void;
 }) {
@@ -50,7 +55,7 @@ export function VerseRow({
         selected && 'bg-accent-soft/40',
       )}
     >
-      <div className="flex items-start gap-3 px-3 py-3 sm:px-4">
+      <div className="flex items-start gap-3 px-3 py-4 sm:px-4">
         <input
           type="checkbox"
           className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
@@ -83,9 +88,9 @@ export function VerseRow({
             ) : null}
           </div>
 
-          <p className="mt-1 font-serif text-sm leading-relaxed text-ink-muted">
-            {truncate(verse.text, 150)}
-          </p>
+          <div className="mt-2">
+            <ScriptureText text={verse.text} size="small" />
+          </div>
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <StatusBadge status={progress.status} />
@@ -104,15 +109,24 @@ export function VerseRow({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 flex-col items-stretch gap-1 sm:flex-row sm:items-center">
           <Button
             size="sm"
             variant="quiet"
-            onClick={() => onQuickReview(verse.id)}
-            aria-label={`Review ${verse.reference} now`}
+            onClick={() => onQuickReview(verse.id, 'first-letter')}
+            aria-label={`Practice ${verse.reference} with first letters`}
           >
-            <Play className="size-3.5" aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">Review</span>
+            <Keyboard className="size-3.5" aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">Letters</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="quiet"
+            onClick={() => onQuickReview(verse.id, 'voice')}
+            aria-label={`Practice ${verse.reference} by speaking`}
+          >
+            <Mic className="size-3.5" aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">Speak</span>
           </Button>
 
           <div className="relative">

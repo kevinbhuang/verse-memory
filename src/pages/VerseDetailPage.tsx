@@ -5,9 +5,10 @@ import {
   BadgeCheck,
   BadgeX,
   Flag,
+  Keyboard,
+  Mic,
   NotebookPen,
   Pin,
-  Play,
   RotateCcw,
 } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
@@ -130,16 +131,17 @@ export function VerseDetailPage() {
       ? 0
       : logs.reduce((sum, log) => sum + log.elapsedMs, 0) / logs.length;
 
-  const practice = async () => {
+  const practice = async (mode: 'first-letter' | 'voice') => {
+    const modeLabel = mode === 'first-letter' ? 'First letters' : 'Speak';
     const session = await createSession(
       {
         source: 'custom',
         verseIds: [verse.id],
         size: 'all',
-        modeStrategy: 'automatic',
-        fixedMode: null,
+        modeStrategy: 'fixed',
+        fixedMode: mode,
       },
-      `Practice \u2014 ${verse.reference}`,
+      `${modeLabel} \u2014 ${verse.reference}`,
     );
     if (session) navigate(`/review/session?id=${session.id}`);
   };
@@ -316,10 +318,18 @@ export function VerseDetailPage() {
               <Button
                 variant="primary"
                 className="w-full"
-                onClick={() => void practice()}
+                onClick={() => void practice('first-letter')}
               >
-                <Play className="size-4" aria-hidden="true" />
-                Practise this passage
+                <Keyboard className="size-4" aria-hidden="true" />
+                First letters
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => void practice('voice')}
+              >
+                <Mic className="size-4" aria-hidden="true" />
+                Speak
               </Button>
 
               <Button

@@ -111,14 +111,18 @@ export function LibraryPage() {
     );
   };
 
-  const startSessionWith = async (verseIds: string[], label: string) => {
+  const startSessionWith = async (
+    verseIds: string[],
+    label: string,
+    mode: 'first-letter' | 'voice' = 'first-letter',
+  ) => {
     const session = await createSession(
       {
         source: 'custom',
         verseIds,
         size: 'all',
-        modeStrategy: 'automatic',
-        fixedMode: null,
+        modeStrategy: 'fixed',
+        fixedMode: mode,
       },
       label,
     );
@@ -171,7 +175,11 @@ export function LibraryPage() {
           void runBulk(action);
         }}
         onStartSession={() =>
-          void startSessionWith([...selected], 'Selected passages')
+          void startSessionWith(
+            [...selected],
+            'Selected passages',
+            'first-letter',
+          )
         }
         onClear={() => setSelected(new Set())}
       />
@@ -233,11 +241,16 @@ export function LibraryPage() {
                     onToggleDifficult={(verseId, difficult) => {
                       void setDifficult(verseId, difficult);
                     }}
-                    onQuickReview={(verseId) => {
+                    onQuickReview={(verseId, mode) => {
                       const target = getVerse(verseId);
+                      const modeLabel =
+                        mode === 'first-letter' ? 'First letters' : 'Speak';
                       void startSessionWith(
                         [verseId],
-                        target ? `Quick review \u2014 ${target.reference}` : 'Quick review',
+                        target
+                          ? `${modeLabel} \u2014 ${target.reference}`
+                          : modeLabel,
+                        mode,
                       );
                     }}
                     onReset={(verseId) => setResetVerseId(verseId)}

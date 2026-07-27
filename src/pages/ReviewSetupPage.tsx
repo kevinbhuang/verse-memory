@@ -1,74 +1,84 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play, RotateCcw } from 'lucide-react';
+import { Keyboard, Mic, Play, RotateCcw } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { Field, Select, TextInput } from '@/components/ui/Field';
+import { Field, Select } from '@/components/ui/Field';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
-import { useSettings } from '@/hooks/useSettings';
 import { getVerse, verses } from '@/data/verses';
-import { SECTIONS, type ModeStrategy, type ReviewMode, type Section } from '@/types';
+import { SECTIONS, type ReviewMode, type Section } from '@/types';
 import {
-  SESSION_SOURCES,
-  SOURCE_LABELS,
   createSession,
   selectVerseIds,
+  SOURCE_LABELS,
   type SessionCriteria,
   type SessionSource,
 } from '@/services/sessionService';
-import { MODE_DESCRIPTIONS, MODE_LABELS, formatRelativeDay } from '@/utils/format';
-import { REVIEW_MODES } from '@/types';
+import { formatRelativeDay } from '@/utils/format';
 
 const SIZE_OPTIONS = [5, 10, 20] as const;
+
+const SIMPLE_SOURCES: SessionSource[] = [
+  'due',
+  'difficult',
+  'new',
+  'learning',
+  'memorized',
+  'section',
+];
+
+const PRACTICE_MODES: Array<{
+  mode: Extract<ReviewMode, 'first-letter' | 'voice'>;
+  title: string;
+  description: string;
+  icon: typeof Keyboard;
+}> = [
+  {
+    mode: 'first-letter',
+    title: 'First letters',
+    description: 'Type the first letter of each word.',
+    icon: Keyboard,
+  },
+  {
+    mode: 'voice',
+    title: 'Speak',
+    description: 'Recite into your microphone.',
+    icon: Mic,
+  },
+];
 
 export function ReviewSetupPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
-  const { settings } = useSettings();
   const progressList = useAllProgress();
   const openSession = useOpenSession();
   const [searchParams] = useSearchParams();
 
+  const initialMode = searchParams.get('mode');
   const initialSource = (searchParams.get('source') ?? 'due') as SessionSource;
 
+  const [mode, setMode] = useState<Extract<ReviewMode, 'first-letter' | 'voice'>>(
+    initialMode === 'voice' ? 'voice' : 'first-letter',
+  );
   const [source, setSource] = useState<SessionSource>(
-    SESSION_SOURCES.includes(initialSource) ? initialSource : 'due',
+    SIMPLE_SOURCES.includes(initialSource) ? initialSource : 'due',
   );
   const [section, setSection] = useState<Section>(SECTIONS[0]);
-  const [rangeStart, setRangeStart] = useState(1);
-  const [rangeEnd, setRangeEnd] = useState(20);
-  const [notReviewedInDays, setNotReviewedInDays] = useState(30);
-  const [size, setSize] = useState<number | 'all'>(settings.defaultSessionSize);
-  const [customSize, setCustomSize] = useState(settings.defaultSessionSize);
-  const [modeStrategy, setModeStrategy] = useState<ModeStrategy>('automatic');
-  const [fixedMode, setFixedMode] = useState<ReviewMode>(
-    settings.defaultReviewMode,
-  );
+  const [size, setSize] = useState<number | 'all'>(10);
   const [starting, setStarting] = useState(false);
 
   const criteria: SessionCriteria = useMemo(
     () => ({
       source,
       section: source === 'section' ? section : null,
-      range: source === 'range' ? { start: rangeStart, end: rangeEnd } : undefined,
-      notReviewedInDays,
       size,
-      modeStrategy,
-      fixedMode: modeStrategy === 'fixed' ? fixedMode : null,
+      modeStrategy: 'fixed',
+      fixedMode: mode,
     }),
-    [
-      fixedMode,
-      modeStrategy,
-      notReviewedInDays,
-      rangeEnd,
-      rangeStart,
-      section,
-      size,
-      source,
-    ],
+    [mode, section, size, source],
   );
 
   const preview = useMemo(
@@ -91,7 +101,7 @@ export function ReviewSetupPage() {
     try {
       const session = await createSession(criteria, SOURCE_LABELS[source]);
       if (!session) {
-        notify('No passages match those criteria right now.', 'error');
+        notify('No passages match that choice right now. Try New or Memorized.', 'error');
         return;
       }
       navigate(`/review/session?id=${session.id}`);
@@ -103,8 +113,8 @@ export function ReviewSetupPage() {
   return (
     <>
       <PageHeader
-        title="Build a review session"
-        description="Choose which passages to review and how you want to be tested. Sessions are saved as you go, so you can pause and resume."
+        title="Review"
+        description="Choose how to practice, then start. Sessions save as you go."
       />
 
       {openSession ? (
@@ -132,29 +142,60 @@ export function ReviewSetupPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-5">
           <Card>
-            <CardHeader
-              title="Which passages"
-              description="Every option keeps the collection order unless the option itself implies another order."
-            />
-            <CardBody className="space-y-4">
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {SESSION_SOURCES.filter((option) => option !== 'custom').map(
-                  (option) => (
+            <CardHeader title="How to practice" />
+            <CardBody>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {PRACTICE_MODES.map((option) => {
+                  const Icon = option.icon;
+                  const selected = mode === option.mode;
+                  return (
                     <button
-                      key={option}
+                      key={option.mode}
                       type="button"
-                      onClick={() => setSource(option)}
-                      aria-pressed={source === option}
-                      className={`rounded-lg border px-3 py-2 text-left text-sm ${
-                        source === option
+                      onClick={() => setMode(option.mode)}
+                      aria-pressed={selected}
+                      className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-left ${
+                        selected
                           ? 'border-accent bg-accent-soft text-accent'
                           : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
                       }`}
                     >
-                      {SOURCE_LABELS[option]}
+                      <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+                      <span>
+                        <span className="block text-sm font-semibold">{option.title}</span>
+                        <span className="mt-0.5 block text-xs opacity-80">
+                          {option.description}
+                        </span>
+                      </span>
                     </button>
-                  ),
-                )}
+                  );
+                })}
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Which passages"
+              description='"Need practice" covers anything due, including overdue.'
+            />
+            <CardBody className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {SIMPLE_SOURCES.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setSource(option)}
+                    aria-pressed={source === option}
+                    className={`rounded-lg border px-3 py-2 text-left text-sm ${
+                      source === option
+                        ? 'border-accent bg-accent-soft text-accent'
+                        : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
+                    }`}
+                  >
+                    {option === 'due' ? 'Need practice' : SOURCE_LABELS[option]}
+                  </button>
+                ))}
               </div>
 
               {source === 'section' ? (
@@ -170,52 +211,6 @@ export function ReviewSetupPage() {
                       </option>
                     ))}
                   </Select>
-                </Field>
-              ) : null}
-
-              {source === 'range' ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="From passage" htmlFor="range-start">
-                    <TextInput
-                      id="range-start"
-                      type="number"
-                      min={1}
-                      max={verses.length}
-                      value={rangeStart}
-                      onChange={(event) =>
-                        setRangeStart(Number(event.target.value))
-                      }
-                    />
-                  </Field>
-                  <Field label="To passage" htmlFor="range-end">
-                    <TextInput
-                      id="range-end"
-                      type="number"
-                      min={1}
-                      max={verses.length}
-                      value={rangeEnd}
-                      onChange={(event) => setRangeEnd(Number(event.target.value))}
-                    />
-                  </Field>
-                </div>
-              ) : null}
-
-              {source === 'not-reviewed-in' ? (
-                <Field
-                  label="Not reviewed in the last"
-                  htmlFor="not-reviewed-days"
-                  hint="Days since the last review."
-                >
-                  <TextInput
-                    id="not-reviewed-days"
-                    type="number"
-                    min={1}
-                    max={730}
-                    value={notReviewedInDays}
-                    onChange={(event) =>
-                      setNotReviewedInDays(Number(event.target.value))
-                    }
-                  />
                 </Field>
               ) : null}
             </CardBody>
@@ -240,80 +235,7 @@ export function ReviewSetupPage() {
                 >
                   All matching
                 </Button>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="custom-size" className="text-sm text-ink-muted">
-                    Custom
-                  </label>
-                  <TextInput
-                    id="custom-size"
-                    type="number"
-                    min={1}
-                    max={verses.length}
-                    value={customSize}
-                    onChange={(event) => {
-                      const next = Number(event.target.value);
-                      setCustomSize(next);
-                      setSize(next);
-                    }}
-                    className="w-24"
-                  />
-                </div>
               </div>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader
-              title="Review mode"
-              description="Automatic follows each passage's learning stage."
-            />
-            <CardBody className="space-y-4">
-              <div className="grid gap-2 sm:grid-cols-2">
-                {(
-                  [
-                    ['automatic', 'Automatic by learning stage'],
-                    ['fixed', 'One mode for the session'],
-                    ['mixed', 'Mixed modes'],
-                    ['choose-each', 'Choose for each passage'],
-                  ] as Array<[ModeStrategy, string]>
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setModeStrategy(value)}
-                    aria-pressed={modeStrategy === value}
-                    className={`rounded-lg border px-3 py-2 text-left text-sm ${
-                      modeStrategy === value
-                        ? 'border-accent bg-accent-soft text-accent'
-                        : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {modeStrategy === 'fixed' ? (
-                <Field
-                  label="Mode"
-                  htmlFor="fixed-mode"
-                  hint={MODE_DESCRIPTIONS[fixedMode]}
-                >
-                  <Select
-                    id="fixed-mode"
-                    value={fixedMode}
-                    onChange={(event) =>
-                      setFixedMode(event.target.value as ReviewMode)
-                    }
-                  >
-                    {REVIEW_MODES.map((option) => (
-                      <option key={option} value={option}>
-                        {MODE_LABELS[option]}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              ) : null}
             </CardBody>
           </Card>
         </div>
@@ -325,7 +247,7 @@ export function ReviewSetupPage() {
               {preview.length === 0 ? (
                 <EmptyState
                   title="Nothing matches yet"
-                  description="Nothing currently fits these criteria. Try a different source, such as new passages or a section."
+                  description="Try New passages, Memorized, or a section."
                 />
               ) : (
                 <>
@@ -367,6 +289,10 @@ export function ReviewSetupPage() {
                 <Play className="size-4" aria-hidden="true" />
                 Start session
               </Button>
+              <p className="mt-2 text-center text-xs text-ink-subtle">
+                {mode === 'first-letter' ? 'First letters' : 'Speak'}
+                {` \u00b7 up to ${size === 'all' ? verses.length : size}`}
+              </p>
             </CardBody>
           </Card>
         </aside>
