@@ -234,7 +234,7 @@ export function PracticePage() {
                   <span>
                     <span className="block text-sm font-semibold">Learn</span>
                     <span className="mt-0.5 block text-xs opacity-80">
-                      See the passage, flip for the reference.
+                      See the reference and passage, then review.
                     </span>
                   </span>
                 </button>

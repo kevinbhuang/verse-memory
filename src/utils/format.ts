@@ -92,7 +92,7 @@ export const MODE_LABELS: Record<ReviewMode, string> = {
 
 export const MODE_DESCRIPTIONS: Record<ReviewMode, string> = {
   flashcard: 'See the reference, recall the passage, then rate yourself.',
-  learn: 'See the passage, then flip to reveal the reference.',
+  learn: 'See the reference and passage, then review with first letters or audio.',
   'first-letter': 'Type the first letter of each word to reveal it.',
   'progressive-hide': 'Read the passage with a share of the words removed.',
   'full-typing': 'Type the whole passage and compare it word by word.',

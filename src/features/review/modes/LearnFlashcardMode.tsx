@@ -1,31 +1,37 @@
-import { useEffect, useRef, useState } from 'react';
-import { Eye } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Keyboard, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ScriptureText } from '@/components/ScriptureText';
-import { useHotkeys } from '@/hooks/useHotkeys';
+import type { ReviewMode } from '@/types';
 import type { ReviewModeProps } from '../modeTypes';
 
+type LearnFlashcardModeProps = ReviewModeProps & {
+  /** Switch this card into an active review exercise. */
+  onPractice?: (mode: Extract<ReviewMode, 'first-letter' | 'voice'>) => void;
+};
+
 /**
- * Learn flashcard: passage text on the front, reference on the back.
- * After reveal, the shared rating panel (Again / Hard / Good / Easy) appears.
+ * Learn card: reference and passage stay visible. From here the reader can
+ * jump straight into first-letter or spoken review, or rate and continue.
  */
 export function LearnFlashcardMode({
   verse,
   settings,
   onComplete,
+  onPractice,
   attemptKey,
-}: ReviewModeProps) {
-  const [revealed, setRevealed] = useState(false);
+}: LearnFlashcardModeProps) {
   const startedAt = useRef(Date.now());
+  const completed = useRef(false);
 
   useEffect(() => {
-    setRevealed(false);
     startedAt.current = Date.now();
+    completed.current = false;
   }, [attemptKey]);
 
-  const reveal = () => {
-    if (revealed) return;
-    setRevealed(true);
+  const finishLearn = () => {
+    if (completed.current) return;
+    completed.current = true;
     onComplete({
       mode: 'learn',
       accuracy: null,
@@ -38,44 +44,51 @@ export function LearnFlashcardMode({
     });
   };
 
-  useHotkeys({ space: reveal, enter: reveal }, { enabled: !revealed });
-
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-line bg-surface px-5 py-6">
-        <ScriptureText text={verse.text} />
+      <div>
+        <h2 className="font-serif text-2xl font-semibold text-ink sm:text-3xl">
+          {verse.reference}
+        </h2>
         {settings.showSectionLabels ? (
-          <p className="mt-4 text-sm text-ink-muted">{verse.section}</p>
+          <p className="mt-1 text-sm text-ink-muted">{verse.section}</p>
         ) : null}
       </div>
 
-      {revealed ? (
-        <div className="rounded-xl border border-accent/40 bg-accent-soft px-5 py-8 text-center">
-          <p className="text-xs font-medium tracking-wide text-accent uppercase">
-            Reference
-          </p>
-          <p className="mt-2 font-serif text-2xl font-semibold text-ink sm:text-3xl">
-            {verse.reference}
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-line-strong bg-surface-muted px-5 py-10 text-center">
-          <p className="text-sm text-ink-muted">
-            Read the passage, then flip the card to check the reference.
-          </p>
+      <div className="rounded-xl border border-line bg-surface px-5 py-6">
+        <ScriptureText text={verse.text} />
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm text-ink-muted">
+          Read it through, then review it now if you want.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
           <Button
             variant="primary"
             size="lg"
-            className="mt-6"
-            onClick={reveal}
-            autoFocus
+            className="w-full"
+            onClick={() => onPractice?.('first-letter')}
+            disabled={!onPractice}
           >
-            <Eye className="size-4" aria-hidden="true" />
-            Reveal reference
+            <Keyboard className="size-4" aria-hidden="true" />
+            First letters
           </Button>
-          <p className="mt-3 text-xs text-ink-subtle">Space or Enter</p>
+          <Button
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            onClick={() => onPractice?.('voice')}
+            disabled={!onPractice}
+          >
+            <Mic className="size-4" aria-hidden="true" />
+            Audio
+          </Button>
         </div>
-      )}
+        <Button variant="ghost" className="w-full" onClick={finishLearn}>
+          Rate and continue
+        </Button>
+      </div>
     </div>
   );
 }

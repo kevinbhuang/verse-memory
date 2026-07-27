@@ -59,16 +59,19 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const [saving, setSaving] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [chosenMode, setChosenMode] = useState<ReviewMode | null>(null);
+  const [practiceMode, setPracticeMode] = useState<ReviewMode | null>(null);
 
   const cardKey = `${sessionId}:${session?.currentIndex ?? 0}:${verseId ?? ''}`;
 
   useEffect(() => {
     setResult(null);
     setChosenMode(null);
+    setPracticeMode(null);
   }, [cardKey]);
 
   const mode: ReviewMode | null = useMemo(() => {
     if (!session || !progress) return null;
+    if (practiceMode) return practiceMode;
     if (session.modeStrategy === 'choose-each') return chosenMode;
     return modeForIndex(
       session,
@@ -76,7 +79,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       session.currentIndex,
       settings.defaultReviewMode,
     );
-  }, [chosenMode, progress, session, settings.defaultReviewMode]);
+  }, [chosenMode, practiceMode, progress, session, settings.defaultReviewMode]);
 
   const rate = useCallback(
     async (rating: Rating) => {
@@ -239,6 +242,19 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
               ))}
             </div>
           </div>
+        ) : mode === 'learn' ? (
+          <LearnFlashcardMode
+            verse={verse}
+            progress={progress}
+            settings={settings}
+            wordStats={wordStats}
+            onComplete={setResult}
+            attemptKey={`${cardKey}:${mode}`}
+            onPractice={(next) => {
+              setResult(null);
+              setPracticeMode(next);
+            }}
+          />
         ) : ModeComponent ? (
           <ModeComponent
             verse={verse}
@@ -246,7 +262,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
             settings={settings}
             wordStats={wordStats}
             onComplete={setResult}
-            attemptKey={cardKey}
+            attemptKey={`${cardKey}:${mode}`}
           />
         ) : (
           <LoadingState />
