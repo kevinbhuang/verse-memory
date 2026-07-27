@@ -1,6 +1,8 @@
 import { jsPDF } from 'jspdf';
 import type { Verse } from '@/types';
 import { appConfig } from '@/config/app';
+import sourceSerif4Regular from '@/assets/fonts/SourceSerif4-Regular.ttf?base64';
+import sourceSerif4Bold from '@/assets/fonts/SourceSerif4-Bold.ttf?base64';
 
 const PAGE_WIDTH = 612; // US Letter points
 const PAGE_HEIGHT = 792;
@@ -27,6 +29,9 @@ const SECTION_BG: [number, number, number] = [228, 235, 240];
 const DIVIDER: [number, number, number] = [200, 208, 216];
 const INK: [number, number, number] = [28, 32, 36];
 
+/** Matches the site serif stack open face (see `--font-serif` in index.css). */
+const PDF_FONT = 'SourceSerif4';
+
 type SectionBlock = { kind: 'section'; title: string };
 type VerseBlock = {
   kind: 'verse';
@@ -48,6 +53,17 @@ export function pdfSafeText(text: string): string {
     .trim();
 }
 
+function registerSiteFonts(doc: jsPDF): void {
+  doc.addFileToVFS('SourceSerif4-Regular.ttf', sourceSerif4Regular);
+  doc.addFont('SourceSerif4-Regular.ttf', PDF_FONT, 'normal');
+  doc.addFileToVFS('SourceSerif4-Bold.ttf', sourceSerif4Bold);
+  doc.addFont('SourceSerif4-Bold.ttf', PDF_FONT, 'bold');
+}
+
+function setPdfFont(doc: jsPDF, style: 'normal' | 'bold' = 'normal'): void {
+  doc.setFont(PDF_FONT, style);
+}
+
 function buildBlocks(doc: jsPDF, verses: readonly Verse[]): Block[] {
   const blocks: Block[] = [];
   let lastSection: string | null = null;
@@ -60,7 +76,7 @@ function buildBlocks(doc: jsPDF, verses: readonly Verse[]): Block[] {
     }
 
     const body = pdfSafeText(verse.text);
-    doc.setFont('times', 'normal');
+    setPdfFont(doc, 'normal');
     doc.setFontSize(BODY_SIZE);
     const lines = doc.splitTextToSize(body, textWidth) as string[];
     blocks.push({
@@ -97,7 +113,7 @@ function drawSection(
   doc.setFillColor(...SECTION_BG);
   doc.rect(x, y, COL_WIDTH, height, 'F');
   doc.setTextColor(...INK);
-  doc.setFont('helvetica', 'bold');
+  setPdfFont(doc, 'bold');
   doc.setFontSize(SECTION_SIZE);
   doc.text(pdfSafeText(title), x + SECTION_PAD_X, y + SECTION_PAD_Y + SECTION_SIZE - 1);
   return y + height + 4;
@@ -118,18 +134,18 @@ function drawVerse(
 
   const metaX = x + CHECK_SIZE + 5;
   doc.setTextColor(...INK);
-  doc.setFont('helvetica', 'normal');
+  setPdfFont(doc, 'normal');
   doc.setFontSize(META_SIZE);
   const numberLabel = `${block.order})`;
   doc.text(numberLabel, metaX, cursor);
 
   const numberWidth = doc.getTextWidth(numberLabel);
-  doc.setFont('times', 'bold');
+  setPdfFont(doc, 'bold');
   doc.setFontSize(META_SIZE);
   doc.text(block.reference, metaX + numberWidth + 3, cursor);
 
   cursor += META_SIZE + 3;
-  doc.setFont('times', 'normal');
+  setPdfFont(doc, 'normal');
   doc.setFontSize(BODY_SIZE);
   for (const line of block.lines) {
     doc.text(line, metaX, cursor);
@@ -165,6 +181,7 @@ export function buildVersesPdf({
     format: 'letter',
     compress: true,
   });
+  registerSiteFonts(doc);
 
   const blocks = buildBlocks(doc, verses);
   let column: 0 | 1 = 0;
@@ -177,7 +194,7 @@ export function buildVersesPdf({
     column = 0;
     y = MARGIN_TOP;
 
-    doc.setFont('helvetica', 'bold');
+    setPdfFont(doc, 'bold');
     doc.setFontSize(TITLE_SIZE);
     doc.setTextColor(...INK);
     const safeTitle = pdfSafeText(title);

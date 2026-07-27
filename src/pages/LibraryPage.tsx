@@ -28,9 +28,10 @@ import {
 } from '@/features/library/filters';
 import { LibraryFilters } from '@/features/library/LibraryFilters';
 import { BulkActionBar } from '@/features/library/BulkActionBar';
+import { LibraryProgressStrip } from '@/features/library/LibraryProgressStrip';
 import { PrintVersesPanel } from '@/features/library/PrintVersesPanel';
 import { VerseRow } from '@/features/library/VerseRow';
-
+import { computeCollectionStats } from '@/services/statsService';
 function filtersFromParams(params: URLSearchParams): LibraryFilterState {
   const section = params.get('section');
   const book = params.get('book');
@@ -89,7 +90,12 @@ export function LibraryPage() {
 
   const groups = useMemo(() => groupBySection(entries), [entries]);
 
-  if (!progressList) {
+  const collectionStats = useMemo(
+    () => (progressList ? computeCollectionStats(progressList) : null),
+    [progressList],
+  );
+
+  if (!progressList || !collectionStats) {
     return <LoadingState label={'Loading the collection\u2026'} />;
   }
 
@@ -153,6 +159,12 @@ export function LibraryPage() {
             </Button>
           </div>
         }
+      />
+
+      <LibraryProgressStrip
+        memorized={collectionStats.memorized}
+        total={collectionStats.total}
+        percentMemorized={collectionStats.percentMemorized}
       />
 
       <LibraryFilters

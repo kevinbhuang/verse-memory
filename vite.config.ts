@@ -3,11 +3,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { ttfBase64Plugin } from './scripts/ttfBase64Plugin';
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    ttfBase64Plugin(),
+
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],

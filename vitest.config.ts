@@ -1,9 +1,10 @@
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { ttfBase64Plugin } from './scripts/ttfBase64Plugin';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), ttfBase64Plugin()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

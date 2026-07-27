@@ -32,6 +32,13 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
         name: /100 Verses Every Christian Should Know/i,
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: /0 of 171 memorized/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: /percent memorized/i })).toHaveAttribute(
+      'aria-valuenow',
+      '0',
+    );
     for (const section of [
       'Law and History',
       'Wisdom and Poetry',
@@ -87,6 +94,9 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     await waitFor(() => expect(checkbox).toBeChecked());
     expect(
       await screen.findByText(/first retention review scheduled for tomorrow/i),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('status', { name: /1 of 171 memorized/i }),
     ).toBeInTheDocument();
   });
 

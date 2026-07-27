@@ -33,5 +33,6 @@ describe('printVersesPdf', () => {
     const bytes = doc.output('arraybuffer');
     expect(bytes.byteLength).toBeGreaterThan(1000);
     expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
+    expect(doc.getFont().fontName).toBe('SourceSerif4');
   });
 });
