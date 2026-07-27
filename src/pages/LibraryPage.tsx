@@ -44,8 +44,8 @@ function filtersFromParams(params: URLSearchParams): LibraryFilterState {
       section && (SECTIONS as readonly string[]).includes(section)
         ? (section as Section)
         : 'all',
-    books:
-      book && COLLECTION_BOOKS.some((item) => item.name === book) ? [book] : [],
+    book:
+      book && COLLECTION_BOOKS.some((item) => item.name === book) ? book : 'all',
     status:
       status && (VERSE_STATUSES as readonly string[]).includes(status)
         ? (status as LibraryFilterState['status'])

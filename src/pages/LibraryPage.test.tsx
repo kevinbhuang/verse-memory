@@ -104,7 +104,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
   it('filters the library to a single book', async () => {
     const { user } = await renderLibrary();
 
-    await user.click(screen.getByRole('checkbox', { name: /^john\b/i }));
+    await user.selectOptions(screen.getByLabelText(/^book$/i), 'John');
 
     await waitFor(() => {
       expect(sectionHeading('Law and History')).not.toBeInTheDocument();

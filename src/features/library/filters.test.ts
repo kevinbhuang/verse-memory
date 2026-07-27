@@ -159,7 +159,7 @@ describe('filterLibrary', () => {
   it('filters passages by book', () => {
     const entries = filterLibrary(
       buildProgress({}),
-      filters({ books: ['Romans'] }),
+      filters({ book: 'Romans' }),
       NOW,
     );
     expect(

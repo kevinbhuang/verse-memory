@@ -1,7 +1,7 @@
 import { Search, X } from 'lucide-react';
-import { BookCheckboxList } from '@/components/BookCheckboxList';
 import { Button } from '@/components/ui/Button';
 import { Select, TextInput } from '@/components/ui/Field';
+import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { SECTIONS } from '@/types';
 import {
   DEFAULT_FILTERS,
@@ -27,7 +27,7 @@ export function LibraryFilters({
 
   return (
     <div className="card mb-3 px-3 py-2.5">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <div className="relative">
           <Search
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-subtle"
@@ -43,23 +43,23 @@ export function LibraryFilters({
           />
         </div>
 
-        <div>
-          <p className="mb-1.5 text-xs font-medium tracking-wide text-ink-muted uppercase">
-            Books
-          </p>
-          <BookCheckboxList
-            idPrefix="library-book"
-            selected={filters.books}
-            onChange={(books) => set('books', books)}
-          />
-          <p className="mt-1 text-xs text-ink-subtle">
-            {filters.books.length === 0
-              ? 'No books checked — showing all.'
-              : `${filters.books.length} book${filters.books.length === 1 ? '' : 's'} selected.`}
-          </p>
-        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <label className="sr-only" htmlFor="filter-book">
+            Book
+          </label>
+          <Select
+            id="filter-book"
+            value={filters.book}
+            onChange={(event) => set('book', event.target.value)}
+          >
+            <option value="all">All books</option>
+            {COLLECTION_BOOKS.map((book) => (
+              <option key={book.name} value={book.name}>
+                {`${book.name} (${book.passageCount})`}
+              </option>
+            ))}
+          </Select>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           <label className="sr-only" htmlFor="filter-section">
             Section
           </label>
@@ -94,57 +94,6 @@ export function LibraryFilters({
             <option value="memorized">Memorized</option>
             <option value="needs-attention">Needs attention</option>
           </Select>
-
-          <label className="sr-only" htmlFor="filter-memorized">
-            Memorized
-          </label>
-          <Select
-            id="filter-memorized"
-            value={filters.memorized}
-            onChange={(event) =>
-              set(
-                'memorized',
-                event.target.value as LibraryFilterState['memorized'],
-              )
-            }
-          >
-            <option value="all">Memorized or not</option>
-            <option value="memorized">Memorized only</option>
-            <option value="not-memorized">Not memorized</option>
-          </Select>
-
-          <label className="sr-only" htmlFor="filter-due">
-            Due
-          </label>
-          <Select
-            id="filter-due"
-            value={filters.due}
-            onChange={(event) =>
-              set('due', event.target.value as LibraryFilterState['due'])
-            }
-          >
-            <option value="all">Any due date</option>
-            <option value="due-or-overdue">Due or overdue</option>
-            <option value="due">Due today</option>
-            <option value="overdue">Overdue</option>
-            <option value="scheduled">Scheduled later</option>
-          </Select>
-
-          <label className="sr-only" htmlFor="filter-sort">
-            Sort
-          </label>
-          <Select
-            id="filter-sort"
-            value={filters.sort}
-            onChange={(event) =>
-              set('sort', event.target.value as LibraryFilterState['sort'])
-            }
-          >
-            <option value="canonical">Canonical order</option>
-            <option value="due-date">Due date</option>
-            <option value="difficulty">Difficulty</option>
-            <option value="last-reviewed">Last reviewed</option>
-          </Select>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -176,7 +125,7 @@ export function LibraryFilters({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => onChange({ ...DEFAULT_FILTERS, sort: filters.sort })}
+              onClick={() => onChange({ ...DEFAULT_FILTERS })}
             >
               <X className="size-3.5" aria-hidden="true" />
               Clear filters
