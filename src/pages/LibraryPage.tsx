@@ -30,6 +30,7 @@ import { LibraryFilters } from '@/features/library/LibraryFilters';
 import { BulkActionBar } from '@/features/library/BulkActionBar';
 import { LibraryProgressStrip } from '@/features/library/LibraryProgressStrip';
 import { PrintVersesPanel } from '@/features/library/PrintVersesPanel';
+import { LibraryCheckboxHeader } from '@/features/library/LibraryCheckboxHeader';
 import { VerseRow } from '@/features/library/VerseRow';
 import { computeCollectionStats } from '@/services/statsService';
 function filtersFromParams(params: URLSearchParams): LibraryFilterState {
@@ -207,6 +208,7 @@ export function LibraryPage() {
         </div>
       ) : (
         <div className="space-y-4">
+          <LibraryCheckboxHeader />
           {groups.map((group) => (
             <section key={group.section} aria-labelledby={`section-${group.section}`}>
               <div className="mb-1 flex items-baseline justify-between gap-3">

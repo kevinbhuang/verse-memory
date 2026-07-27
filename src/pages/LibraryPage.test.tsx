@@ -39,6 +39,12 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
       'aria-valuenow',
       '0',
     );
+    expect(
+      screen.getByRole('columnheader', { name: /^selected$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: /^memorized$/i }),
+    ).toBeInTheDocument();
     for (const section of [
       'Law and History',
       'Wisdom and Poetry',

@@ -14,6 +14,10 @@ import {
   StatusBadge,
 } from '@/components/VerseBadges';
 import type { Verse, VerseProgress } from '@/types';
+import {
+  LIBRARY_MEMORIZED_COL,
+  LIBRARY_SELECT_COL,
+} from './LibraryCheckboxHeader';
 
 export function VerseRow({
   verse,
@@ -46,22 +50,29 @@ export function VerseRow({
       )}
     >
       <div className="flex items-start gap-2.5 px-2 py-2 sm:px-3">
-        <div className="flex shrink-0 items-center gap-2 pt-0.5">
-          <input
-            type="checkbox"
-            className="size-3.5 accent-[var(--accent)]"
-            checked={selected}
-            onChange={(event) => onToggleSelected(verse.id, event.target.checked)}
-            aria-label={`Select ${verse.reference} for bulk actions`}
-          />
-          <input
-            type="checkbox"
-            className="size-3.5 accent-[var(--accent)]"
-            checked={progress.isMemorized}
-            onChange={(event) => onToggleMemorized(verse.id, event.target.checked)}
-            aria-label={`Mark ${verse.reference} as memorized`}
-            title="Memorized"
-          />
+        <div className="flex shrink-0 gap-2 pt-0.5">
+          <span className={`${LIBRARY_SELECT_COL} flex justify-center`}>
+            <input
+              type="checkbox"
+              className="size-3.5 accent-[var(--accent)]"
+              checked={selected}
+              onChange={(event) =>
+                onToggleSelected(verse.id, event.target.checked)
+              }
+              aria-label={`Select ${verse.reference} for bulk actions`}
+            />
+          </span>
+          <span className={`${LIBRARY_MEMORIZED_COL} flex justify-center`}>
+            <input
+              type="checkbox"
+              className="size-3.5 accent-[var(--accent)]"
+              checked={progress.isMemorized}
+              onChange={(event) =>
+                onToggleMemorized(verse.id, event.target.checked)
+              }
+              aria-label={`Mark ${verse.reference} as memorized`}
+            />
+          </span>
         </div>
 
         <div className="min-w-0 flex-1">
