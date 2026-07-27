@@ -1,22 +1,28 @@
 @import 'tailwindcss';
+@import '@fontsource/source-sans-3/400.css';
+@import '@fontsource/source-sans-3/500.css';
+@import '@fontsource/source-sans-3/600.css';
+@import '@fontsource/source-sans-3/700.css';
+@import '@fontsource/source-serif-4/400.css';
+@import '@fontsource/source-serif-4/600.css';
+@import '@fontsource/source-serif-4/700.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * A single restrained accent, a warm off-white reading surface and a dark
- * neutral ink. Colours are declared as CSS variables so the dark theme swaps
- * values rather than duplicating every utility class.
+ * Cool paper, a single slate accent, and Source Sans / Source Serif for a
+ * settled reading UI. Colours swap via CSS variables for dark theme.
  */
 :root {
-  --paper: #faf9f7;
+  --paper: #f5f6f8;
   --surface: #ffffff;
-  --surface-muted: #f3f1ed;
-  --surface-sunken: #edeae4;
-  --border-subtle: #e5e1d9;
-  --border-strong: #d2ccc1;
-  --ink: #1b1a18;
-  --ink-muted: #5c574f;
-  --ink-subtle: #8b857b;
+  --surface-muted: #eef0f3;
+  --surface-sunken: #e6e9ee;
+  --border-subtle: #dde1e7;
+  --border-strong: #c8ced6;
+  --ink: #1a1c1f;
+  --ink-muted: #5a5f68;
+  --ink-subtle: #858b95;
   --accent: #2f5372;
   --accent-strong: #24425c;
   --accent-soft: #e8eef5;
@@ -27,9 +33,9 @@
   --warning-soft: #f7efdf;
   --danger: #93362f;
   --danger-soft: #f8e9e7;
-  --heat-1: #f6ecdf;
-  --heat-2: #f2ddc4;
-  --heat-3: #ecc8a4;
+  --heat-1: #f0ebe4;
+  --heat-2: #e8ddd0;
+  --heat-3: #deceb8;
 }
 
 .dark {
@@ -59,10 +65,10 @@
 
 @theme inline {
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, sans-serif;
+    'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   --font-serif:
-    'Iowan Old Style', 'Palatino Linotype', Palatino, 'Source Serif 4', Georgia,
+    'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia,
     'Times New Roman', serif;
 
   --color-paper: var(--paper);

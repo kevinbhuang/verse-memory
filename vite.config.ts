@@ -20,7 +20,7 @@ export default defineConfig({
         description:
           'A focused Scripture memory workspace for learning, reviewing, and retaining a fixed collection of 171 passages.',
         theme_color: '#1f2937',
-        background_color: '#faf9f7',
+        background_color: '#f5f6f8',
         display: 'standalone',
         orientation: 'portrait-primary',
         start_url: '/',

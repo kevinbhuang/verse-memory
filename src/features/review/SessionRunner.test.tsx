@@ -316,7 +316,7 @@ describe('SessionRunner', () => {
     await user.click(
       within(screen.getByRole('group', { name: /practice mode/i })).getByRole(
         'button',
-        { name: /^first letters$/i },
+        { name: /^letters$/i },
       ),
     );
     expect(

@@ -23,6 +23,8 @@
     "clean:js": "node scripts/clean-emitted-js.mjs"
   },
   "dependencies": {
+    "@fontsource/source-sans-3": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.11",

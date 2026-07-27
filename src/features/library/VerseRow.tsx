@@ -45,8 +45,8 @@ export function VerseRow({
         selected && 'bg-accent-soft/40',
       )}
     >
-      <div className="flex items-start gap-2 px-2 py-1.5 sm:px-3">
-        <label className="flex w-11 shrink-0 flex-col items-center gap-0.5 pt-0.5">
+      <div className="flex items-start gap-2.5 px-2 py-2 sm:px-3">
+        <div className="flex shrink-0 items-center gap-2 pt-0.5">
           <input
             type="checkbox"
             className="size-3.5 accent-[var(--accent)]"
@@ -54,23 +54,15 @@ export function VerseRow({
             onChange={(event) => onToggleSelected(verse.id, event.target.checked)}
             aria-label={`Select ${verse.reference} for bulk actions`}
           />
-          <span className="text-[9px] leading-none font-medium tracking-wide text-ink-subtle uppercase">
-            Select
-          </span>
-        </label>
-
-        <label className="flex w-14 shrink-0 flex-col items-center gap-0.5 pt-0.5">
           <input
             type="checkbox"
             className="size-3.5 accent-[var(--accent)]"
             checked={progress.isMemorized}
             onChange={(event) => onToggleMemorized(verse.id, event.target.checked)}
             aria-label={`Mark ${verse.reference} as memorized`}
+            title="Memorized"
           />
-          <span className="text-[9px] leading-none font-medium tracking-wide text-ink-subtle uppercase">
-            Memorized
-          </span>
-        </label>
+        </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -87,15 +79,13 @@ export function VerseRow({
               <span className="text-[11px] text-ink-subtle">{verse.section}</span>
             ) : null}
             <span className="inline-flex flex-wrap items-center gap-1">
-              <StatusBadge status={progress.status} />
-              <DueBadge progress={progress} />
+              <StatusBadge status={progress.status} exceptionalOnly />
+              <DueBadge progress={progress} exceptionalOnly />
               <DifficultBadge progress={progress} />
             </span>
           </div>
 
-          <p
-            className="mt-0.5 font-serif text-sm leading-relaxed text-ink-muted"
-          >
+          <p className="mt-0.5 font-serif text-sm leading-relaxed text-ink-muted">
             {verse.text}
           </p>
         </div>

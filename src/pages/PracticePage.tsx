@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  CalendarClock,
   GraduationCap,
   Keyboard,
   Play,
@@ -13,6 +12,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
 import { DECKS } from '@/config/app';
@@ -208,10 +208,10 @@ export function PracticePage() {
 
   const dueDetail =
     dueVerseIds.length === 0
-      ? 'Nothing due right now.'
+      ? null
       : overdueCount > 0
-        ? `${dueVerseIds.length} passage${dueVerseIds.length === 1 ? '' : 's'} \u00b7 ${overdueCount} overdue`
-        : `${dueVerseIds.length} passage${dueVerseIds.length === 1 ? '' : 's'} ready to review`;
+        ? `${overdueCount} overdue`
+        : 'Ready to review';
 
   return (
     <>
@@ -242,53 +242,55 @@ export function PracticePage() {
         </Card>
       ) : null}
 
-      <Card className="mb-5">
-        <CardBody className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <CalendarClock
-              className="mt-0.5 size-5 shrink-0 text-accent"
-              aria-hidden="true"
-            />
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-ink">Due today</p>
-              <p className="text-sm text-ink-muted">{dueDetail}</p>
-            </div>
-          </div>
-          <Button
-            variant="primary"
-            disabled={dueVerseIds.length === 0 || starting}
-            onClick={() => void startDueToday()}
-            aria-label={
-              dueVerseIds.length === 0
-                ? 'Nothing due today'
-                : `Start ${dueVerseIds.length} due passage${dueVerseIds.length === 1 ? '' : 's'}`
-            }
-          >
-            <Play className="size-4" aria-hidden="true" />
-            Start
-          </Button>
-        </CardBody>
-      </Card>
+      <div
+        className={`mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5 ${
+          dueVerseIds.length === 0 ? 'opacity-70' : ''
+        }`}
+      >
+        <div className="min-w-0">
+          <p className="text-sm text-ink-muted">Due today</p>
+          {dueVerseIds.length === 0 ? (
+            <p className="mt-1 text-sm text-ink-muted">Nothing due right now.</p>
+          ) : (
+            <>
+              <p className="mt-0.5 font-serif text-3xl font-semibold tracking-tight text-ink tabular-nums">
+                {dueVerseIds.length}
+              </p>
+              {dueDetail ? (
+                <p className="mt-0.5 text-sm text-ink-muted">{dueDetail}</p>
+              ) : null}
+            </>
+          )}
+        </div>
+        <Button
+          variant="primary"
+          disabled={dueVerseIds.length === 0 || starting}
+          onClick={() => void startDueToday()}
+          aria-label={
+            dueVerseIds.length === 0
+              ? 'Nothing due today'
+              : `Start ${dueVerseIds.length} due passage${dueVerseIds.length === 1 ? '' : 's'}`
+          }
+        >
+          <Play className="size-4" aria-hidden="true" />
+          Start
+        </Button>
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-5">
           <Card>
             <CardHeader title="What to practice" />
             <CardBody className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={scope === 'deck' ? 'primary' : 'secondary'}
-                  onClick={() => setScope('deck')}
-                >
-                  Decks
-                </Button>
-                <Button
-                  variant={scope === 'book' ? 'primary' : 'secondary'}
-                  onClick={() => setScope('book')}
-                >
-                  Books
-                </Button>
-              </div>
+              <SegmentedControl
+                aria-label="Practice scope"
+                value={scope}
+                onChange={setScope}
+                options={[
+                  { value: 'deck', label: 'Decks' },
+                  { value: 'book', label: 'Books' },
+                ]}
+              />
 
               {scope === 'deck' ? (
                 <div className="space-y-2">
@@ -314,7 +316,7 @@ export function PracticePage() {
                     </button>
                   </div>
                   <div
-                    className="grid gap-2 sm:grid-cols-2"
+                    className="divide-y divide-line border-y border-line"
                     role="group"
                     aria-label="Decks"
                   >
@@ -326,20 +328,22 @@ export function PracticePage() {
                           type="button"
                           onClick={() => toggleSection(deck.section)}
                           aria-pressed={selected}
-                          className={`rounded-lg border px-3 py-3 text-left ${
+                          className={`flex w-full items-baseline justify-between gap-3 px-1 py-2.5 text-left transition-colors ${
                             selected
-                              ? 'border-accent bg-accent-soft text-accent'
-                              : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
+                              ? 'bg-accent-soft/50 text-accent'
+                              : 'text-ink hover:bg-surface-muted'
                           }`}
                         >
-                          <span className="block text-xs font-medium tracking-wide uppercase opacity-80">
-                            {deck.label}
+                          <span className="min-w-0">
+                            <span className="block text-xs text-ink-subtle">
+                              {deck.label}
+                            </span>
+                            <span className="block text-sm font-medium">
+                              {deck.section}
+                            </span>
                           </span>
-                          <span className="mt-0.5 block text-sm font-semibold">
-                            {deck.section}
-                          </span>
-                          <span className="mt-1 block text-xs opacity-80">
-                            {`Passages ${deck.rangeLabel} \u00b7 ${deck.passageCount}`}
+                          <span className="shrink-0 text-xs text-ink-muted tabular-nums">
+                            {deck.passageCount}
                           </span>
                         </button>
                       );
@@ -360,32 +364,29 @@ export function PracticePage() {
 
               <div>
                 <p className="mb-2 text-sm font-medium text-ink">How many</p>
-                <div
-                  className="flex flex-wrap gap-2"
-                  role="group"
+                <SegmentedControl
                   aria-label="Session length"
-                >
-                  <Button
-                    variant={sizeChoice === 10 ? 'primary' : 'secondary'}
-                    size="sm"
-                    onClick={() => setSizeChoice(10)}
-                    disabled={matchingTotal === 0}
-                    aria-pressed={sizeChoice === 10}
-                  >
-                    10 passages
-                  </Button>
-                  <Button
-                    variant={sizeChoice === 'all' ? 'primary' : 'secondary'}
-                    size="sm"
-                    onClick={() => setSizeChoice('all')}
-                    disabled={matchingTotal === 0}
-                    aria-pressed={sizeChoice === 'all'}
-                  >
-                    {matchingTotal > 0
-                      ? `All ${matchingTotal} passages`
-                      : 'All passages'}
-                  </Button>
-                </div>
+                  size="sm"
+                  value={sizeChoice === 'all' ? 'all' : '10'}
+                  onChange={(next) =>
+                    setSizeChoice(next === 'all' ? 'all' : 10)
+                  }
+                  options={[
+                    {
+                      value: '10',
+                      label: '10 passages',
+                      disabled: matchingTotal === 0,
+                    },
+                    {
+                      value: 'all',
+                      label:
+                        matchingTotal > 0
+                          ? `All ${matchingTotal} passages`
+                          : 'All passages',
+                      disabled: matchingTotal === 0,
+                    },
+                  ]}
+                />
               </div>
             </CardBody>
           </Card>
@@ -393,18 +394,25 @@ export function PracticePage() {
           <Card>
             <CardHeader title="How" />
             <CardBody className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div
+                className="divide-y divide-line border-y border-line"
+                role="group"
+                aria-label="Practice style"
+              >
                 <button
                   type="button"
                   onClick={() => setKind('learn')}
                   aria-pressed={kind === 'learn'}
-                  className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-left ${
+                  className={`flex w-full items-start gap-3 px-1 py-3 text-left transition-colors ${
                     kind === 'learn'
-                      ? 'border-accent bg-accent-soft text-accent'
-                      : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
+                      ? 'bg-accent-soft/50 text-accent'
+                      : 'text-ink hover:bg-surface-muted'
                   }`}
                 >
-                  <GraduationCap className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+                  <GraduationCap
+                    className="mt-0.5 size-5 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span>
                     <span className="block text-sm font-semibold">Learn</span>
                     <span className="mt-0.5 block text-xs opacity-80">
@@ -416,13 +424,16 @@ export function PracticePage() {
                   type="button"
                   onClick={() => setKind('first-letter')}
                   aria-pressed={kind === 'first-letter'}
-                  className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-left ${
+                  className={`flex w-full items-start gap-3 px-1 py-3 text-left transition-colors ${
                     kind === 'first-letter'
-                      ? 'border-accent bg-accent-soft text-accent'
-                      : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
+                      ? 'bg-accent-soft/50 text-accent'
+                      : 'text-ink hover:bg-surface-muted'
                   }`}
                 >
-                  <Keyboard className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+                  <Keyboard
+                    className="mt-0.5 size-5 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span>
                     <span className="block text-sm font-semibold">Practice</span>
                     <span className="mt-0.5 block text-xs opacity-80">
@@ -432,29 +443,17 @@ export function PracticePage() {
                 </button>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={filter === 'all' ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filter === 'memorized' ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setFilter('memorized')}
-                >
-                  Memorized only
-                </Button>
-                <Button
-                  variant={filter === 'difficult' ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setFilter('difficult')}
-                >
-                  Difficult only
-                </Button>
-              </div>
+              <SegmentedControl
+                aria-label="Passage filter"
+                size="sm"
+                value={filter}
+                onChange={setFilter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'memorized', label: 'Memorized only' },
+                  { value: 'difficult', label: 'Difficult only' },
+                ]}
+              />
             </CardBody>
           </Card>
         </div>

@@ -56,7 +56,8 @@ describe('PracticePage', () => {
     const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
     await screen.findByRole('heading', { name: /^practice$/i });
 
-    expect(screen.getByText(/2 passages · 1 overdue/i)).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText(/1 overdue/i)).toBeInTheDocument();
     await user.click(
       screen.getByRole('button', { name: /start 2 due passages/i }),
     );

@@ -32,9 +32,7 @@ export function CardHeader({
       )}
     >
       <div className="min-w-0">
-        <h2 className="text-sm font-semibold tracking-wide text-ink uppercase">
-          {title}
-        </h2>
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
         {description ? (
           <p className="mt-1 text-sm text-ink-muted">{description}</p>
         ) : null}

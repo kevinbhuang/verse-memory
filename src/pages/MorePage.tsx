@@ -113,6 +113,26 @@ export function MorePage() {
               <span className="text-ink">4</span> More (also L / P / Q / M).
             </p>
             <p>
+              Questions or feedback?{' '}
+              <a
+                href="mailto:kevin.huang@acts2.network"
+                className="text-accent hover:underline"
+              >
+                kevin.huang@acts2.network
+              </a>
+            </p>
+            <p>
+              Other projects:{' '}
+              <a
+                href="https://kevinbhuang.github.io/bible-plan-generator/"
+                className="text-accent hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Bible Reading Plan Generator
+              </a>
+            </p>
+            <p>
               <Link to="/practice" className="text-accent hover:underline">
                 Back to Practice
               </Link>

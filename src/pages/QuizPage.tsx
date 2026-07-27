@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
 import { DECKS, appConfig } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
@@ -138,26 +139,16 @@ export function QuizPage() {
           <Card>
             <CardHeader title="What to quiz" />
             <CardBody className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={scope === 'all' ? 'primary' : 'secondary'}
-                  onClick={() => setScope('all')}
-                >
-                  All verses
-                </Button>
-                <Button
-                  variant={scope === 'deck' ? 'primary' : 'secondary'}
-                  onClick={() => setScope('deck')}
-                >
-                  Decks
-                </Button>
-                <Button
-                  variant={scope === 'book' ? 'primary' : 'secondary'}
-                  onClick={() => setScope('book')}
-                >
-                  Books
-                </Button>
-              </div>
+              <SegmentedControl
+                aria-label="Quiz scope"
+                value={scope}
+                onChange={setScope}
+                options={[
+                  { value: 'all', label: 'All verses' },
+                  { value: 'deck', label: 'Decks' },
+                  { value: 'book', label: 'Books' },
+                ]}
+              />
 
               {scope === 'all' ? (
                 <p className="text-sm text-ink-muted">
@@ -167,7 +158,7 @@ export function QuizPage() {
 
               {scope === 'deck' ? (
                 <div
-                  className="grid gap-2 sm:grid-cols-2"
+                  className="divide-y divide-line border-y border-line"
                   role="group"
                   aria-label="Decks"
                 >
@@ -179,20 +170,22 @@ export function QuizPage() {
                         type="button"
                         onClick={() => toggleSection(deck.section)}
                         aria-pressed={selected}
-                        className={`rounded-lg border px-3 py-3 text-left ${
+                        className={`flex w-full items-baseline justify-between gap-3 px-1 py-2.5 text-left transition-colors ${
                           selected
-                            ? 'border-accent bg-accent-soft text-accent'
-                            : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
+                            ? 'bg-accent-soft/50 text-accent'
+                            : 'text-ink hover:bg-surface-muted'
                         }`}
                       >
-                        <span className="block text-xs font-medium tracking-wide uppercase opacity-80">
-                          {deck.label}
+                        <span className="min-w-0">
+                          <span className="block text-xs text-ink-subtle">
+                            {deck.label}
+                          </span>
+                          <span className="block text-sm font-medium">
+                            {deck.section}
+                          </span>
                         </span>
-                        <span className="mt-0.5 block text-sm font-semibold">
-                          {deck.section}
-                        </span>
-                        <span className="mt-1 block text-xs opacity-80">
-                          {`${deck.passageCount} passages`}
+                        <span className="shrink-0 text-xs text-ink-muted tabular-nums">
+                          {deck.passageCount}
                         </span>
                       </button>
                     );
@@ -211,66 +204,68 @@ export function QuizPage() {
 
               <div>
                 <p className="mb-2 text-sm font-medium text-ink">How many</p>
-                <div
-                  className="flex flex-wrap gap-2"
-                  role="group"
+                <SegmentedControl
                   aria-label="Quiz length"
-                >
-                  <Button
-                    variant={sizeChoice === 10 ? 'primary' : 'secondary'}
-                    size="sm"
-                    onClick={() => setSizeChoice(10)}
-                    disabled={matchingTotal === 0}
-                    aria-pressed={sizeChoice === 10}
-                  >
-                    10 passages
-                  </Button>
-                  <Button
-                    variant={sizeChoice === 'all' ? 'primary' : 'secondary'}
-                    size="sm"
-                    onClick={() => setSizeChoice('all')}
-                    disabled={matchingTotal === 0}
-                    aria-pressed={sizeChoice === 'all'}
-                  >
-                    {matchingTotal > 0
-                      ? `All ${matchingTotal} passages`
-                      : 'All passages'}
-                  </Button>
-                </div>
+                  size="sm"
+                  value={sizeChoice === 'all' ? 'all' : '10'}
+                  onChange={(next) =>
+                    setSizeChoice(next === 'all' ? 'all' : 10)
+                  }
+                  options={[
+                    {
+                      value: '10',
+                      label: '10 passages',
+                      disabled: matchingTotal === 0,
+                    },
+                    {
+                      value: 'all',
+                      label:
+                        matchingTotal > 0
+                          ? `All ${matchingTotal} passages`
+                          : 'All passages',
+                      disabled: matchingTotal === 0,
+                    },
+                  ]}
+                />
               </div>
             </CardBody>
           </Card>
 
           <Card>
             <CardHeader title="Quiz type" />
-            <CardBody className="grid gap-2 sm:grid-cols-2">
-              {QUIZ_MODES.map((option) => {
-                const Icon = MODE_ICONS[option];
-                const selected = mode === option;
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setMode(option)}
-                    aria-pressed={selected}
-                    className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-left ${
-                      selected
-                        ? 'border-accent bg-accent-soft text-accent'
-                        : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
-                    }`}
-                  >
-                    <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-                    <span>
-                      <span className="block text-sm font-semibold">
-                        {QUIZ_MODE_LABELS[option]}
+            <CardBody className="!p-0">
+              <div className="divide-y divide-line">
+                {QUIZ_MODES.map((option) => {
+                  const Icon = MODE_ICONS[option];
+                  const selected = mode === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setMode(option)}
+                      aria-pressed={selected}
+                      className={`flex w-full items-start gap-3 px-5 py-3 text-left transition-colors ${
+                        selected
+                          ? 'bg-accent-soft/50 text-accent'
+                          : 'text-ink hover:bg-surface-muted'
+                      }`}
+                    >
+                      <Icon
+                        className="mt-0.5 size-5 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold">
+                          {QUIZ_MODE_LABELS[option]}
+                        </span>
+                        <span className="mt-0.5 block text-xs opacity-80">
+                          {QUIZ_MODE_DESCRIPTIONS[option]}
+                        </span>
                       </span>
-                      <span className="mt-0.5 block text-xs opacity-80">
-                        {QUIZ_MODE_DESCRIPTIONS[option]}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </CardBody>
           </Card>
         </div>

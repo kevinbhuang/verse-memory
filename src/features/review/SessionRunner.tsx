@@ -209,9 +209,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
       <header className="flex items-center justify-between gap-3 border-b border-line pb-3">
         <div className="min-w-0">
-          <p className="text-xs tracking-wide text-ink-subtle uppercase">
-            {session.label}
-          </p>
+          <p className="text-xs text-ink-subtle">{session.label}</p>
           <p className="text-sm text-ink-muted tabular-nums">
             {`Passage ${position} of ${total}${mode ? ` \u00b7 ${MODE_LABELS[mode]}` : ''}`}
           </p>
@@ -258,74 +256,73 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         />
       </div>
 
-      <VerseAudioControls
-        text={verse.text}
-        passageKey={cardKey}
-        className="mt-2"
-      />
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line pb-2">
+        <VerseAudioControls
+          text={verse.text}
+          passageKey={cardKey}
+          className="mt-0"
+        />
 
-      {isLearnSession ? (
-        <div className="mt-3 space-y-2">
-          <div className="flex items-center justify-between gap-2">
+        {isLearnSession ? (
+          <div className="flex flex-wrap items-center gap-1">
             <Button
-              variant="secondary"
+              variant="ghost"
               size="sm"
               disabled={!canGoPrev}
               onClick={() => goToIndex(session.currentIndex - 1)}
               aria-label="Previous passage"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
-              Previous
             </Button>
             <Button
-              variant="secondary"
+              variant="ghost"
               size="sm"
               disabled={!canGoNext}
               onClick={() => goToIndex(session.currentIndex + 1)}
               aria-label="Next passage"
             >
-              Next
               <ChevronRight className="size-4" aria-hidden="true" />
             </Button>
+            {practiceMode ? (
+              <div
+                className="ml-1 flex flex-wrap gap-1"
+                role="group"
+                aria-label="Practice mode"
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => switchLearnPractice(null)}
+                >
+                  Passage
+                </Button>
+                <Button
+                  variant={
+                    practiceMode === 'first-letter' ? 'quiet' : 'ghost'
+                  }
+                  size="sm"
+                  onClick={() => switchLearnPractice('first-letter')}
+                  aria-pressed={practiceMode === 'first-letter'}
+                >
+                  <Keyboard className="size-4" aria-hidden="true" />
+                  Letters
+                </Button>
+                <Button
+                  variant={practiceMode === 'voice' ? 'quiet' : 'ghost'}
+                  size="sm"
+                  onClick={() => switchLearnPractice('voice')}
+                  aria-pressed={practiceMode === 'voice'}
+                >
+                  <Mic className="size-4" aria-hidden="true" />
+                  Audio
+                </Button>
+              </div>
+            ) : null}
           </div>
+        ) : null}
+      </div>
 
-          {practiceMode ? (
-            <div
-              className="flex flex-wrap gap-2"
-              role="group"
-              aria-label="Practice mode"
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => switchLearnPractice(null)}
-              >
-                Show passage
-              </Button>
-              <Button
-                variant={practiceMode === 'first-letter' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => switchLearnPractice('first-letter')}
-                aria-pressed={practiceMode === 'first-letter'}
-              >
-                <Keyboard className="size-4" aria-hidden="true" />
-                First letters
-              </Button>
-              <Button
-                variant={practiceMode === 'voice' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => switchLearnPractice('voice')}
-                aria-pressed={practiceMode === 'voice'}
-              >
-                <Mic className="size-4" aria-hidden="true" />
-                Audio
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      <main className="flex-1 py-6">
+      <main className="flex-1 py-5">
         {session.modeStrategy === 'choose-each' && !chosenMode ? (
           <div className="space-y-4">
             <h2 className="font-serif text-xl font-semibold text-ink">
@@ -376,19 +373,14 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       <footer className="sticky bottom-0 border-t border-line bg-paper/95 py-3 backdrop-blur">
         {mode ? (
           <div className="space-y-2">
-            {result?.accuracy !== null && result ? (
-              <p className="text-xs text-ink-muted">
-                {`${formatAccuracy(result.accuracy)} accuracy \u00b7 ${formatDuration(result.elapsedMs)} \u00b7 ${result.hintCount} hint${result.hintCount === 1 ? '' : 's'}`}
-              </p>
-            ) : null}
-            <RatingPanel
-              progress={progress}
-              settings={settings}
-              suggested={result?.suggestedRating ?? null}
-              disabled={saving}
-              onRate={(rating) => void rate(rating)}
-            />
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between gap-3">
+              {result?.accuracy !== null && result ? (
+                <p className="text-xs text-ink-muted">
+                  {`${formatAccuracy(result.accuracy)} accuracy \u00b7 ${formatDuration(result.elapsedMs)} \u00b7 ${result.hintCount} hint${result.hintCount === 1 ? '' : 's'}`}
+                </p>
+              ) : (
+                <p className="text-xs text-ink-muted">Rate when ready</p>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -398,6 +390,13 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
                 Skip
               </Button>
             </div>
+            <RatingPanel
+              progress={progress}
+              settings={settings}
+              suggested={result?.suggestedRating ?? null}
+              disabled={saving}
+              onRate={(rating) => void rate(rating)}
+            />
           </div>
         ) : (
           <p className="text-xs text-ink-muted">

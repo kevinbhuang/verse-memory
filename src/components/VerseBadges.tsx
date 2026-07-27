@@ -10,7 +10,16 @@ import { dueState } from '@/lib/scheduler';
 import { formatRelativeDay } from '@/utils/format';
 import type { VerseProgress, VerseStatus } from '@/types';
 
-export function StatusBadge({ status }: { status: VerseStatus }) {
+export function StatusBadge({
+  status,
+  exceptionalOnly = false,
+}: {
+  status: VerseStatus;
+  /** When true, only “needs attention” is shown. */
+  exceptionalOnly?: boolean;
+}) {
+  if (exceptionalOnly && status !== 'needs-attention') return null;
+
   switch (status) {
     case 'memorized':
       return <Badge tone="success">Memorized</Badge>;
@@ -37,9 +46,12 @@ export function StatusBadge({ status }: { status: VerseStatus }) {
 export function DueBadge({
   progress,
   now = new Date(),
+  exceptionalOnly = false,
 }: {
   progress: VerseProgress;
   now?: Date;
+  /** When true, hide routine “scheduled” dates — keep due/overdue only. */
+  exceptionalOnly?: boolean;
 }) {
   const state = dueState(progress, now);
   if (state === 'new') return null;
@@ -59,6 +71,8 @@ export function DueBadge({
       </Badge>
     );
   }
+
+  if (exceptionalOnly) return null;
 
   return (
     <Badge tone="outline" icon={<CalendarClock className="size-3" aria-hidden="true" />}>
