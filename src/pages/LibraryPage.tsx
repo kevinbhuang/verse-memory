@@ -28,6 +28,7 @@ import {
 } from '@/features/library/filters';
 import { LibraryFilters } from '@/features/library/LibraryFilters';
 import { BulkActionBar } from '@/features/library/BulkActionBar';
+import { PrintVersesPanel } from '@/features/library/PrintVersesPanel';
 import { VerseRow } from '@/features/library/VerseRow';
 
 function filtersFromParams(params: URLSearchParams): LibraryFilterState {
@@ -158,6 +159,8 @@ export function LibraryPage() {
         resultCount={entries.length}
         totalCount={verses.length}
       />
+
+      <PrintVersesPanel />
 
       <BulkActionBar
         selectedCount={selected.size}

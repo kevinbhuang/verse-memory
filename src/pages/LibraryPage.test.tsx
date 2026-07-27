@@ -50,6 +50,18 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(references.at(-1)).toBe('/verses/verse-171');
   });
 
+  it('offers deck and book PDF download controls', async () => {
+    const { user } = await renderLibrary();
+
+    expect(
+      screen.getByRole('heading', { name: /print passages/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /download pdf/i })).toBeEnabled();
+
+    await user.click(screen.getByRole('button', { name: /^book$/i }));
+    expect(screen.getByLabelText(/book to print/i)).toBeInTheDocument();
+  });
+
   it('marks a passage memorized and keeps it checked', async () => {
     const { user } = await renderLibrary();
 
