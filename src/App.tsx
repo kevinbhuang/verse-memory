@@ -5,6 +5,8 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { VerseDetailPage } from '@/pages/VerseDetailPage';
 import { PracticePage } from '@/pages/PracticePage';
+import { QuizPage } from '@/pages/QuizPage';
+import { QuizSessionPage } from '@/pages/QuizSessionPage';
 import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
 import { MorePage } from '@/pages/MorePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -16,8 +18,10 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/practice" replace />} />
+              <Route path="/" element={<Navigate to="/verses" replace />} />
               <Route path="/practice" element={<PracticePage />} />
+              <Route path="/quiz" element={<QuizPage />} />
+              <Route path="/quiz/session" element={<QuizSessionPage />} />
               <Route path="/verses" element={<LibraryPage />} />
               <Route path="/verses/:verseId" element={<VerseDetailPage />} />
               <Route path="/review/session" element={<ReviewSessionPage />} />
@@ -28,7 +32,7 @@ export function App() {
               <Route path="/settings" element={<Navigate to="/more" replace />} />
               <Route
                 path="/index.html"
-                element={<Navigate to="/practice" replace />}
+                element={<Navigate to="/verses" replace />}
               />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

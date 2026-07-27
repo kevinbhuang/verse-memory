@@ -244,6 +244,65 @@ export function matchReference(
   };
 }
 
+/**
+ * Quiz grading: book and chapter must match. Verse numbers are optional.
+ */
+export function matchBookAndChapter(
+  input: string,
+  canonicalReference: string,
+): ReferenceMatch {
+  const expected = parseReference(canonicalReference);
+  const parsed = parseReference(input);
+
+  if (!parsed) {
+    return {
+      isMatch: false,
+      isCloseMatch: false,
+      parsed: null,
+      expected,
+      message: 'That does not look like a Bible reference.',
+    };
+  }
+
+  if (!expected) {
+    return {
+      isMatch: false,
+      isCloseMatch: false,
+      parsed,
+      expected: null,
+      message: 'The stored reference could not be parsed.',
+    };
+  }
+
+  if (parsed.book !== expected.book) {
+    return {
+      isMatch: false,
+      isCloseMatch: false,
+      parsed,
+      expected,
+      message: `Wrong book \u2014 you wrote ${parsed.book}.`,
+    };
+  }
+
+  if (parsed.chapter !== expected.chapter) {
+    return {
+      isMatch: false,
+      isCloseMatch: false,
+      parsed,
+      expected,
+      message: `Right book, wrong chapter \u2014 you wrote chapter ${parsed.chapter}.`,
+    };
+  }
+
+  return {
+    isMatch: true,
+    isCloseMatch: false,
+    parsed,
+    expected,
+    message: 'Correct book and chapter.',
+  };
+}
+
 /** Book name only, used for grouping and search. */
 export function bookOf(reference: string): string | null {
   return parseReference(reference)?.book ?? null;

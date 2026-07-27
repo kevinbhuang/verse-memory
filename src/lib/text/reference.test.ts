@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookOf, matchReference, normalizeReference, parseReference } from './reference';
+import { bookOf, matchBookAndChapter, matchReference, normalizeReference, parseReference } from './reference';
 import { verses } from '@/data/verses';
 
 describe('parseReference', () => {
@@ -92,5 +92,14 @@ describe('matchReference', () => {
 
   it('rejects nonsense input without throwing', () => {
     expect(matchReference('???', 'John 3:16').isMatch).toBe(false);
+  });
+});
+
+describe('matchBookAndChapter', () => {
+  it('accepts book and chapter without verse numbers', () => {
+    expect(matchBookAndChapter('John 3', 'John 3:16').isMatch).toBe(true);
+    expect(matchBookAndChapter('Jn 3:16', 'John 3:16').isMatch).toBe(true);
+    expect(matchBookAndChapter('John 4', 'John 3:16').isMatch).toBe(false);
+    expect(matchBookAndChapter('Romans 3', 'John 3:16').isMatch).toBe(false);
   });
 });

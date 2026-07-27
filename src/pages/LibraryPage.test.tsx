@@ -53,10 +53,13 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
   it('offers deck and book PDF download controls', async () => {
     const { user } = await renderLibrary();
 
-    expect(screen.getByLabelText(/passages to print/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /print pdf/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /^print$/i })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: /^print$/i }));
 
-    await user.selectOptions(screen.getByLabelText(/passages to print/i), 'books');
+    expect(
+      await screen.findByRole('dialog', { name: /print passages/i }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^books$/i }));
     const bookList = screen.getByRole('group', { name: /^books$/i });
     expect(within(bookList).getByRole('checkbox', { name: /romans/i })).toBeChecked();
 

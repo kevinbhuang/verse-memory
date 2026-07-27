@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Printer } from 'lucide-react';
 import { BookCheckboxList } from '@/components/BookCheckboxList';
 import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
 import { Select } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
 import { DECKS, appConfig } from '@/config/app';
@@ -24,12 +25,15 @@ function versesForBooks(names: readonly string[]) {
 }
 
 /**
- * Compact library control: print all, one deck, or one-or-more books as PDF.
+ * Subtle library print control: one button, then a dialog to choose the set.
  */
 export function PrintVersesPanel() {
   const { notify } = useToast();
+  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<PrintMode>('all');
-  const [section, setSection] = useState<Section>(DECKS[0]?.section ?? 'Law and History');
+  const [section, setSection] = useState<Section>(
+    DECKS[0]?.section ?? 'Law and History',
+  );
   const [books, setBooks] = useState<string[]>(() => {
     const romans = COLLECTION_BOOKS.find((item) => item.name === 'Romans');
     return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? ''].filter(Boolean);
@@ -71,6 +75,7 @@ export function PrintVersesPanel() {
         `Downloaded ${selectedVerses.length} passage${selectedVerses.length === 1 ? '' : 's'}.`,
         'success',
       );
+      setOpen(false);
     } catch (error) {
       notify(
         error instanceof Error ? error.message : 'Could not create the PDF.',
@@ -82,62 +87,87 @@ export function PrintVersesPanel() {
   };
 
   return (
-    <div className="mb-3 space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="sr-only" htmlFor="print-mode">
-          Passages to print
-        </label>
-        <Select
-          id="print-mode"
-          value={mode}
-          onChange={(event) => setMode(event.target.value as PrintMode)}
-          className="w-auto min-w-[9rem]"
-          aria-label="Passages to print"
-        >
-          <option value="all">{`All (${verses.length})`}</option>
-          <option value="deck">Deck</option>
-          <option value="books">Books</option>
-        </Select>
+    <>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <Printer className="size-3.5" aria-hidden="true" />
+        Print
+      </Button>
 
-        {mode === 'deck' ? (
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Print passages"
+        description="Download a two-column PDF checklist."
+        size="md"
+        footer={
           <>
-            <label className="sr-only" htmlFor="print-deck">
-              Deck to print
-            </label>
-            <Select
-              id="print-deck"
-              value={section}
-              onChange={(event) => setSection(event.target.value as Section)}
-              className="min-w-0 flex-1 sm:max-w-xs"
-              aria-label="Deck to print"
+            <Button variant="secondary" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={onDownload}
+              disabled={busy || selectedVerses.length === 0}
             >
-              {DECKS.map((deck) => (
-                <option key={deck.section} value={deck.section}>
-                  {`${deck.label} — ${deck.section} (${deck.passageCount})`}
-                </option>
-              ))}
-            </Select>
+              <Printer className="size-4" aria-hidden="true" />
+              {busy
+                ? 'Preparing\u2026'
+                : `Download PDF (${selectedVerses.length})`}
+            </Button>
           </>
-        ) : null}
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={mode === 'all' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setMode('all')}
+            >
+              {`All (${verses.length})`}
+            </Button>
+            <Button
+              variant={mode === 'deck' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setMode('deck')}
+            >
+              Deck
+            </Button>
+            <Button
+              variant={mode === 'books' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setMode('books')}
+            >
+              Books
+            </Button>
+          </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onDownload}
-          disabled={busy || selectedVerses.length === 0}
-        >
-          <Printer className="size-3.5" aria-hidden="true" />
-          {busy ? 'Preparing\u2026' : 'Print PDF'}
-        </Button>
-      </div>
+          {mode === 'deck' ? (
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-ink">Deck</span>
+              <Select
+                value={section}
+                onChange={(event) => setSection(event.target.value as Section)}
+                aria-label="Deck to print"
+              >
+                {DECKS.map((deck) => (
+                  <option key={deck.section} value={deck.section}>
+                    {`${deck.label} — ${deck.section} (${deck.passageCount})`}
+                  </option>
+                ))}
+              </Select>
+            </label>
+          ) : null}
 
-      {mode === 'books' ? (
-        <BookCheckboxList
-          idPrefix="print-book"
-          selected={books}
-          onChange={setBooks}
-        />
-      ) : null}
-    </div>
+          {mode === 'books' ? (
+            <BookCheckboxList
+              idPrefix="print-book"
+              selected={books}
+              onChange={setBooks}
+            />
+          ) : null}
+        </div>
+      </Dialog>
+    </>
   );
 }

@@ -1,20 +1,23 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Ellipsis, Repeat2 } from 'lucide-react';
+import { BookOpen, ClipboardList, Ellipsis, Repeat2 } from 'lucide-react';
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
 import { Footer } from './Footer';
 import { UpdatePrompt } from './UpdatePrompt';
 
 const NAV_ITEMS = [
-  { to: '/practice', label: 'Practice', icon: Repeat2, end: false },
   { to: '/verses', label: 'Library', icon: BookOpen, end: false },
+  { to: '/practice', label: 'Practice', icon: Repeat2, end: false },
+  { to: '/quiz', label: 'Quiz', icon: ClipboardList, end: false },
   { to: '/more', label: 'More', icon: Ellipsis, end: false },
 ];
 
 export function AppLayout() {
   const location = useLocation();
   // The active review screen is deliberately free of navigation chrome.
-  const focusMode = location.pathname.startsWith('/review/session');
+  const focusMode =
+    location.pathname.startsWith('/review/session') ||
+    location.pathname.startsWith('/quiz/session');
 
   if (focusMode) {
     return (

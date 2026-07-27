@@ -138,18 +138,21 @@ export function LibraryPage() {
         title="Verse library"
         description={`All ${verses.length} passages of ${appConfig.collectionTitle}, in their original order.`}
         actions={
-          <Button
-            variant="secondary"
-            onClick={() =>
-              setFilters((current) => ({
-                ...DEFAULT_FILTERS,
-                sort: current.sort,
-              }))
-            }
-          >
-            <ListFilter className="size-4" aria-hidden="true" />
-            Reset filters
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <PrintVersesPanel />
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setFilters((current) => ({
+                  ...DEFAULT_FILTERS,
+                  sort: current.sort,
+                }))
+              }
+            >
+              <ListFilter className="size-4" aria-hidden="true" />
+              Reset filters
+            </Button>
+          </div>
         }
       />
 
@@ -159,8 +162,6 @@ export function LibraryPage() {
         resultCount={entries.length}
         totalCount={verses.length}
       />
-
-      <PrintVersesPanel />
 
       <BulkActionBar
         selectedCount={selected.size}
