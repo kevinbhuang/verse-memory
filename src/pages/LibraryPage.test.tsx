@@ -13,7 +13,7 @@ const sectionHeading = (name: string) =>
 
 async function renderLibrary(route = '/verses') {
   const view = renderWithProviders(<LibraryPage />, { route });
-  await screen.findByRole('heading', { name: /verse library/i });
+  await screen.findByRole('heading', { name: /100 Verses Every Christian Should Know/i });
   await screen.findByRole('heading', { name: 'Law and History' });
   return view;
 }
@@ -27,7 +27,11 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
   it('lists every passage under its section heading in canonical order', async () => {
     await renderLibrary();
 
-    expect(screen.getByText(/all 171 passages/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /100 Verses Every Christian Should Know/i,
+      }),
+    ).toBeInTheDocument();
     for (const section of [
       'Law and History',
       'Wisdom and Poetry',

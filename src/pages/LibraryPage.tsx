@@ -135,8 +135,7 @@ export function LibraryPage() {
   return (
     <>
       <PageHeader
-        title="Verse library"
-        description={`All ${verses.length} passages of ${appConfig.collectionTitle}, in their original order.`}
+        title={appConfig.collectionTitle}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <PrintVersesPanel />

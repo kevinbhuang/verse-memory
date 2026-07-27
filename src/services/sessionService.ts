@@ -39,6 +39,8 @@ export type SessionSource = (typeof SESSION_SOURCES)[number];
 export type SessionCriteria = {
   source: SessionSource;
   section?: Section | null;
+  /** One or more deck sections. Prefer this over `section` for multi-select. */
+  sections?: Section[] | null;
   /** Canonical book name, e.g. "Romans" or "John". Prefer `books` for multi-select. */
   book?: string | null;
   /** One or more canonical book names. */
@@ -92,7 +94,11 @@ export function selectVerseIds(
     if (!progress) return false;
 
     // Optional scope filters (deck / book) apply on top of any source.
-    if (criteria.section && verse.section !== criteria.section) return false;
+    if (criteria.sections && criteria.sections.length > 0) {
+      if (!criteria.sections.includes(verse.section)) return false;
+    } else if (criteria.section && verse.section !== criteria.section) {
+      return false;
+    }
     const bookName = bookFromReference(verse.reference);
     if (criteria.books && criteria.books.length > 0) {
       if (!bookName || !criteria.books.includes(bookName)) return false;

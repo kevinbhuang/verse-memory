@@ -9,7 +9,7 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
-import { DECKS, deckForSection } from '@/config/app';
+import { DECKS } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
 import { SECTIONS, type ReviewMode, type Section } from '@/types';
@@ -23,12 +23,13 @@ import { formatRelativeDay } from '@/utils/format';
 type Scope = 'deck' | 'book';
 type PracticeKind = 'learn' | 'first-letter';
 type PassageFilter = 'all' | 'difficult';
+type SizeChoice = 10 | 'all';
 
-function initialSection(param: string | null): Section {
+function initialSections(param: string | null): Section[] {
   if (param && (SECTIONS as readonly string[]).includes(param)) {
-    return param as Section;
+    return [param as Section];
   }
-  return SECTIONS[0];
+  return [SECTIONS[0]];
 }
 
 function initialBooks(param: string | null): string[] {
@@ -39,13 +40,19 @@ function initialBooks(param: string | null): string[] {
   return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? 'John'];
 }
 
-function defaultSize(passageCount: number): number | 'all' {
-  return passageCount > 0 && passageCount <= 10 ? 'all' : 10;
+function decksLabel(sections: readonly Section[]): string {
+  if (sections.length === 0) return 'No decks';
+  if (sections.length === DECKS.length) return 'All decks';
+  if (sections.length === 1) {
+    const deck = DECKS.find((item) => item.section === sections[0]);
+    return deck?.label ?? sections[0]!;
+  }
+  return `${sections.length} decks`;
 }
 
 /**
- * Single entry point for sessions: pick a deck/book, Learn or Practice,
- * optionally Difficult only, then start.
+ * Single entry point for sessions: pick deck(s)/book(s), Learn or Practice,
+ * size and difficulty, then start.
  */
 export function PracticePage() {
   const navigate = useNavigate();
@@ -59,10 +66,11 @@ export function PracticePage() {
   const filterParam = searchParams.get('filter');
 
   const [scope, setScope] = useState<Scope>(bookParam ? 'book' : 'deck');
-  const [section, setSection] = useState<Section>(() =>
-    initialSection(searchParams.get('section') ?? searchParams.get('deck')),
+  const [sections, setSections] = useState<Section[]>(() =>
+    initialSections(searchParams.get('section') ?? searchParams.get('deck')),
   );
   const [books, setBooks] = useState(() => initialBooks(bookParam));
+  const [sizeChoice, setSizeChoice] = useState<SizeChoice>(10);
   const [kind, setKind] = useState<PracticeKind>(
     kindParam === 'first-letter' ? 'first-letter' : 'learn',
   );
@@ -71,12 +79,18 @@ export function PracticePage() {
   );
   const [starting, setStarting] = useState(false);
 
-  const selectedDeck = deckForSection(section) ?? DECKS[0];
-  const matchingTotal =
-    scope === 'deck'
-      ? selectedDeck.passageCount
-      : passageCountForBooks(books);
-  const size = defaultSize(matchingTotal);
+  const matchingTotal = useMemo(() => {
+    if (scope === 'deck') {
+      return DECKS.filter((deck) => sections.includes(deck.section)).reduce(
+        (sum, deck) => sum + deck.passageCount,
+        0,
+      );
+    }
+    return passageCountForBooks(books);
+  }, [books, scope, sections]);
+
+  const size: number | 'all' =
+    sizeChoice === 'all' ? 'all' : Math.min(10, matchingTotal || 10);
 
   const fixedMode: Extract<ReviewMode, 'learn' | 'first-letter'> =
     kind === 'learn' ? 'learn' : 'first-letter';
@@ -94,15 +108,29 @@ export function PracticePage() {
       size,
       modeStrategy: 'fixed',
       fixedMode,
-      section: scope === 'deck' ? section : null,
+      sections: scope === 'deck' ? sections : null,
+      section: null,
       books: scope === 'book' ? books : null,
     };
-  }, [books, filter, fixedMode, scope, section, size]);
+  }, [books, filter, fixedMode, scope, sections, size]);
 
   const preview = useMemo(
     () => (progressList ? selectVerseIds(criteria, progressList) : []),
     [criteria, progressList],
   );
+
+  const allDecksSelected =
+    scope === 'deck' && sections.length === DECKS.length;
+
+  const toggleSection = (section: Section) => {
+    setSections((current) => {
+      if (current.includes(section)) {
+        if (current.length <= 1) return current;
+        return current.filter((item) => item !== section);
+      }
+      return [...current, section];
+    });
+  };
 
   if (!progressList) return <LoadingState />;
 
@@ -110,7 +138,7 @@ export function PracticePage() {
     setStarting(true);
     try {
       const scopeLabel =
-        scope === 'deck' ? selectedDeck.label : booksLabel(books);
+        scope === 'deck' ? decksLabel(sections) : booksLabel(books);
       const kindLabel = kind === 'learn' ? 'Learn' : 'Practice';
       const filterLabel = filter === 'difficult' ? ' · Difficult' : '';
       const session = await createSession(
@@ -131,7 +159,7 @@ export function PracticePage() {
     <>
       <PageHeader
         title="Practice"
-        description="Pick a deck or book, choose Learn or Practice, then start."
+        description="Pick decks or books, choose Learn or Practice, then start."
       />
 
       {openSession ? (
@@ -166,44 +194,74 @@ export function PracticePage() {
                   variant={scope === 'deck' ? 'primary' : 'secondary'}
                   onClick={() => setScope('deck')}
                 >
-                  Deck
+                  Decks
                 </Button>
                 <Button
                   variant={scope === 'book' ? 'primary' : 'secondary'}
                   onClick={() => setScope('book')}
                 >
-                  Book
+                  Books
                 </Button>
               </div>
 
               {scope === 'deck' ? (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {DECKS.map((deck) => {
-                    const selected = section === deck.section;
-                    return (
-                      <button
-                        key={deck.section}
-                        type="button"
-                        onClick={() => setSection(deck.section)}
-                        aria-pressed={selected}
-                        className={`rounded-lg border px-3 py-3 text-left ${
-                          selected
-                            ? 'border-accent bg-accent-soft text-accent'
-                            : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
-                        }`}
-                      >
-                        <span className="block text-xs font-medium tracking-wide uppercase opacity-80">
-                          {deck.label}
-                        </span>
-                        <span className="mt-0.5 block text-sm font-semibold">
-                          {deck.section}
-                        </span>
-                        <span className="mt-1 block text-xs opacity-80">
-                          {`Passages ${deck.rangeLabel} \u00b7 ${deck.passageCount}`}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-accent hover:underline"
+                      onClick={() =>
+                        setSections(DECKS.map((deck) => deck.section))
+                      }
+                    >
+                      Select all decks
+                    </button>
+                    <span className="text-xs text-ink-subtle" aria-hidden="true">
+                      ·
+                    </span>
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-ink-muted hover:underline"
+                      onClick={() => setSections([SECTIONS[0]])}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <div
+                    className="grid gap-2 sm:grid-cols-2"
+                    role="group"
+                    aria-label="Decks"
+                  >
+                    {DECKS.map((deck) => {
+                      const selected = sections.includes(deck.section);
+                      return (
+                        <button
+                          key={deck.section}
+                          type="button"
+                          onClick={() => toggleSection(deck.section)}
+                          aria-pressed={selected}
+                          className={`rounded-lg border px-3 py-3 text-left ${
+                            selected
+                              ? 'border-accent bg-accent-soft text-accent'
+                              : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
+                          }`}
+                        >
+                          <span className="block text-xs font-medium tracking-wide uppercase opacity-80">
+                            {deck.label}
+                          </span>
+                          <span className="mt-0.5 block text-sm font-semibold">
+                            {deck.section}
+                          </span>
+                          <span className="mt-1 block text-xs opacity-80">
+                            {`Passages ${deck.rangeLabel} \u00b7 ${deck.passageCount}`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {allDecksSelected ? (
+                    <p className="text-xs text-ink-muted">All decks selected.</p>
+                  ) : null}
                 </div>
               ) : (
                 <BookCheckboxList
@@ -213,6 +271,36 @@ export function PracticePage() {
                   requireOne
                 />
               )}
+
+              <div>
+                <p className="mb-2 text-sm font-medium text-ink">How many</p>
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="Session length"
+                >
+                  <Button
+                    variant={sizeChoice === 10 ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setSizeChoice(10)}
+                    disabled={matchingTotal === 0}
+                    aria-pressed={sizeChoice === 10}
+                  >
+                    10 passages
+                  </Button>
+                  <Button
+                    variant={sizeChoice === 'all' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setSizeChoice('all')}
+                    disabled={matchingTotal === 0}
+                    aria-pressed={sizeChoice === 'all'}
+                  >
+                    {matchingTotal > 0
+                      ? `All ${matchingTotal} passages`
+                      : 'All passages'}
+                  </Button>
+                </div>
+              </div>
             </CardBody>
           </Card>
 
@@ -290,11 +378,9 @@ export function PracticePage() {
               ) : (
                 <>
                   <p className="text-sm text-ink-muted">
-                    {`${preview.length} passage${preview.length === 1 ? '' : 's'}${
-                      size !== 'all' && matchingTotal > preview.length
-                        ? ` of ${matchingTotal}`
-                        : ''
-                    }`}
+                    {sizeChoice === 'all'
+                      ? `All ${preview.length} passages`
+                      : `${preview.length} of ${matchingTotal} passages`}
                   </p>
                   <ol className="mt-3 max-h-64 space-y-1 overflow-y-auto text-sm">
                     {preview.slice(0, 20).map((verseId) => {

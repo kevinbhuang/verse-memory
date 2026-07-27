@@ -16,9 +16,13 @@ describe('PracticePage', () => {
     await screen.findByRole('heading', { name: /^practice$/i });
 
     expect(
-      screen.getByRole('button', { name: /see the passage, flip for the reference/i }),
+      screen.getByRole('button', { name: /see the reference and passage/i }),
     ).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: /deck 1/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: /10 passages/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -29,6 +33,7 @@ describe('PracticePage', () => {
     await screen.findByRole('heading', { name: /^practice$/i });
 
     await user.click(screen.getByRole('button', { name: /deck 5/i }));
+    await user.click(screen.getByRole('button', { name: /deck 1/i }));
     await user.click(screen.getByRole('button', { name: /^start$/i }));
 
     await waitFor(async () => {
@@ -38,12 +43,28 @@ describe('PracticePage', () => {
     });
   });
 
+  it('can select all decks and practice every passage', async () => {
+    const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
+    await screen.findByRole('heading', { name: /^practice$/i });
+
+    await user.click(screen.getByRole('button', { name: /select all decks/i }));
+    expect(screen.getByText(/all decks selected/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /all 171 passages/i }));
+    expect(
+      screen.getByRole('button', { name: /all 171 passages/i }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getAllByText(/all 171 passages/i).length).toBeGreaterThan(0);
+  });
+
   it('practices only difficult passages in a deck', async () => {
     await setDifficult(actsOne.id, true);
     const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
     await screen.findByRole('heading', { name: /^practice$/i });
 
     await user.click(screen.getByRole('button', { name: /deck 5/i }));
+    await user.click(screen.getByRole('button', { name: /deck 1/i }));
+    await user.click(screen.getByRole('button', { name: /all \d+ passages/i }));
     await user.click(screen.getByRole('button', { name: /difficult only/i }));
     await user.click(
       screen.getByRole('button', { name: /type the first letter of each word/i }),
@@ -59,7 +80,7 @@ describe('PracticePage', () => {
     });
     await screen.findByRole('heading', { name: /^practice$/i });
 
-    expect(await screen.findByText(/10 passages of 14/i)).toBeInTheDocument();
+    expect(await screen.findByText(/10 of 14 passages/i)).toBeInTheDocument();
     expect(screen.getByText(romansOne.reference)).toBeInTheDocument();
 
     await user.click(
