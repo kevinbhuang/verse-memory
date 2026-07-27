@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Keyboard, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ScriptureText } from '@/components/ScriptureText';
@@ -11,8 +11,8 @@ type LearnFlashcardModeProps = ReviewModeProps & {
 };
 
 /**
- * Learn card: reference and passage stay visible. From here the reader can
- * jump straight into first-letter or spoken review, or rate and continue.
+ * Learn card: reference and passage stay visible, and rating is available
+ * immediately. Optional first-letter or spoken practice is offered alongside.
  */
 export function LearnFlashcardMode({
   verse,
@@ -21,28 +21,19 @@ export function LearnFlashcardMode({
   onPractice,
   attemptKey,
 }: LearnFlashcardModeProps) {
-  const startedAt = useRef(Date.now());
-  const completed = useRef(false);
-
   useEffect(() => {
-    startedAt.current = Date.now();
-    completed.current = false;
-  }, [attemptKey]);
-
-  const finishLearn = () => {
-    if (completed.current) return;
-    completed.current = true;
+    // Rating is available as soon as the passage is shown — no exercise required.
     onComplete({
       mode: 'learn',
       accuracy: null,
-      elapsedMs: Date.now() - startedAt.current,
+      elapsedMs: 0,
       incorrectCount: 0,
       hintCount: 0,
       fullRevealUsed: false,
       wordErrors: [],
       suggestedRating: 'good',
     });
-  };
+  }, [attemptKey, onComplete]);
 
   return (
     <div className="space-y-6">
@@ -61,11 +52,11 @@ export function LearnFlashcardMode({
 
       <div className="space-y-3">
         <p className="text-sm text-ink-muted">
-          Read it through, then review it now if you want.
+          Rate it when you are ready, or review it first.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           <Button
-            variant="primary"
+            variant="secondary"
             size="lg"
             className="w-full"
             onClick={() => onPractice?.('first-letter')}
@@ -85,9 +76,6 @@ export function LearnFlashcardMode({
             Audio
           </Button>
         </div>
-        <Button variant="ghost" className="w-full" onClick={finishLearn}>
-          Rate and continue
-        </Button>
       </div>
     </div>
   );

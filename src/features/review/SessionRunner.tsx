@@ -259,7 +259,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       <VerseAudioControls
         text={verse.text}
         passageKey={cardKey}
-        className="mt-3 rounded-lg border border-line bg-surface px-3 py-2"
+        className="mt-2"
       />
 
       {isLearnSession ? (

@@ -156,7 +156,7 @@ describe('VerseAudioControls', () => {
 
     await user.click(screen.getByRole('button', { name: /play passage 5 times/i }));
     expect(await screen.findByRole('button', { name: /stop/i })).toBeInTheDocument();
-    expect(screen.getByText(/playing 1 of 5/i)).toBeInTheDocument();
+    expect(screen.getByText(/1\/5/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /stop/i }));
     expect(synthesis.cancel).toHaveBeenCalled();

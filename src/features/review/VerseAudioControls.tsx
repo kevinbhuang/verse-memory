@@ -1,5 +1,4 @@
 import { Pause, Volume2 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { useVerseSpeech } from '@/hooks/useVerseSpeech';
 import {
   SPEAK_RATES,
@@ -15,7 +14,7 @@ type VerseAudioControlsProps = {
 };
 
 /**
- * Listen-along controls: play once or ×5, with 1× / 1.5× / 2× speed.
+ * Compact listen-along controls: play / ×5 and speed, in one quiet row.
  */
 export function VerseAudioControls({
   text,
@@ -34,78 +33,86 @@ export function VerseAudioControls({
 
   return (
     <div
-      className={`space-y-2 ${className ?? ''}`}
+      className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-subtle ${className ?? ''}`}
       role="group"
       aria-label="Passage audio"
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted">
-          <Volume2 className="size-3.5" aria-hidden="true" />
-          Listen
-        </span>
+      <Volume2 className="size-3 shrink-0 opacity-70" aria-hidden="true" />
 
-        {speech.playing ? (
-          <>
-            <p className="text-xs text-ink-muted tabular-nums" aria-live="polite">
-              {speech.playTotal > 1
-                ? `Playing ${speech.playIndex} of ${speech.playTotal}`
-                : 'Playing\u2026'}
-              {` · ${formatSpeakRate(speech.rate)}`}
-            </p>
-            <Button variant="secondary" size="sm" onClick={speech.stop}>
-              <Pause className="size-3.5" aria-hidden="true" />
-              Stop
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => speech.play(1)}
-              aria-label="Play passage once"
-            >
-              Play
-            </Button>
-            <Button
-              variant="quiet"
-              size="sm"
-              onClick={() => speech.play(5)}
-              aria-label="Play passage 5 times"
-            >
-              ×5
-            </Button>
-          </>
-        )}
-      </div>
+      {speech.playing ? (
+        <>
+          <span className="tabular-nums" aria-live="polite">
+            {speech.playTotal > 1
+              ? `${speech.playIndex}/${speech.playTotal}`
+              : 'Playing'}
+            {` · ${formatSpeakRate(speech.rate)}`}
+          </span>
+          <button
+            type="button"
+            onClick={speech.stop}
+            className="inline-flex items-center gap-1 text-ink-muted underline-offset-2 hover:text-ink hover:underline"
+          >
+            <Pause className="size-3" aria-hidden="true" />
+            Stop
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => speech.play(1)}
+            aria-label="Play passage once"
+            className="text-ink-muted underline-offset-2 hover:text-ink hover:underline"
+          >
+            Play
+          </button>
+          <button
+            type="button"
+            onClick={() => speech.play(5)}
+            aria-label="Play passage 5 times"
+            className="text-ink-muted underline-offset-2 hover:text-ink hover:underline"
+          >
+            ×5
+          </button>
+        </>
+      )}
 
-      <div
-        className="flex flex-wrap items-center gap-1.5"
+      <span className="text-ink-subtle/50" aria-hidden="true">
+        ·
+      </span>
+
+      <span
+        className="inline-flex items-center gap-2"
         role="group"
         aria-label="Playback speed"
       >
-        <span className="mr-1 text-xs text-ink-muted">Speed</span>
-        {SPEAK_RATES.map((rate) => {
+        {SPEAK_RATES.map((rate, index) => {
           const selected = speech.rate === rate;
           return (
-            <button
-              key={rate}
-              type="button"
-              aria-pressed={selected}
-              aria-label={`Playback speed ${formatSpeakRate(rate)}`}
-              disabled={speech.playing}
-              onClick={() => speech.setRate(rate as SpeakRate)}
-              className={`rounded-md border px-2 py-0.5 text-xs tabular-nums transition-colors disabled:opacity-50 ${
-                selected
-                  ? 'border-accent bg-accent-soft font-semibold text-accent'
-                  : 'border-line-strong bg-surface text-ink-muted hover:bg-surface-muted hover:text-ink'
-              }`}
-            >
-              {formatSpeakRate(rate)}
-            </button>
+            <span key={rate} className="inline-flex items-center gap-2">
+              {index > 0 ? (
+                <span className="text-ink-subtle/40" aria-hidden="true">
+                  /
+                </span>
+              ) : null}
+              <button
+                type="button"
+                aria-pressed={selected}
+                aria-label={`Playback speed ${formatSpeakRate(rate)}`}
+                disabled={speech.playing}
+                onClick={() => speech.setRate(rate as SpeakRate)}
+                className={`tabular-nums transition-colors disabled:opacity-40 ${
+                  selected
+                    ? 'font-medium text-ink'
+                    : 'text-ink-subtle hover:text-ink-muted'
+                }`}
+              >
+                {formatSpeakRate(rate)}
+              </button>
+            </span>
           );
         })}
-      </div>
+      </span>
     </div>
   );
 }

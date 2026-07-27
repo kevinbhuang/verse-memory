@@ -25,6 +25,18 @@ export function Footer() {
           kevin.huang@acts2.network
         </a>
       </p>
+      <p className="mt-3 max-w-3xl">
+        Interested in my other projects? Check out the{' '}
+        <a
+          href="https://kevinbhuang.github.io/bible-plan-generator/"
+          className="underline hover:text-ink"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Bible Reading Plan Generator
+        </a>
+        .
+      </p>
     </footer>
   );
 }
