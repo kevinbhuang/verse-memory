@@ -169,11 +169,7 @@ export function LibraryPage() {
           void runBulk(action);
         }}
         onStartSession={() =>
-          void startSessionWith(
-            [...selected],
-            'Selected passages',
-            'first-letter',
-          )
+          void startSessionWith([...selected], 'Selected passages')
         }
         onClear={() => setSelected(new Set())}
       />
