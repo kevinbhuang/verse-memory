@@ -1,14 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
+import { subDays } from 'date-fns';
 import { requireVerse } from '@/data/verses';
 import { getDataStore } from '@/repositories';
-import { setDifficult } from '@/services/progressService';
+import { getProgress, setDifficult, setMemorized } from '@/services/progressService';
 import { createSession } from '@/services/sessionService';
 import { renderWithProviders } from '@/test/render';
 import { PracticePage } from './PracticePage';
 
 const actsOne = requireVerse('verse-069');
 const romansOne = requireVerse('verse-073');
+
+async function markDue(
+  verseId: string,
+  when: Date,
+  extras: Partial<Awaited<ReturnType<typeof getProgress>>> = {},
+) {
+  const current = await getProgress(verseId);
+  await getDataStore().progress.put({
+    ...current,
+    isMemorized: true,
+    status: 'memorized',
+    nextDueAt: when.toISOString(),
+    ...extras,
+  });
+}
 
 describe('PracticePage', () => {
   it('defaults to learn mode on a deck', async () => {
@@ -26,6 +42,31 @@ describe('PracticePage', () => {
       'aria-pressed',
       'true',
     );
+    expect(screen.getByText(/nothing due right now/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /nothing due today/i }),
+    ).toBeDisabled();
+  });
+
+  it('starts a due-today session in one tap', async () => {
+    const now = new Date();
+    await markDue(actsOne.id, now);
+    await markDue(romansOne.id, subDays(now, 5));
+
+    const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
+    await screen.findByRole('heading', { name: /^practice$/i });
+
+    expect(screen.getByText(/2 passages · 1 overdue/i)).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: /start 2 due passages/i }),
+    );
+
+    await waitFor(async () => {
+      const [session] = await getDataStore().sessions.all();
+      expect(session.label).toBe('Due today');
+      expect(session.fixedMode).toBe('first-letter');
+      expect(session.verseIds).toEqual([romansOne.id, actsOne.id]);
+    });
   });
 
   it('starts a learn session for a deck', async () => {
@@ -69,6 +110,20 @@ describe('PracticePage', () => {
     await user.click(
       screen.getByRole('button', { name: /type the first letter of each word/i }),
     );
+
+    expect(await screen.findByText(/1 passage/i)).toBeInTheDocument();
+    expect(screen.getByText(actsOne.reference)).toBeInTheDocument();
+  });
+
+  it('practices only memorized passages in a deck', async () => {
+    await setMemorized(actsOne.id, true);
+    const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
+    await screen.findByRole('heading', { name: /^practice$/i });
+
+    await user.click(screen.getByRole('button', { name: /deck 5/i }));
+    await user.click(screen.getByRole('button', { name: /deck 1/i }));
+    await user.click(screen.getByRole('button', { name: /all \d+ passages/i }));
+    await user.click(screen.getByRole('button', { name: /memorized only/i }));
 
     expect(await screen.findByText(/1 passage/i)).toBeInTheDocument();
     expect(screen.getByText(actsOne.reference)).toBeInTheDocument();

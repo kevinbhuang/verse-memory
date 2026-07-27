@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GraduationCap, Keyboard, Play, RotateCcw } from 'lucide-react';
+import {
+  CalendarClock,
+  GraduationCap,
+  Keyboard,
+  Play,
+  RotateCcw,
+} from 'lucide-react';
 import { BookCheckboxList } from '@/components/BookCheckboxList';
 import { booksLabel, passageCountForBooks } from '@/lib/text/bookSelection';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -12,6 +18,7 @@ import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
 import { DECKS } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
+import { dueState } from '@/lib/scheduler';
 import { SECTIONS, type ReviewMode, type Section } from '@/types';
 import {
   createSession,
@@ -22,7 +29,7 @@ import { formatRelativeDay } from '@/utils/format';
 
 type Scope = 'deck' | 'book';
 type PracticeKind = 'learn' | 'first-letter';
-type PassageFilter = 'all' | 'difficult';
+type PassageFilter = 'all' | 'difficult' | 'memorized';
 type SizeChoice = 10 | 'all';
 
 function initialSections(param: string | null): Section[] {
@@ -75,7 +82,9 @@ export function PracticePage() {
     kindParam === 'first-letter' ? 'first-letter' : 'learn',
   );
   const [filter, setFilter] = useState<PassageFilter>(
-    filterParam === 'difficult' ? 'difficult' : 'all',
+    filterParam === 'difficult' || filterParam === 'memorized'
+      ? filterParam
+      : 'all',
   );
   const [starting, setStarting] = useState(false);
 
@@ -99,9 +108,11 @@ export function PracticePage() {
     const source =
       filter === 'difficult'
         ? 'difficult'
-        : scope === 'deck'
-          ? 'section'
-          : 'book';
+        : filter === 'memorized'
+          ? 'memorized'
+          : scope === 'deck'
+            ? 'section'
+            : 'book';
 
     return {
       source,
@@ -118,6 +129,27 @@ export function PracticePage() {
     () => (progressList ? selectVerseIds(criteria, progressList) : []),
     [criteria, progressList],
   );
+
+  const dueCriteria = useMemo<SessionCriteria>(
+    () => ({
+      source: 'due',
+      size: 'all',
+      modeStrategy: 'fixed',
+      fixedMode: 'first-letter',
+    }),
+    [],
+  );
+
+  const dueVerseIds = useMemo(
+    () => (progressList ? selectVerseIds(dueCriteria, progressList) : []),
+    [dueCriteria, progressList],
+  );
+
+  const overdueCount = useMemo(() => {
+    if (!progressList) return 0;
+    return progressList.filter((progress) => dueState(progress) === 'overdue')
+      .length;
+  }, [progressList]);
 
   const allDecksSelected =
     scope === 'deck' && sections.length === DECKS.length;
@@ -140,7 +172,12 @@ export function PracticePage() {
       const scopeLabel =
         scope === 'deck' ? decksLabel(sections) : booksLabel(books);
       const kindLabel = kind === 'learn' ? 'Learn' : 'Practice';
-      const filterLabel = filter === 'difficult' ? ' · Difficult' : '';
+      const filterLabel =
+        filter === 'difficult'
+          ? ' · Difficult'
+          : filter === 'memorized'
+            ? ' · Memorized'
+            : '';
       const session = await createSession(
         criteria,
         `${kindLabel} \u00b7 ${scopeLabel}${filterLabel}`,
@@ -155,11 +192,32 @@ export function PracticePage() {
     }
   };
 
+  const startDueToday = async () => {
+    setStarting(true);
+    try {
+      const session = await createSession(dueCriteria, 'Due today');
+      if (!session) {
+        notify('Nothing is due right now.', 'error');
+        return;
+      }
+      navigate(`/review/session?id=${session.id}`);
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const dueDetail =
+    dueVerseIds.length === 0
+      ? 'Nothing due right now.'
+      : overdueCount > 0
+        ? `${dueVerseIds.length} passage${dueVerseIds.length === 1 ? '' : 's'} \u00b7 ${overdueCount} overdue`
+        : `${dueVerseIds.length} passage${dueVerseIds.length === 1 ? '' : 's'} ready to review`;
+
   return (
     <>
       <PageHeader
         title="Practice"
-        description="Pick decks or books, choose Learn or Practice, then start."
+        description="Review what's due, or build a Learn/Practice session by deck or book."
       />
 
       {openSession ? (
@@ -183,6 +241,34 @@ export function PracticePage() {
           </CardBody>
         </Card>
       ) : null}
+
+      <Card className="mb-5">
+        <CardBody className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <CalendarClock
+              className="mt-0.5 size-5 shrink-0 text-accent"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink">Due today</p>
+              <p className="text-sm text-ink-muted">{dueDetail}</p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            disabled={dueVerseIds.length === 0 || starting}
+            onClick={() => void startDueToday()}
+            aria-label={
+              dueVerseIds.length === 0
+                ? 'Nothing due today'
+                : `Start ${dueVerseIds.length} due passage${dueVerseIds.length === 1 ? '' : 's'}`
+            }
+          >
+            <Play className="size-4" aria-hidden="true" />
+            Start
+          </Button>
+        </CardBody>
+      </Card>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-5">
@@ -353,6 +439,13 @@ export function PracticePage() {
                   onClick={() => setFilter('all')}
                 >
                   All
+                </Button>
+                <Button
+                  variant={filter === 'memorized' ? 'primary' : 'secondary'}
+                  size="sm"
+                  onClick={() => setFilter('memorized')}
+                >
+                  Memorized only
                 </Button>
                 <Button
                   variant={filter === 'difficult' ? 'primary' : 'secondary'}
