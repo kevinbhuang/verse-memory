@@ -16,6 +16,15 @@ export function Footer() {
           About
         </Link>
       </p>
+      <p className="mt-3 max-w-3xl">
+        Questions? Suggestions? Like this tool? Let Kevin know —{' '}
+        <a
+          href="mailto:kevin.huang@acts2.network"
+          className="underline hover:text-ink"
+        >
+          kevin.huang@acts2.network
+        </a>
+      </p>
     </footer>
   );
 }
