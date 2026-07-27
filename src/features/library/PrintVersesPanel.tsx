@@ -1,46 +1,62 @@
 import { useMemo, useState } from 'react';
 import { Printer } from 'lucide-react';
+import { BookCheckboxList } from '@/components/BookCheckboxList';
 import { Button } from '@/components/ui/Button';
-import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
-import { DECKS, appConfig, deckForSection } from '@/config/app';
-import { getVerse, versesInSection } from '@/data/verses';
-import { COLLECTION_BOOKS, collectionBook } from '@/lib/text/books';
-import { SECTIONS, type Section } from '@/types';
+import { DECKS, appConfig } from '@/config/app';
+import { getVerse, verses, versesInSection } from '@/data/verses';
+import { COLLECTION_BOOKS } from '@/lib/text/books';
+import { booksLabel } from '@/lib/text/bookSelection';
+import type { Section } from '@/types';
 import { downloadVersesPdf, versesPdfFilename } from './printVersesPdf';
 
-type PrintScope = 'deck' | 'book';
+type PrintMode = 'all' | 'deck' | 'books';
+
+function versesForBooks(names: readonly string[]) {
+  const selected = new Set(names);
+  return COLLECTION_BOOKS.filter((book) => selected.has(book.name)).flatMap(
+    (book) =>
+      book.verseIds
+        .map((id) => getVerse(id))
+        .filter((verse): verse is NonNullable<typeof verse> => Boolean(verse)),
+  );
+}
 
 /**
- * Pick a deck or book and download a two-column checklist PDF of its passages.
+ * Compact library control: print all, one deck, or one-or-more books as PDF.
  */
 export function PrintVersesPanel() {
   const { notify } = useToast();
-  const [scope, setScope] = useState<PrintScope>('deck');
-  const [section, setSection] = useState<Section>(SECTIONS[0]);
-  const [book, setBook] = useState(
-    () => COLLECTION_BOOKS.find((item) => item.name === 'Romans')?.name ?? COLLECTION_BOOKS[0]?.name ?? '',
-  );
+  const [mode, setMode] = useState<PrintMode>('all');
+  const [section, setSection] = useState<Section>(DECKS[0]?.section ?? 'Law and History');
+  const [books, setBooks] = useState<string[]>(() => {
+    const romans = COLLECTION_BOOKS.find((item) => item.name === 'Romans');
+    return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? ''].filter(Boolean);
+  });
   const [busy, setBusy] = useState(false);
 
   const selectedVerses = useMemo(() => {
-    if (scope === 'deck') return versesInSection(section);
-    const entry = collectionBook(book);
-    if (!entry) return [];
-    return entry.verseIds
-      .map((id) => getVerse(id))
-      .filter((verse): verse is NonNullable<typeof verse> => Boolean(verse));
-  }, [book, scope, section]);
+    if (mode === 'all') return [...verses];
+    if (mode === 'deck') return versesInSection(section);
+    return versesForBooks(books);
+  }, [books, mode, section]);
 
   const scopeLabel =
-    scope === 'deck'
-      ? (deckForSection(section)?.section ?? section)
-      : book;
+    mode === 'all'
+      ? 'Collection'
+      : mode === 'deck'
+        ? section
+        : booksLabel(books);
 
   const onDownload = () => {
     if (selectedVerses.length === 0) {
-      notify('No passages in that selection.', 'error');
+      notify(
+        mode === 'books' && books.length === 0
+          ? 'Select at least one book to print.'
+          : 'No passages in that selection.',
+        'error',
+      );
       return;
     }
 
@@ -66,35 +82,33 @@ export function PrintVersesPanel() {
   };
 
   return (
-    <Card className="mb-3">
-      <CardHeader
-        title="Print passages"
-        description="Download a two-column PDF checklist for a deck or book."
-      />
-      <CardBody className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={scope === 'deck' ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setScope('deck')}
-          >
-            Deck
-          </Button>
-          <Button
-            variant={scope === 'book' ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setScope('book')}
-          >
-            Book
-          </Button>
-        </div>
+    <div className="mb-3 space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="print-mode">
+          Passages to print
+        </label>
+        <Select
+          id="print-mode"
+          value={mode}
+          onChange={(event) => setMode(event.target.value as PrintMode)}
+          className="w-auto min-w-[9rem]"
+          aria-label="Passages to print"
+        >
+          <option value="all">{`All (${verses.length})`}</option>
+          <option value="deck">Deck</option>
+          <option value="books">Books</option>
+        </Select>
 
-        {scope === 'deck' ? (
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-ink">Deck</span>
+        {mode === 'deck' ? (
+          <>
+            <label className="sr-only" htmlFor="print-deck">
+              Deck to print
+            </label>
             <Select
+              id="print-deck"
               value={section}
               onChange={(event) => setSection(event.target.value as Section)}
+              className="min-w-0 flex-1 sm:max-w-xs"
               aria-label="Deck to print"
             >
               {DECKS.map((deck) => (
@@ -103,35 +117,27 @@ export function PrintVersesPanel() {
                 </option>
               ))}
             </Select>
-          </label>
-        ) : (
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-ink">Book</span>
-            <Select
-              value={book}
-              onChange={(event) => setBook(event.target.value)}
-              aria-label="Book to print"
-            >
-              {COLLECTION_BOOKS.map((item) => (
-                <option key={item.name} value={item.name}>
-                  {`${item.name} (${item.passageCount})`}
-                </option>
-              ))}
-            </Select>
-          </label>
-        )}
+          </>
+        ) : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-ink-muted">
-            {selectedVerses.length} passage
-            {selectedVerses.length === 1 ? '' : 's'}
-          </p>
-          <Button onClick={onDownload} disabled={busy || selectedVerses.length === 0}>
-            <Printer className="size-4" aria-hidden="true" />
-            {busy ? 'Preparing\u2026' : 'Download PDF'}
-          </Button>
-        </div>
-      </CardBody>
-    </Card>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDownload}
+          disabled={busy || selectedVerses.length === 0}
+        >
+          <Printer className="size-3.5" aria-hidden="true" />
+          {busy ? 'Preparing\u2026' : 'Print PDF'}
+        </Button>
+      </div>
+
+      {mode === 'books' ? (
+        <BookCheckboxList
+          idPrefix="print-book"
+          selected={books}
+          onChange={setBooks}
+        />
+      ) : null}
+    </div>
   );
 }

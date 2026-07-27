@@ -53,13 +53,15 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
   it('offers deck and book PDF download controls', async () => {
     const { user } = await renderLibrary();
 
-    expect(
-      screen.getByRole('heading', { name: /print passages/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /download pdf/i })).toBeEnabled();
+    expect(screen.getByLabelText(/passages to print/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /print pdf/i })).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: /^book$/i }));
-    expect(screen.getByLabelText(/book to print/i)).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/passages to print/i), 'books');
+    const bookList = screen.getByRole('group', { name: /^books$/i });
+    expect(within(bookList).getByRole('checkbox', { name: /romans/i })).toBeChecked();
+
+    await user.click(within(bookList).getByRole('checkbox', { name: /^john\b/i }));
+    expect(within(bookList).getByRole('checkbox', { name: /^john\b/i })).toBeChecked();
   });
 
   it('marks a passage memorized and keeps it checked', async () => {
