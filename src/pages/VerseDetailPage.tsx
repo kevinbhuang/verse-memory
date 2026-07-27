@@ -7,7 +7,6 @@ import {
   Flag,
   Keyboard,
   Mic,
-  NotebookPen,
   Pin,
   RotateCcw,
 } from 'lucide-react';
@@ -16,7 +15,6 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { Field, Select, TextInput } from '@/components/ui/Field';
 import { LoadingState } from '@/components/ui/EmptyState';
-import { NoteDialog } from '@/components/NoteDialog';
 import { ScriptureText } from '@/components/ScriptureText';
 import { useToast } from '@/components/ui/Toast';
 import {
@@ -36,7 +34,6 @@ import { heatLevel } from '@/lib/weakWords';
 import { recommendationReason } from '@/lib/scheduler';
 import {
   resetVerse,
-  saveNote,
   setCustomMaximumInterval,
   setDifficult,
   setDueDate,
@@ -89,7 +86,6 @@ export function VerseDetailPage() {
   const logs = useReviewLogs(verseId);
   const wordStats = useWordStats(verseId);
 
-  const [noteOpen, setNoteOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
   const heat = useMemo(() => {
@@ -228,30 +224,6 @@ export function VerseDetailPage() {
                   Shaded words are the ones you have missed most often.
                 </p>
               ) : null}
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader
-              title="Personal note"
-              action={
-                <Button size="sm" variant="secondary" onClick={() => setNoteOpen(true)}>
-                  <NotebookPen className="size-3.5" aria-hidden="true" />
-                  {progress.note.trim() === '' ? 'Add note' : 'Edit'}
-                </Button>
-              }
-            />
-            <CardBody>
-              {progress.note.trim() === '' ? (
-                <p className="text-sm text-ink-muted">
-                  No note yet. Notes are private and never change the passage
-                  text.
-                </p>
-              ) : (
-                <p className="text-sm whitespace-pre-wrap text-ink">
-                  {progress.note}
-                </p>
-              )}
             </CardBody>
           </Card>
 
@@ -520,22 +492,11 @@ export function VerseDetailPage() {
         </aside>
       </div>
 
-      <NoteDialog
-        open={noteOpen}
-        reference={verse.reference}
-        initialNote={progress.note}
-        onClose={() => setNoteOpen(false)}
-        onSave={async (note) => {
-          await saveNote(verse.id, note);
-          setNoteOpen(false);
-          notify('Note saved.', 'success');
-        }}
-      />
 
       <ConfirmDialog
         open={confirmReset}
         title={`Reset ${verse.reference}?`}
-        description="Scheduling, review history and word statistics for this passage are deleted. Your note and difficult flag are kept."
+        description="Scheduling, review history and word statistics for this passage are deleted. The difficult flag is kept."
         confirmLabel="Reset passage"
         destructive
         onCancel={() => setConfirmReset(false)}

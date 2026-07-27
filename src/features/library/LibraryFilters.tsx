@@ -1,6 +1,7 @@
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select, TextInput } from '@/components/ui/Field';
+import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { SECTIONS } from '@/types';
 import {
   DEFAULT_FILTERS,
@@ -25,8 +26,8 @@ export function LibraryFilters({
   ) => onChange({ ...filters, [key]: value });
 
   return (
-    <div className="card mb-4 px-4 py-3">
-      <div className="flex flex-col gap-3">
+    <div className="card mb-3 px-3 py-2.5">
+      <div className="flex flex-col gap-2">
         <div className="relative">
           <Search
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-subtle"
@@ -36,13 +37,13 @@ export function LibraryFilters({
             type="search"
             value={filters.search}
             onChange={(event) => set('search', event.target.value)}
-            placeholder="Search by reference, passage number, or words in the text"
+            placeholder="Search by reference, book, or words"
             aria-label="Search passages"
             className="pl-9"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <label className="sr-only" htmlFor="filter-section">
             Section
           </label>
@@ -57,6 +58,22 @@ export function LibraryFilters({
             {SECTIONS.map((section) => (
               <option key={section} value={section}>
                 {section}
+              </option>
+            ))}
+          </Select>
+
+          <label className="sr-only" htmlFor="filter-book">
+            Book
+          </label>
+          <Select
+            id="filter-book"
+            value={filters.book}
+            onChange={(event) => set('book', event.target.value)}
+          >
+            <option value="all">All books</option>
+            {COLLECTION_BOOKS.map((book) => (
+              <option key={book.name} value={book.name}>
+                {`${book.name} (${book.passageCount})`}
               </option>
             ))}
           </Select>
@@ -149,16 +166,6 @@ export function LibraryFilters({
               onChange={(event) => set('neverReviewed', event.target.checked)}
             />
             Never reviewed
-          </label>
-
-          <label className="flex items-center gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              className="size-4 accent-[var(--accent)]"
-              checked={filters.withNotes}
-              onChange={(event) => set('withNotes', event.target.checked)}
-            />
-            Has a note
           </label>
 
           <span className="ml-auto text-sm text-ink-muted" role="status">

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Flag, NotebookPen, SkipForward, X } from 'lucide-react';
+import { Flag, SkipForward, X } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
-import { NoteDialog } from '@/components/NoteDialog';
 import { LoadingState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useHotkeys } from '@/hooks/useHotkeys';
@@ -17,12 +16,13 @@ import {
   modeForIndex,
   skipCard,
 } from '@/services/sessionService';
-import { saveNote, setDifficult } from '@/services/progressService';
+import { setDifficult } from '@/services/progressService';
 import { recommendationReason } from '@/lib/scheduler';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ModeResult, Rating, ReviewMode } from '@/types';
 import { RatingPanel } from './RatingPanel';
 import { FlashcardMode } from './modes/FlashcardMode';
+import { LearnFlashcardMode } from './modes/LearnFlashcardMode';
 import { FirstLetterMode } from './modes/FirstLetterMode';
 import { ProgressiveHideMode } from './modes/ProgressiveHideMode';
 import { FullTypingMode } from './modes/FullTypingMode';
@@ -32,6 +32,7 @@ import { SessionSummary } from './SessionSummary';
 
 const MODE_COMPONENTS = {
   flashcard: FlashcardMode,
+  learn: LearnFlashcardMode,
   'first-letter': FirstLetterMode,
   'progressive-hide': ProgressiveHideMode,
   'full-typing': FullTypingMode,
@@ -52,7 +53,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
 
   const [result, setResult] = useState<ModeResult | null>(null);
   const [saving, setSaving] = useState(false);
-  const [noteOpen, setNoteOpen] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [chosenMode, setChosenMode] = useState<ReviewMode | null>(null);
 
@@ -112,7 +112,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           ),
         );
       },
-      n: () => setNoteOpen(true),
       escape: () => setConfirmExit(true),
     }),
     [notify, progress, rate, result, verse],
@@ -179,15 +178,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
               fill={progress.isDifficult ? 'currentColor' : 'none'}
             />
             <span className="sr-only">Toggle difficult</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setNoteOpen(true)}
-            title="Add a note (N)"
-          >
-            <NotebookPen className="size-4" aria-hidden="true" />
-            <span className="sr-only">Add note</span>
           </Button>
           <Button
             variant="ghost"
@@ -290,18 +280,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         )}
       </footer>
 
-      <NoteDialog
-        open={noteOpen}
-        reference={verse.reference}
-        initialNote={progress.note}
-        onClose={() => setNoteOpen(false)}
-        onSave={async (note) => {
-          await saveNote(verse.id, note);
-          setNoteOpen(false);
-          notify('Note saved.', 'success');
-        }}
-      />
-
       <ConfirmDialog
         open={confirmExit}
         title="Leave this session?"
@@ -311,7 +289,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         onCancel={() => setConfirmExit(false)}
         onConfirm={() => {
           setConfirmExit(false);
-          navigate('/review');
+          navigate(session.fixedMode === 'learn' ? '/learn' : '/review');
         }}
       >
         <div className="space-y-3 text-sm text-ink-muted">

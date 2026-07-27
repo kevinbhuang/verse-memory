@@ -31,9 +31,26 @@ export const SECTION_RANGES: ReadonlyArray<{
   { section: SECTIONS[6], start: 145, end: 171 },
 ];
 
+/** The seven review decks — one per biblical section, in collection order. */
+export const DECKS = SECTION_RANGES.map((range, index) => ({
+  number: index + 1,
+  section: range.section,
+  start: range.start,
+  end: range.end,
+  passageCount: range.end - range.start + 1,
+  label: `Deck ${index + 1}`,
+  rangeLabel: `${range.start}\u2013${range.end}`,
+}));
+
+export type Deck = (typeof DECKS)[number];
+
 export function sectionForOrder(order: number): Section | null {
   return (
     SECTION_RANGES.find((range) => order >= range.start && order <= range.end)
       ?.section ?? null
   );
+}
+
+export function deckForSection(section: Section): Deck | undefined {
+  return DECKS.find((deck) => deck.section === section);
 }

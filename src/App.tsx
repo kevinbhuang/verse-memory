@@ -5,6 +5,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { VerseDetailPage } from '@/pages/VerseDetailPage';
+import { LearnPage } from '@/pages/LearnPage';
 import { ReviewSetupPage } from '@/pages/ReviewSetupPage';
 import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
 import { ProgressPage } from '@/pages/ProgressPage';
@@ -21,6 +22,7 @@ export function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/verses" element={<LibraryPage />} />
               <Route path="/verses/:verseId" element={<VerseDetailPage />} />
+              <Route path="/learn" element={<LearnPage />} />
               <Route path="/review" element={<ReviewSetupPage />} />
               <Route path="/review/session" element={<ReviewSessionPage />} />
               <Route path="/progress" element={<ProgressPage />} />

@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   BookOpen,
   ChartNoAxesColumn,
+  GraduationCap,
   LayoutDashboard,
   Repeat2,
   Settings as SettingsIcon,
@@ -14,6 +15,7 @@ import { UpdatePrompt } from './UpdatePrompt';
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/verses', label: 'Library', icon: BookOpen, end: false },
+  { to: '/learn', label: 'Learn', icon: GraduationCap, end: false },
   { to: '/review', label: 'Review', icon: Repeat2, end: false },
   { to: '/progress', label: 'Progress', icon: ChartNoAxesColumn, end: false },
   { to: '/settings', label: 'Settings', icon: SettingsIcon, end: false },

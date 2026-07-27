@@ -5,19 +5,15 @@ import {
   Flag,
   Keyboard,
   Mic,
-  NotebookPen,
   RotateCcw,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
-import { ScriptureText } from '@/components/ScriptureText';
 import {
   DifficultBadge,
   DueBadge,
-  PinnedBadge,
   StatusBadge,
 } from '@/components/VerseBadges';
-import { formatRelativeDay } from '@/utils/format';
 import type { ReviewMode, Verse, VerseProgress } from '@/types';
 
 export function VerseRow({
@@ -30,7 +26,6 @@ export function VerseRow({
   onToggleDifficult,
   onQuickReview,
   onReset,
-  onEditNote,
 }: {
   verse: Verse;
   progress: VerseProgress;
@@ -44,7 +39,6 @@ export function VerseRow({
     mode: Extract<ReviewMode, 'first-letter' | 'voice'>,
   ) => void;
   onReset: (verseId: string) => void;
-  onEditNote: (verseId: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -55,10 +49,10 @@ export function VerseRow({
         selected && 'bg-accent-soft/40',
       )}
     >
-      <div className="flex items-start gap-3 px-3 py-4 sm:px-4">
+      <div className="flex items-start gap-2 px-2 py-1.5 sm:px-3">
         <input
           type="checkbox"
-          className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
+          className="mt-1 size-3.5 shrink-0 accent-[var(--accent)]"
           checked={selected}
           onChange={(event) => onToggleSelected(verse.id, event.target.checked)}
           aria-label={`Select ${verse.reference} for bulk actions`}
@@ -66,79 +60,72 @@ export function VerseRow({
 
         <input
           type="checkbox"
-          className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
+          className="mt-1 size-3.5 shrink-0 accent-[var(--accent)]"
           checked={progress.isMemorized}
           onChange={(event) => onToggleMemorized(verse.id, event.target.checked)}
           aria-label={`Mark ${verse.reference} as memorized`}
         />
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="font-mono text-xs text-ink-subtle tabular-nums">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="font-mono text-[11px] text-ink-subtle tabular-nums">
               {String(verse.order).padStart(3, '0')}
             </span>
             <Link
               to={`/verses/${verse.id}`}
-              className="font-serif text-base font-semibold text-ink hover:text-accent hover:underline"
+              className="font-serif text-sm font-semibold text-ink hover:text-accent hover:underline"
             >
               {verse.reference}
             </Link>
             {showSectionLabel ? (
-              <span className="text-xs text-ink-subtle">{verse.section}</span>
+              <span className="text-[11px] text-ink-subtle">{verse.section}</span>
             ) : null}
-          </div>
-
-          <div className="mt-2">
-            <ScriptureText text={verse.text} size="small" />
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <StatusBadge status={progress.status} />
-            <DueBadge progress={progress} />
-            <DifficultBadge progress={progress} />
-            <PinnedBadge progress={progress} />
-            {progress.note.trim() !== '' ? (
-              <span className="inline-flex items-center gap-1 text-xs text-ink-subtle">
-                <NotebookPen className="size-3" aria-hidden="true" />
-                Note
-              </span>
-            ) : null}
-            <span className="text-xs text-ink-subtle">
-              Last reviewed: {formatRelativeDay(progress.lastReviewedAt)}
+            <span className="inline-flex flex-wrap items-center gap-1">
+              <StatusBadge status={progress.status} />
+              <DueBadge progress={progress} />
+              <DifficultBadge progress={progress} />
             </span>
           </div>
+
+          <p
+            className="mt-0.5 line-clamp-2 font-serif text-xs leading-snug text-ink-muted"
+            title={verse.text}
+          >
+            {verse.text}
+          </p>
         </div>
 
-        <div className="flex shrink-0 flex-col items-stretch gap-1 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 items-center gap-0.5">
           <Button
             size="sm"
-            variant="quiet"
+            variant="ghost"
+            className="h-7 px-1.5"
             onClick={() => onQuickReview(verse.id, 'first-letter')}
             aria-label={`Practice ${verse.reference} with first letters`}
           >
             <Keyboard className="size-3.5" aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">Letters</span>
           </Button>
           <Button
             size="sm"
-            variant="quiet"
+            variant="ghost"
+            className="h-7 px-1.5"
             onClick={() => onQuickReview(verse.id, 'voice')}
             aria-label={`Practice ${verse.reference} by speaking`}
           >
             <Mic className="size-3.5" aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">Speak</span>
           </Button>
 
           <div className="relative">
             <Button
               size="sm"
               variant="ghost"
+              className="h-7 px-1.5"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
               aria-label={`More actions for ${verse.reference}`}
             >
-              <EllipsisVertical className="size-4" aria-hidden="true" />
+              <EllipsisVertical className="size-3.5" aria-hidden="true" />
             </Button>
 
             {menuOpen ? (
@@ -152,7 +139,7 @@ export function VerseRow({
                 />
                 <div
                   role="menu"
-                  className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-lg"
+                  className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-lg"
                 >
                   <Link
                     role="menuitem"
@@ -175,18 +162,6 @@ export function VerseRow({
                     {progress.isDifficult
                       ? 'Remove difficult flag'
                       : 'Mark difficult'}
-                  </button>
-                  <button
-                    role="menuitem"
-                    type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-muted"
-                    onClick={() => {
-                      onEditNote(verse.id);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <NotebookPen className="size-3.5" aria-hidden="true" />
-                    {progress.note.trim() === '' ? 'Add note' : 'Edit note'}
                   </button>
                   <button
                     role="menuitem"

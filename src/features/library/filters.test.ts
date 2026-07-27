@@ -156,13 +156,16 @@ describe('filterLibrary', () => {
     expect(orders(entries)).not.toContain(1);
   });
 
-  it('filters passages carrying a note', () => {
+  it('filters passages by book', () => {
     const entries = filterLibrary(
-      buildProgress({ 15: { note: 'Remember the context.' }, 16: { note: '  ' } }),
-      filters({ withNotes: true }),
+      buildProgress({}),
+      filters({ book: 'Romans' }),
       NOW,
     );
-    expect(orders(entries)).toEqual([15]);
+    expect(
+      entries.every((entry) => entry.verse.reference.startsWith('Romans')),
+    ).toBe(true);
+    expect(entries.length).toBe(14);
   });
 
   it('combines filters', () => {

@@ -36,6 +36,7 @@ export type Rating = (typeof RATINGS)[number];
 
 export const REVIEW_MODES = [
   'flashcard',
+  'learn',
   'first-letter',
   'progressive-hide',
   'full-typing',

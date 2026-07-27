@@ -74,20 +74,12 @@ describe('VerseDetailPage', () => {
     });
   });
 
-  it('saves a private note that leaves the Scripture untouched', async () => {
-    const { user } = await renderDetail();
+  it('offers first-letter and speak practice without notes', async () => {
+    await renderDetail();
 
-    await user.click(screen.getByRole('button', { name: /add note/i }));
-    await user.type(
-      await screen.findByRole('textbox', { name: `Note on ${verse.reference}` }),
-      'Contrast with verse 22.',
-    );
-    await user.click(screen.getByRole('button', { name: /save note/i }));
-
-    await waitFor(async () => {
-      expect((await getProgress(verse.id)).note).toBe('Contrast with verse 22.');
-    });
-    expect(requireVerse(verse.id).text).toBe(verse.text);
+    expect(screen.getByRole('button', { name: /first letters/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^speak$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /add note/i })).not.toBeInTheDocument();
     expect(visibleText()).toContain(passage);
   });
 

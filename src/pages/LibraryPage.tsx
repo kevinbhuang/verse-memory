@@ -5,17 +5,16 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
-import { NoteDialog } from '@/components/NoteDialog';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress } from '@/hooks/useProgressData';
 import { useSettings } from '@/hooks/useSettings';
 import { getVerse, verses } from '@/data/verses';
 import { appConfig } from '@/config/app';
+import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { SECTIONS, VERSE_STATUSES, type Section } from '@/types';
 import {
   applyBulkAction,
   resetVerse,
-  saveNote,
   setDifficult,
   setMemorized,
   type BulkAction,
@@ -33,6 +32,7 @@ import { VerseRow } from '@/features/library/VerseRow';
 
 function filtersFromParams(params: URLSearchParams): LibraryFilterState {
   const section = params.get('section');
+  const book = params.get('book');
   const status = params.get('status');
   const memorized = params.get('memorized');
   const due = params.get('due');
@@ -44,6 +44,8 @@ function filtersFromParams(params: URLSearchParams): LibraryFilterState {
       section && (SECTIONS as readonly string[]).includes(section)
         ? (section as Section)
         : 'all',
+    book:
+      book && COLLECTION_BOOKS.some((item) => item.name === book) ? book : 'all',
     status:
       status && (VERSE_STATUSES as readonly string[]).includes(status)
         ? (status as LibraryFilterState['status'])
@@ -67,12 +69,10 @@ export function LibraryPage() {
   const progressList = useAllProgress();
   const [searchParams] = useSearchParams();
 
-  // Dashboard and progress tiles deep-link into a pre-filtered library.
   const [filters, setFilters] = useState<LibraryFilterState>(() =>
     filtersFromParams(searchParams),
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [noteVerseId, setNoteVerseId] = useState<string | null>(null);
   const [resetVerseId, setResetVerseId] = useState<string | null>(null);
   const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
 
@@ -133,8 +133,6 @@ export function LibraryPage() {
     navigate(`/review/session?id=${session.id}`);
   };
 
-  const noteVerse = noteVerseId ? getVerse(noteVerseId) : null;
-  const noteProgress = noteVerseId ? progressById.get(noteVerseId) : undefined;
   const resetTarget = resetVerseId ? getVerse(resetVerseId) : null;
 
   return (
@@ -201,13 +199,13 @@ export function LibraryPage() {
           />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {groups.map((group) => (
             <section key={group.section} aria-labelledby={`section-${group.section}`}>
-              <div className="mb-2 flex items-baseline justify-between gap-3">
+              <div className="mb-1 flex items-baseline justify-between gap-3">
                 <h2
                   id={`section-${group.section}`}
-                  className="font-serif text-lg font-semibold text-ink"
+                  className="font-serif text-base font-semibold text-ink"
                 >
                   {group.section}
                 </h2>
@@ -254,7 +252,6 @@ export function LibraryPage() {
                       );
                     }}
                     onReset={(verseId) => setResetVerseId(verseId)}
-                    onEditNote={(verseId) => setNoteVerseId(verseId)}
                   />
                 ))}
               </ul>
@@ -263,23 +260,10 @@ export function LibraryPage() {
         </div>
       )}
 
-      <NoteDialog
-        open={noteVerseId !== null}
-        reference={noteVerse?.reference ?? ''}
-        initialNote={noteProgress?.note ?? ''}
-        onClose={() => setNoteVerseId(null)}
-        onSave={async (note) => {
-          if (!noteVerseId) return;
-          await saveNote(noteVerseId, note);
-          setNoteVerseId(null);
-          notify('Note saved.', 'success');
-        }}
-      />
-
       <ConfirmDialog
         open={resetVerseId !== null}
         title={`Reset ${resetTarget?.reference ?? 'this passage'}?`}
-        description="Scheduling, review history and word statistics for this passage are deleted. Your note and difficult flag are kept."
+        description="Scheduling, review history and word statistics for this passage are deleted. The difficult flag is kept."
         confirmLabel="Reset passage"
         destructive
         onCancel={() => setResetVerseId(null)}
@@ -295,7 +279,7 @@ export function LibraryPage() {
       <ConfirmDialog
         open={pendingBulk !== null}
         title={`Reset scheduling for ${selected.size} passage${selected.size === 1 ? '' : 's'}?`}
-        description="Due dates and intervals are cleared. Review history, notes and flags are kept."
+        description="Due dates and intervals are cleared. Review history and flags are kept."
         confirmLabel="Reset scheduling"
         destructive
         onCancel={() => setPendingBulk(null)}

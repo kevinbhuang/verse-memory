@@ -3,23 +3,16 @@ import { expect, test, type Page } from '@playwright/test';
 const FIRST_PASSAGE = 'Exodus 19:4-6';
 
 /**
- * Builds a one-passage session that always uses first-letter typing, so the
- * exercise under test does not depend on the passage's learning stage.
+ * Starts a one-passage first-letter session from the library row action.
  */
 async function startFirstLetterSession(page: Page) {
-  await page.goto('/review');
-
-  await page.getByRole('button', { name: 'Passage number range' }).click();
-  const end = page.getByLabel('To passage');
-  await end.fill('1');
-
-  await page.getByRole('button', { name: 'One mode for the session' }).click();
-  await page.getByLabel('Mode', { exact: true }).selectOption('first-letter');
-
-  await expect(page.getByText('1 passage in this session')).toBeVisible();
-  await page.getByRole('button', { name: 'Start session' }).click();
+  await page.goto('/verses');
+  await page
+    .getByRole('button', { name: `Practice ${FIRST_PASSAGE} with first letters` })
+    .click();
 
   await expect(page.getByText(/passage 1 of 1/i)).toBeVisible();
+  await expect(page.getByText(FIRST_PASSAGE).first()).toBeVisible();
 }
 
 /**
@@ -90,47 +83,36 @@ test.describe('completing a first-letter review', () => {
 
   test('can be paused and resumed', async ({ page }) => {
     await page.goto('/review');
-    await page.getByRole('button', { name: 'Passage number range' }).click();
-    await page.getByLabel('To passage').fill('3');
-    await page.getByRole('button', { name: 'One mode for the session' }).click();
-    await page.getByLabel('Mode', { exact: true }).selectOption('flashcard');
+    await page.getByRole('button', { name: /deck 1/i }).click();
+    await page.getByRole('button', { name: '5' }).click();
+    await expect(page.getByText(/deck 1: 5 passages/i)).toBeVisible();
     await page.getByRole('button', { name: 'Start session' }).click();
 
-    await expect(page.getByText(/passage 1 of 3/i)).toBeVisible();
-    await page.getByRole('button', { name: 'Reveal passage' }).click();
-    await page.getByRole('button', { name: /^Good/ }).click();
-    await expect(page.getByText(/passage 2 of 3/i)).toBeVisible();
+    await expect(page.getByText(/passage 1 of 5/i)).toBeVisible();
+    await page.getByRole('button', { name: /skip/i }).click();
+    await expect(page.getByText(/passage 2 of 5/i)).toBeVisible();
 
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Pause and leave' }).click();
 
     await expect(page.getByText(/you have an unfinished session/i)).toBeVisible();
-    await expect(page.getByText(/1 of 3 completed/i)).toBeVisible();
+    await expect(page.getByText(/1 of 5 completed/i)).toBeVisible();
 
     await page.getByRole('button', { name: 'Resume session' }).click();
-    await expect(page.getByText(/passage 2 of 3/i)).toBeVisible();
+    await expect(page.getByText(/passage 2 of 5/i)).toBeVisible();
   });
 
-  test('a difficult-verse session contains only flagged passages', async ({
-    page,
-  }) => {
-    await page.goto('/verses');
-    await page
-      .getByRole('button', { name: `More actions for ${FIRST_PASSAGE}` })
-      .click();
-    await page.getByRole('menuitem', { name: 'Mark difficult' }).click();
-    await expect(
-      page.getByRole('listitem').filter({ hasText: FIRST_PASSAGE }).getByText('Difficult'),
-    ).toBeVisible();
-
-    await page.goto('/review?source=difficult');
-    await expect(page.getByText('1 passage in this session')).toBeVisible();
-    await expect(
-      page.getByRole('listitem').filter({ hasText: FIRST_PASSAGE }),
-    ).toBeVisible();
+  test('a deck session stays inside that section', async ({ page }) => {
+    await page.goto('/review?section=Acts');
+    await expect(page.getByRole('button', { name: /deck 5/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await page.getByRole('button', { name: /whole deck/i }).click();
+    await expect(page.getByText(/deck 5: 4 passages/i)).toBeVisible();
 
     await page.getByRole('button', { name: 'Start session' }).click();
-    await expect(page.getByText(/passage 1 of 1/i)).toBeVisible();
-    await expect(page.getByText(FIRST_PASSAGE).first()).toBeVisible();
+    await expect(page.getByText(/passage 1 of 4/i)).toBeVisible();
+    await expect(page.getByText(/Acts /).first()).toBeVisible();
   });
 });

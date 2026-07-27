@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Mic, Square } from 'lucide-react';
+import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { ScriptureText } from '@/components/ScriptureText';
-import { gradeAttempt, type GradeResult } from '@/lib/text/diff';
+import {
+  gradeAttempt,
+  type DiffOp,
+  type GradeResult,
+} from '@/lib/text/diff';
 import { formatAccuracy } from '@/utils/format';
 import { suggestRating, type ReviewModeProps } from '../modeTypes';
 
@@ -46,6 +51,60 @@ function getRecognitionConstructor(): SpeechRecognitionConstructor | null {
       }
     ).webkitSpeechRecognition;
   return candidate ?? null;
+}
+
+const opStyles: Record<DiffOp['type'], string> = {
+  correct: 'bg-success-soft text-success',
+  missing: 'bg-danger-soft text-danger line-through decoration-danger/50',
+  extra: 'bg-warning-soft text-warning line-through decoration-warning/50',
+  replaced: 'bg-danger-soft text-danger',
+  moved: 'bg-warning-soft text-warning',
+};
+
+const opLabels: Record<DiffOp['type'], string> = {
+  correct: 'correct',
+  missing: 'missing from what was heard',
+  extra: 'heard but not in the passage',
+  replaced: 'substituted',
+  moved: 'out of order',
+};
+
+function WordComparison({ ops }: { ops: DiffOp[] }) {
+  return (
+    <div>
+      <h3 className="mb-2 text-sm font-semibold text-ink">
+        Word-by-word comparison
+      </h3>
+      <p
+        className="scripture-sm rounded-lg border border-line bg-surface px-4 py-3 text-base leading-relaxed"
+        aria-label="Comparison of what was heard with the passage"
+      >
+        {ops.map((op, index) => (
+          <span
+            key={`${op.type}-${index}`}
+            className={clsx('mr-1 inline rounded-sm px-0.5', opStyles[op.type])}
+            title={opLabels[op.type]}
+          >
+            {op.type === 'replaced' ? (
+              <>
+                <span className="line-through decoration-danger/50">
+                  {op.received}
+                </span>{' '}
+                <span className="font-medium">{op.expected}</span>
+              </>
+            ) : (
+              (op.expected ?? op.received)
+            )}
+          </span>
+        ))}
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
+        <li className="text-success">Green: correct</li>
+        <li className="text-danger">Red: missing or wrong</li>
+        <li className="text-warning">Amber: extra words heard</li>
+      </ul>
+    </div>
+  );
 }
 
 export function VoiceMode({ verse, onComplete, attemptKey }: ReviewModeProps) {
@@ -221,18 +280,21 @@ export function VoiceMode({ verse, onComplete, attemptKey }: ReviewModeProps) {
       </div>
 
       {result ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="rounded-lg border border-line bg-surface-muted px-4 py-3 text-sm">
             <p className="font-medium text-ink">
               {`Approximate accuracy ${formatAccuracy(result.accuracy)}`}
             </p>
             <p className="mt-1 text-ink-muted">
-              {`${result.missingCount} words not heard \u00b7 ${result.replacedCount} substituted`}
+              {`${result.correctCount} correct \u00b7 ${result.missingCount} not heard \u00b7 ${result.replacedCount} substituted \u00b7 ${result.extraCount} extra`}
             </p>
           </div>
+
+          <WordComparison ops={result.ops} />
+
           <details className="rounded-lg border border-line bg-surface px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium text-ink">
-              Show the passage
+              Show the unmarked passage
             </summary>
             <div className="mt-3">
               <ScriptureText text={verse.text} />

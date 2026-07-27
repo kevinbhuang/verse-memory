@@ -301,8 +301,6 @@ export function SettingsPage() {
                 <dd className="text-ink-muted">Hint (Shift+Enter while typing)</dd>
                 <dt className="font-mono text-xs text-ink-subtle">D</dt>
                 <dd className="text-ink-muted">Toggle the difficult flag</dd>
-                <dt className="font-mono text-xs text-ink-subtle">N</dt>
-                <dd className="text-ink-muted">Open the note</dd>
                 <dt className="font-mono text-xs text-ink-subtle">Escape</dt>
                 <dd className="text-ink-muted">Pause and leave the session</dd>
               </dl>

@@ -2,6 +2,7 @@ import { differenceInCalendarDays } from 'date-fns';
 import { getDataStore } from '@/repositories';
 import { verses } from '@/data/verses';
 import { createId } from '@/lib/id';
+import { bookFromReference } from '@/lib/text/books';
 import { daysOverdue, dueState, isDue } from '@/lib/scheduler';
 import type {
   ModeStrategy,
@@ -21,6 +22,7 @@ export const SESSION_SOURCES = [
   'needs-attention',
   'weak',
   'section',
+  'book',
   'memorized',
   'learning',
   'new',
@@ -37,6 +39,8 @@ export type SessionSource = (typeof SESSION_SOURCES)[number];
 export type SessionCriteria = {
   source: SessionSource;
   section?: Section | null;
+  /** Canonical book name, e.g. "Romans" or "John". */
+  book?: string | null;
   verseIds?: string[];
   range?: { start: number; end: number };
   notReviewedInDays?: number;
@@ -54,6 +58,7 @@ export const SOURCE_LABELS: Record<SessionSource, string> = {
   'needs-attention': 'Needs attention',
   weak: 'Weak passages',
   section: 'A section',
+  book: 'A book',
   memorized: 'Memorized passages',
   learning: 'Learning passages',
   new: 'New passages',
@@ -84,6 +89,15 @@ export function selectVerseIds(
     const progress = progressFor(verse.id);
     if (!progress) return false;
 
+    // Optional scope filters (deck / book) apply on top of any source.
+    if (criteria.section && verse.section !== criteria.section) return false;
+    if (
+      criteria.book &&
+      bookFromReference(verse.reference) !== criteria.book
+    ) {
+      return false;
+    }
+
     switch (criteria.source) {
       case 'due':
         return isDue(progress, now);
@@ -101,7 +115,9 @@ export function selectVerseIds(
           progress.difficultyScore >= 30
         );
       case 'section':
-        return criteria.section ? verse.section === criteria.section : false;
+        return true;
+      case 'book':
+        return true;
       case 'memorized':
         return progress.isMemorized;
       case 'learning':

@@ -1,5 +1,6 @@
 import { verses } from '@/data/verses';
 import { dueState } from '@/lib/scheduler';
+import { bookFromReference } from '@/lib/text/books';
 import { normalizeReference, parseReference } from '@/lib/text/reference';
 import { collapseWhitespace } from '@/lib/text/normalize';
 import type { Section, Verse, VerseProgress, VerseStatus } from '@/types';
@@ -16,24 +17,24 @@ export type SortOption =
 export type LibraryFilterState = {
   search: string;
   section: Section | 'all';
+  book: string | 'all';
   status: StatusFilter;
   memorized: MemorizedFilter;
   difficultOnly: boolean;
   due: DueFilter;
   neverReviewed: boolean;
-  withNotes: boolean;
   sort: SortOption;
 };
 
 export const DEFAULT_FILTERS: LibraryFilterState = {
   search: '',
   section: 'all',
+  book: 'all',
   status: 'all',
   memorized: 'all',
   difficultOnly: false,
   due: 'all',
   neverReviewed: false,
-  withNotes: false,
   sort: 'canonical',
 };
 
@@ -41,12 +42,12 @@ export function isFilterActive(filters: LibraryFilterState): boolean {
   return (
     filters.search.trim() !== '' ||
     filters.section !== 'all' ||
+    filters.book !== 'all' ||
     filters.status !== 'all' ||
     filters.memorized !== 'all' ||
     filters.difficultOnly ||
     filters.due !== 'all' ||
-    filters.neverReviewed ||
-    filters.withNotes
+    filters.neverReviewed
   );
 }
 
@@ -105,13 +106,18 @@ export function filterLibrary(
 
     if (!matchesSearch(verse, filters.search)) continue;
     if (filters.section !== 'all' && verse.section !== filters.section) continue;
+    if (
+      filters.book !== 'all' &&
+      bookFromReference(verse.reference) !== filters.book
+    ) {
+      continue;
+    }
     if (filters.status !== 'all' && progress.status !== filters.status) continue;
 
     if (filters.memorized === 'memorized' && !progress.isMemorized) continue;
     if (filters.memorized === 'not-memorized' && progress.isMemorized) continue;
     if (filters.difficultOnly && !progress.isDifficult) continue;
     if (filters.neverReviewed && progress.reviewCount > 0) continue;
-    if (filters.withNotes && progress.note.trim() === '') continue;
 
     if (filters.due !== 'all') {
       const state = dueState(progress, now);

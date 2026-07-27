@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Keyboard, Mic, Play, RotateCcw } from 'lucide-react';
+import { Play, RotateCcw } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
@@ -11,47 +11,16 @@ import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
 import { DECKS, deckForSection } from '@/config/app';
 import { COLLECTION_BOOKS, collectionBook } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
-import { SECTIONS, type ReviewMode, type Section } from '@/types';
+import { SECTIONS, type Section } from '@/types';
 import {
   createSession,
   selectVerseIds,
   type SessionCriteria,
-  type SessionSource,
 } from '@/services/sessionService';
 import { formatRelativeDay } from '@/utils/format';
 
 const SIZE_OPTIONS = [5, 10, 20] as const;
 type Scope = 'deck' | 'book';
-type ReviewFilter = 'all' | 'difficult' | 'due' | 'new' | 'learning' | 'memorized';
-
-const FILTER_OPTIONS: Array<{ id: ReviewFilter; label: string; hint: string }> = [
-  { id: 'all', label: 'All', hint: 'Every passage in the deck or book' },
-  { id: 'difficult', label: 'Difficult', hint: 'Marked difficult' },
-  { id: 'due', label: 'Need practice', hint: 'Due or overdue' },
-  { id: 'new', label: 'New', hint: 'Never reviewed' },
-  { id: 'learning', label: 'Learning', hint: 'In progress' },
-  { id: 'memorized', label: 'Memorized', hint: 'Marked memorized' },
-];
-
-const PRACTICE_MODES: Array<{
-  mode: Extract<ReviewMode, 'first-letter' | 'voice'>;
-  title: string;
-  description: string;
-  icon: typeof Keyboard;
-}> = [
-  {
-    mode: 'first-letter',
-    title: 'First letters',
-    description: 'Type the first letter of each word.',
-    icon: Keyboard,
-  },
-  {
-    mode: 'voice',
-    title: 'Speak',
-    description: 'Recite into your microphone.',
-    icon: Mic,
-  },
-];
 
 function initialSection(param: string | null): Section {
   if (param && (SECTIONS as readonly string[]).includes(param)) {
@@ -71,63 +40,54 @@ function initialBook(param: string | null): string {
   );
 }
 
-function sourceForFilter(filter: ReviewFilter, scope: Scope): SessionSource {
-  if (filter === 'all') return scope === 'deck' ? 'section' : 'book';
-  return filter;
-}
-
-export function ReviewSetupPage() {
+export function LearnPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
   const progressList = useAllProgress();
   const openSession = useOpenSession();
   const [searchParams] = useSearchParams();
 
-  const initialMode = searchParams.get('mode');
   const bookParam = searchParams.get('book');
-  const filterParam = searchParams.get('filter') as ReviewFilter | null;
-
   const [scope, setScope] = useState<Scope>(bookParam ? 'book' : 'deck');
-  const [filter, setFilter] = useState<ReviewFilter>(
-    filterParam && FILTER_OPTIONS.some((option) => option.id === filterParam)
-      ? filterParam
-      : 'all',
-  );
-  const [mode, setMode] = useState<Extract<ReviewMode, 'first-letter' | 'voice'>>(
-    initialMode === 'voice' ? 'voice' : 'first-letter',
-  );
   const [section, setSection] = useState<Section>(() =>
-    initialSection(searchParams.get('section') ?? searchParams.get('deck')),
+    initialSection(searchParams.get('section')),
   );
   const [book, setBook] = useState(() => initialBook(bookParam));
-  const [size, setSize] = useState<number | 'all'>(10);
+  const [size, setSize] = useState<number | 'all'>(() => {
+    const deck = deckForSection(initialSection(searchParams.get('section')));
+    return deck && deck.passageCount <= 10 ? 'all' : 10;
+  });
   const [starting, setStarting] = useState(false);
 
   const selectedDeck = deckForSection(section) ?? DECKS[0];
   const selectedBook = collectionBook(book);
+  const matchingTotal =
+    scope === 'deck'
+      ? selectedDeck.passageCount
+      : (selectedBook?.passageCount ?? 0);
 
-  const criteria: SessionCriteria = useMemo(() => {
-    const source = sourceForFilter(filter, scope);
-    const base = {
-      size,
-      modeStrategy: 'fixed' as const,
-      fixedMode: mode,
-      section: scope === 'deck' ? section : null,
-      book: scope === 'book' ? book : null,
-    };
-    return { ...base, source };
-  }, [book, filter, mode, scope, section, size]);
+  const criteria: SessionCriteria = useMemo(
+    () =>
+      scope === 'deck'
+        ? {
+            source: 'section',
+            section,
+            size,
+            modeStrategy: 'fixed',
+            fixedMode: 'learn',
+          }
+        : {
+            source: 'book',
+            book,
+            size,
+            modeStrategy: 'fixed',
+            fixedMode: 'learn',
+          },
+    [book, scope, section, size],
+  );
 
   const preview = useMemo(
     () => (progressList ? selectVerseIds(criteria, progressList) : []),
-    [criteria, progressList],
-  );
-
-  const matchingCount = useMemo(
-    () =>
-      progressList
-        ? selectVerseIds({ ...criteria, size: 'all' }, progressList).length
-        : 0,
     [criteria, progressList],
   );
 
@@ -138,15 +98,9 @@ export function ReviewSetupPage() {
     try {
       const scopeLabel =
         scope === 'deck' ? selectedDeck.label : (selectedBook?.name ?? book);
-      const filterLabel =
-        FILTER_OPTIONS.find((option) => option.id === filter)?.label ?? filter;
-      const modeLabel = mode === 'first-letter' ? 'First letters' : 'Speak';
-      const session = await createSession(
-        criteria,
-        `${scopeLabel} \u00b7 ${filterLabel} \u00b7 ${modeLabel}`,
-      );
+      const session = await createSession(criteria, `Learn \u00b7 ${scopeLabel}`);
       if (!session) {
-        notify('No passages match that choice right now.', 'error');
+        notify('No passages match that choice.', 'error');
         return;
       }
       navigate(`/review/session?id=${session.id}`);
@@ -155,21 +109,21 @@ export function ReviewSetupPage() {
     }
   };
 
-  const resumeIsReview = openSession && openSession.fixedMode !== 'learn';
+  const resumeIsLearn = openSession?.fixedMode === 'learn';
 
   return (
     <>
       <PageHeader
-        title="Review"
-        description="Pick a deck or book, choose what to include, then practice with first letters or speak."
+        title="Learn"
+        description="Flashcards that show the passage first. Flip to check the reference, then rate how well you knew it."
       />
 
-      {resumeIsReview ? (
+      {openSession && resumeIsLearn ? (
         <Card className="mb-5 border-accent/40 bg-accent-soft">
           <CardBody className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-ink">
-                You have an unfinished review session
+                You have an unfinished learn session
               </p>
               <p className="text-sm text-ink-muted">
                 {`${openSession.label} \u00b7 ${openSession.currentIndex} of ${openSession.verseIds.length} completed \u00b7 started ${formatRelativeDay(openSession.createdAt)}`}
@@ -180,7 +134,7 @@ export function ReviewSetupPage() {
               onClick={() => navigate(`/review/session?id=${openSession.id}`)}
             >
               <RotateCcw className="size-4" aria-hidden="true" />
-              Resume session
+              Resume
             </Button>
           </CardBody>
         </Card>
@@ -189,7 +143,10 @@ export function ReviewSetupPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-5">
           <Card>
-            <CardHeader title="Deck or book" />
+            <CardHeader
+              title="What to learn"
+              description="Pick a deck or a single book."
+            />
             <CardBody className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -200,7 +157,12 @@ export function ReviewSetupPage() {
                 </Button>
                 <Button
                   variant={scope === 'book' ? 'primary' : 'secondary'}
-                  onClick={() => setScope('book')}
+                  onClick={() => {
+                    setScope('book');
+                    if (selectedBook && selectedBook.passageCount <= 10) {
+                      setSize('all');
+                    }
+                  }}
                 >
                   Book
                 </Button>
@@ -214,7 +176,11 @@ export function ReviewSetupPage() {
                       <button
                         key={deck.section}
                         type="button"
-                        onClick={() => setSection(deck.section)}
+                        onClick={() => {
+                          setSection(deck.section);
+                          if (deck.passageCount <= 10) setSize('all');
+                          else if (size === 'all') setSize(10);
+                        }}
                         aria-pressed={selected}
                         className={`rounded-lg border px-3 py-3 text-left ${
                           selected
@@ -236,11 +202,17 @@ export function ReviewSetupPage() {
                   })}
                 </div>
               ) : (
-                <Field label="Book" htmlFor="review-book">
+                <Field label="Book" htmlFor="learn-book">
                   <Select
-                    id="review-book"
+                    id="learn-book"
                     value={book}
-                    onChange={(event) => setBook(event.target.value)}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setBook(next);
+                      const info = collectionBook(next);
+                      if (info && info.passageCount <= 10) setSize('all');
+                      else if (size === 'all') setSize(10);
+                    }}
                   >
                     {COLLECTION_BOOKS.map((item) => (
                       <option key={item.name} value={item.name}>
@@ -254,74 +226,7 @@ export function ReviewSetupPage() {
           </Card>
 
           <Card>
-            <CardHeader
-              title="Which passages"
-              description="Filter within the deck or book you chose."
-            />
-            <CardBody>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {FILTER_OPTIONS.map((option) => {
-                  const selected = filter === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setFilter(option.id)}
-                      aria-pressed={selected}
-                      className={`rounded-lg border px-3 py-2.5 text-left ${
-                        selected
-                          ? 'border-accent bg-accent-soft text-accent'
-                          : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold">{option.label}</span>
-                      <span className="mt-0.5 block text-xs opacity-80">
-                        {option.hint}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title="How to practice" />
-            <CardBody>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {PRACTICE_MODES.map((option) => {
-                  const Icon = option.icon;
-                  const selected = mode === option.mode;
-                  return (
-                    <button
-                      key={option.mode}
-                      type="button"
-                      onClick={() => setMode(option.mode)}
-                      aria-pressed={selected}
-                      className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-left ${
-                        selected
-                          ? 'border-accent bg-accent-soft text-accent'
-                          : 'border-line-strong bg-surface text-ink hover:bg-surface-muted'
-                      }`}
-                    >
-                      <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-                      <span>
-                        <span className="block text-sm font-semibold">
-                          {option.title}
-                        </span>
-                        <span className="mt-0.5 block text-xs opacity-80">
-                          {option.description}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title="How many" />
+            <CardHeader title="How many cards" />
             <CardBody>
               <div className="flex flex-wrap gap-2">
                 {SIZE_OPTIONS.map((option) => (
@@ -329,7 +234,7 @@ export function ReviewSetupPage() {
                     key={option}
                     variant={size === option ? 'primary' : 'secondary'}
                     onClick={() => setSize(option)}
-                    disabled={matchingCount > 0 && option > matchingCount}
+                    disabled={option > matchingTotal}
                   >
                     {option}
                   </Button>
@@ -338,33 +243,26 @@ export function ReviewSetupPage() {
                   variant={size === 'all' ? 'primary' : 'secondary'}
                   onClick={() => setSize('all')}
                 >
-                  {`All matching (${matchingCount})`}
+                  {`All (${matchingTotal})`}
                 </Button>
               </div>
             </CardBody>
           </Card>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <aside className="lg:sticky lg:top-4 lg:self-start">
           <Card>
-            <CardHeader title="Session preview" />
+            <CardHeader title="Preview" />
             <CardBody>
               {preview.length === 0 ? (
-                <EmptyState
-                  title="Nothing matches"
-                  description="Try All, or pick a different deck, book, or filter."
-                />
+                <EmptyState title="Nothing to learn" description="Try another deck or book." />
               ) : (
                 <>
                   <p className="text-sm text-ink-muted">
-                    {`${preview.length} passage${preview.length === 1 ? '' : 's'}${
-                      matchingCount > preview.length
-                        ? ` of ${matchingCount} matching`
-                        : ''
-                    }.`}
+                    {`${preview.length} card${preview.length === 1 ? '' : 's'} · passage first, then reference`}
                   </p>
                   <ol className="mt-3 max-h-64 space-y-1 overflow-y-auto text-sm">
-                    {preview.slice(0, 25).map((verseId) => {
+                    {preview.slice(0, 20).map((verseId) => {
                       const verse = getVerse(verseId);
                       return (
                         <li key={verseId} className="flex gap-2 text-ink">
@@ -375,9 +273,9 @@ export function ReviewSetupPage() {
                         </li>
                       );
                     })}
-                    {preview.length > 25 ? (
+                    {preview.length > 20 ? (
                       <li className="text-xs text-ink-subtle">
-                        {`and ${preview.length - 25} more`}
+                        {`and ${preview.length - 20} more`}
                       </li>
                     ) : null}
                   </ol>
@@ -392,7 +290,7 @@ export function ReviewSetupPage() {
                 onClick={() => void start()}
               >
                 <Play className="size-4" aria-hidden="true" />
-                Start review
+                Start learning
               </Button>
             </CardBody>
           </Card>

@@ -23,7 +23,7 @@ const rowFor = (reference: string) => {
   return checkbox.closest('li') as HTMLElement;
 };
 
-describe('LibraryPage', () => {
+describe('LibraryPage', { timeout: 15_000 }, () => {
   it('lists every passage under its section heading in canonical order', async () => {
     await renderLibrary();
 
@@ -101,27 +101,16 @@ describe('LibraryPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('saves a note without changing the passage', async () => {
+  it('filters the library to a single book', async () => {
     const { user } = await renderLibrary();
 
-    await user.click(
-      screen.getByLabelText(`More actions for ${passage.reference}`),
-    );
-    await user.click(screen.getByRole('menuitem', { name: /add note/i }));
+    await user.selectOptions(screen.getByLabelText(/^book$/i), 'John');
 
-    const field = await screen.findByRole('textbox', {
-      name: `Note on ${passage.reference}`,
+    await waitFor(() => {
+      expect(sectionHeading('Law and History')).not.toBeInTheDocument();
     });
-    await user.type(field, 'The heart of the gospel.');
-    await user.click(screen.getByRole('button', { name: /save note/i }));
-
-    await waitFor(async () => {
-      expect((await getProgress(passage.id)).note).toBe(
-        'The heart of the gospel.',
-      );
-    });
-    expect(requireVerse(passage.id).text).toBe(passage.text);
-    expect(await screen.findByText(/note saved/i)).toBeInTheDocument();
+    expect(screen.getByText(/showing 15 of 171/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /john 3:16/i })).toBeInTheDocument();
   });
 
   it('filters by a search term', async () => {

@@ -197,21 +197,12 @@ describe('SessionRunner', () => {
     });
   });
 
-  it('saves a note without leaving the session', async () => {
+  it('does not offer notes during a review', async () => {
     const session = await startFlashcardSession();
-    const { user } = await renderSession(session);
+    await renderSession(session);
 
-    await user.click(await screen.findByRole('button', { name: /add note/i }));
-    await user.type(
-      await screen.findByRole('textbox', { name: `Note on ${first.reference}` }),
-      'Watch the second clause.',
-    );
-    await user.click(screen.getByRole('button', { name: /save note/i }));
-
-    await waitFor(async () => {
-      expect((await getProgress(first.id)).note).toBe('Watch the second clause.');
-    });
     expect(await screen.findByText(/passage 1 of 2/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /add note/i })).not.toBeInTheDocument();
   });
 
   it('confirms before leaving a session', async () => {
