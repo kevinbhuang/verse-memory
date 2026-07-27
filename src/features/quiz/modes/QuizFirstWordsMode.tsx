@@ -70,6 +70,7 @@ export function QuizFirstWordsMode({
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault();
+              event.stopPropagation();
               check();
             }
           }}

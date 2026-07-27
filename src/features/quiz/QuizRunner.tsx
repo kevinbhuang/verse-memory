@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
@@ -34,10 +34,13 @@ export function QuizRunner({ quizId }: { quizId: string }) {
   const [session, setSession] = useState<QuizSession | null | undefined>(undefined);
   const [pendingResult, setPendingResult] = useState<QuizModeResult | null>(null);
   const [confirmExit, setConfirmExit] = useState(false);
+  /** Blocks Enter-to-advance until the key is released after checking an answer. */
+  const enterArmed = useRef(true);
 
   useEffect(() => {
     setSession(getQuizSession(quizId));
     setPendingResult(null);
+    enterArmed.current = true;
   }, [quizId]);
 
   const verseId = session?.verseIds[session.currentIndex];
@@ -46,7 +49,16 @@ export function QuizRunner({ quizId }: { quizId: string }) {
 
   useEffect(() => {
     setPendingResult(null);
+    enterArmed.current = true;
   }, [cardKey]);
+
+  useEffect(() => {
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') enterArmed.current = true;
+    };
+    window.addEventListener('keyup', onKeyUp);
+    return () => window.removeEventListener('keyup', onKeyUp);
+  }, []);
 
   const continueAfterAnswer = useCallback(() => {
     if (!session || !verse || !pendingResult) return;
@@ -60,10 +72,17 @@ export function QuizRunner({ quizId }: { quizId: string }) {
     setSession(next);
   }, [pendingResult, session, verse]);
 
+  const onModeComplete = useCallback((result: QuizModeResult) => {
+    // The Enter that submitted the answer must not also advance.
+    enterArmed.current = false;
+    setPendingResult(result);
+  }, []);
+
   const hotkeys = useMemo(
     () => ({
       enter: () => {
-        if (pendingResult) continueAfterAnswer();
+        if (!pendingResult || !enterArmed.current) return;
+        continueAfterAnswer();
       },
       escape: () => setConfirmExit(true),
     }),
@@ -72,7 +91,6 @@ export function QuizRunner({ quizId }: { quizId: string }) {
 
   useHotkeys(hotkeys, {
     enabled: Boolean(session && !session.completedAt),
-    allowWhileTyping: ['enter'],
   });
 
   if (session === undefined) {
@@ -146,7 +164,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
         <ModeComponent
           verse={verse}
           attemptKey={cardKey}
-          onComplete={setPendingResult}
+          onComplete={onModeComplete}
         />
       </main>
 
