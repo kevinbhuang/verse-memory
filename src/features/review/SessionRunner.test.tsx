@@ -84,19 +84,25 @@ describe('SessionRunner', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('asks for a rating only once the exercise is finished', async () => {
+  it('lets the reader rate without finishing the exercise first', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
     expect(
-      screen.getByText(/finish the exercise to rate this passage/i),
-    ).toBeInTheDocument();
-
-    await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-
-    expect(
       await screen.findByText(/how well did you recall it\?/i),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/finish the exercise to rate this passage/i),
+    ).not.toBeInTheDocument();
+
+    await user.click(ratingButton(/^Good/));
+
+    await waitFor(async () => {
+      const progress = await getProgress(first.id);
+      expect(progress.reviewCount).toBe(1);
+      expect(progress.lastRating).toBe('good');
+    });
+    expect(await screen.findByText(/passage 2 of 2/i)).toBeInTheDocument();
   });
 
   it('shows the interval each rating would produce before choosing', async () => {

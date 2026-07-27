@@ -30,6 +30,7 @@ import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ModeResult, Rating, ReviewMode } from '@/types';
 import { RatingPanel } from './RatingPanel';
 import { VerseAudioControls } from './VerseAudioControls';
+import { emptyResult } from './modeTypes';
 import { FlashcardMode } from './modes/FlashcardMode';
 import { LearnFlashcardMode } from './modes/LearnFlashcardMode';
 import { FirstLetterMode } from './modes/FirstLetterMode';
@@ -96,13 +97,14 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
 
   const rate = useCallback(
     async (rating: Rating) => {
-      if (!session || !verse || !result || saving) return;
+      if (!session || !verse || !mode || saving) return;
+      const attempt = result ?? emptyResult(mode);
       setSaving(true);
       try {
         const { log } = await recordReview({
           verseId: verse.id,
           rating,
-          result,
+          result: attempt,
           settings,
           sessionId: session.id,
         });
@@ -112,7 +114,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         setSaving(false);
       }
     },
-    [result, saving, session, settings, verse],
+    [mode, result, saving, session, settings, verse],
   );
 
   const goToIndex = useCallback(
@@ -132,10 +134,10 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
 
   const hotkeys = useMemo(
     () => ({
-      '1': () => void (result && rate('again')),
-      '2': () => void (result && rate('hard')),
-      '3': () => void (result && rate('good')),
-      '4': () => void (result && rate('easy')),
+      '1': () => void (mode && rate('again')),
+      '2': () => void (mode && rate('hard')),
+      '3': () => void (mode && rate('good')),
+      '4': () => void (mode && rate('easy')),
       d: () => {
         if (!verse || !progress) return;
         void setDifficult(verse.id, !progress.isDifficult).then(() =>
@@ -163,7 +165,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         goToIndex(session.currentIndex + 1);
       },
     }),
-    [goToIndex, isLearnSession, notify, progress, rate, result, session, verse],
+    [goToIndex, isLearnSession, mode, notify, progress, rate, session, verse],
   );
 
   useHotkeys(hotkeys);
@@ -372,35 +374,35 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       </main>
 
       <footer className="sticky bottom-0 border-t border-line bg-paper/95 py-3 backdrop-blur">
-        {result ? (
-          <>
-            {result.accuracy !== null ? (
-              <p className="mb-2 text-xs text-ink-muted">
+        {mode ? (
+          <div className="space-y-2">
+            {result?.accuracy !== null && result ? (
+              <p className="text-xs text-ink-muted">
                 {`${formatAccuracy(result.accuracy)} accuracy \u00b7 ${formatDuration(result.elapsedMs)} \u00b7 ${result.hintCount} hint${result.hintCount === 1 ? '' : 's'}`}
               </p>
             ) : null}
             <RatingPanel
               progress={progress}
               settings={settings}
-              suggested={result.suggestedRating}
+              suggested={result?.suggestedRating ?? null}
               disabled={saving}
               onRate={(rating) => void rate(rating)}
             />
-          </>
-        ) : (
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-ink-muted">
-              Finish the exercise to rate this passage.
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void skipCard(session)}
-            >
-              <SkipForward className="size-4" aria-hidden="true" />
-              Skip
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void skipCard(session)}
+              >
+                <SkipForward className="size-4" aria-hidden="true" />
+                Skip
+              </Button>
+            </div>
           </div>
+        ) : (
+          <p className="text-xs text-ink-muted">
+            Choose a practice mode to continue.
+          </p>
         )}
       </footer>
 
