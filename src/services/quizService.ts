@@ -6,7 +6,7 @@ import type { QuizAnswer, QuizMode, QuizSession } from '@/types/quiz';
 
 const STORAGE_PREFIX = 'verse-memory:quiz:';
 
-export type QuizScope = 'deck' | 'book';
+export type QuizScope = 'all' | 'deck' | 'book';
 
 export type QuizCriteria = {
   scope: QuizScope;
@@ -29,9 +29,10 @@ function shuffleInPlace<T>(items: T[]): T[] {
   return items;
 }
 
-/** Resolve passage ids for a quiz from deck(s) or book(s). */
+/** Resolve passage ids for a quiz from the full collection, deck(s), or book(s). */
 export function selectQuizVerseIds(criteria: QuizCriteria): string[] {
-  let matching = verses.filter((verse) => {
+  const matching = verses.filter((verse) => {
+    if (criteria.scope === 'all') return true;
     if (criteria.scope === 'deck') {
       return criteria.sections.includes(verse.section);
     }

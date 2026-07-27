@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BookOpen, ClipboardList, Ellipsis, Repeat2 } from 'lucide-react';
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
+import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
 import { Footer } from './Footer';
 import { UpdatePrompt } from './UpdatePrompt';
 
@@ -14,7 +15,8 @@ const NAV_ITEMS = [
 
 export function AppLayout() {
   const location = useLocation();
-  // The active review screen is deliberately free of navigation chrome.
+  useAppNavHotkeys();
+  // The active review / quiz screen is deliberately free of navigation chrome.
   const focusMode =
     location.pathname.startsWith('/review/session') ||
     location.pathname.startsWith('/quiz/session');

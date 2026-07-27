@@ -25,6 +25,28 @@ describe('quizService', () => {
     expect(ids.length).toBe(7 + 4);
   });
 
+  it('can quiz the entire collection or cap at 10', () => {
+    const all = selectQuizVerseIds({
+      scope: 'all',
+      sections: [],
+      books: [],
+      size: 'all',
+      mode: 'reference',
+      shuffle: false,
+    });
+    expect(all.length).toBe(171);
+
+    const ten = selectQuizVerseIds({
+      scope: 'all',
+      sections: [],
+      books: [],
+      size: 10,
+      mode: 'reference',
+      shuffle: false,
+    });
+    expect(ten).toHaveLength(10);
+  });
+
   it('creates, answers, and scores a quiz session', () => {
     const session = createQuizSession(
       {

@@ -15,9 +15,14 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
-import { DECKS } from '@/config/app';
+import { DECKS, appConfig } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
-import { createQuizSession, selectQuizVerseIds } from '@/services/quizService';
+import { verses } from '@/data/verses';
+import {
+  createQuizSession,
+  selectQuizVerseIds,
+  type QuizScope,
+} from '@/services/quizService';
 import { SECTIONS, type Section } from '@/types';
 import {
   QUIZ_MODES,
@@ -26,7 +31,7 @@ import {
   type QuizMode,
 } from '@/types/quiz';
 
-type Scope = 'deck' | 'book';
+type SizeChoice = 10 | 'all';
 
 const MODE_ICONS: Record<QuizMode, typeof Quote> = {
   reference: BookOpen,
@@ -34,10 +39,6 @@ const MODE_ICONS: Record<QuizMode, typeof Quote> = {
   'first-letter': Keyboard,
   'fill-blank': PencilLine,
 };
-
-function defaultSize(count: number): number | 'all' {
-  return count > 0 && count <= 10 ? 'all' : 10;
-}
 
 function decksLabel(sections: readonly Section[]): string {
   if (sections.length === 0) return 'No decks';
@@ -49,22 +50,24 @@ function decksLabel(sections: readonly Section[]): string {
 }
 
 /**
- * Build a scored quiz: pick decks or books, choose a quiz type, then start.
+ * Build a scored quiz: pick scope, size, and quiz type, then start.
  */
 export function QuizPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
 
-  const [scope, setScope] = useState<Scope>('deck');
+  const [scope, setScope] = useState<QuizScope>('deck');
   const [sections, setSections] = useState<Section[]>([SECTIONS[0]]);
   const [books, setBooks] = useState(() => {
     const romans = COLLECTION_BOOKS.find((item) => item.name === 'Romans');
     return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? 'John'];
   });
+  const [sizeChoice, setSizeChoice] = useState<SizeChoice>(10);
   const [mode, setMode] = useState<QuizMode>('reference');
   const [starting, setStarting] = useState(false);
 
   const matchingTotal = useMemo(() => {
+    if (scope === 'all') return verses.length;
     if (scope === 'deck') {
       return DECKS.filter((deck) => sections.includes(deck.section)).reduce(
         (sum, deck) => sum + deck.passageCount,
@@ -74,7 +77,9 @@ export function QuizPage() {
     return passageCountForBooks(books);
   }, [books, scope, sections]);
 
-  const size = defaultSize(matchingTotal);
+  const size: number | 'all' =
+    sizeChoice === 'all' ? 'all' : Math.min(10, matchingTotal || 10);
+
   const previewCount = selectQuizVerseIds({
     scope,
     sections,
@@ -102,7 +107,11 @@ export function QuizPage() {
     setStarting(true);
     try {
       const scopePart =
-        scope === 'deck' ? decksLabel(sections) : booksLabel(books);
+        scope === 'all'
+          ? 'All verses'
+          : scope === 'deck'
+            ? decksLabel(sections)
+            : booksLabel(books);
       const session = createQuizSession(
         { scope, sections, books, size, mode, shuffle: true },
         `${QUIZ_MODE_LABELS[mode]} \u00b7 ${scopePart}`,
@@ -121,7 +130,7 @@ export function QuizPage() {
     <>
       <PageHeader
         title="Quiz"
-        description="Test yourself on decks or books with a scored quiz."
+        description="Test yourself on the collection, decks, or books with a scored quiz."
       />
 
       <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
@@ -130,6 +139,12 @@ export function QuizPage() {
             <CardHeader title="What to quiz" />
             <CardBody className="space-y-4">
               <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={scope === 'all' ? 'primary' : 'secondary'}
+                  onClick={() => setScope('all')}
+                >
+                  All verses
+                </Button>
                 <Button
                   variant={scope === 'deck' ? 'primary' : 'secondary'}
                   onClick={() => setScope('deck')}
@@ -143,6 +158,12 @@ export function QuizPage() {
                   Books
                 </Button>
               </div>
+
+              {scope === 'all' ? (
+                <p className="text-sm text-ink-muted">
+                  {`Every passage in ${appConfig.collectionTitle} (${verses.length}).`}
+                </p>
+              ) : null}
 
               {scope === 'deck' ? (
                 <div
@@ -177,14 +198,46 @@ export function QuizPage() {
                     );
                   })}
                 </div>
-              ) : (
+              ) : null}
+
+              {scope === 'book' ? (
                 <BookCheckboxList
                   idPrefix="quiz-book"
                   selected={books}
                   onChange={setBooks}
                   requireOne
                 />
-              )}
+              ) : null}
+
+              <div>
+                <p className="mb-2 text-sm font-medium text-ink">How many</p>
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="Quiz length"
+                >
+                  <Button
+                    variant={sizeChoice === 10 ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setSizeChoice(10)}
+                    disabled={matchingTotal === 0}
+                    aria-pressed={sizeChoice === 10}
+                  >
+                    10 passages
+                  </Button>
+                  <Button
+                    variant={sizeChoice === 'all' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setSizeChoice('all')}
+                    disabled={matchingTotal === 0}
+                    aria-pressed={sizeChoice === 'all'}
+                  >
+                    {matchingTotal > 0
+                      ? `All ${matchingTotal} passages`
+                      : 'All passages'}
+                  </Button>
+                </div>
+              </div>
             </CardBody>
           </Card>
 
@@ -234,7 +287,7 @@ export function QuizPage() {
                 />
               ) : (
                 <p className="text-sm text-ink-muted">
-                  {size === 'all'
+                  {sizeChoice === 'all'
                     ? `All ${previewCount} passages`
                     : `${previewCount} of ${matchingTotal} passages`}
                   {` \u00b7 ${QUIZ_MODE_LABELS[mode]}`}
@@ -251,6 +304,11 @@ export function QuizPage() {
               </Button>
             </CardBody>
           </Card>
+
+          <p className="px-1 text-xs text-ink-subtle">
+            Shortcuts: 1 Library · 2 Practice · 3 Quiz · 4 More. In a quiz, Enter
+            checks or goes to the next question.
+          </p>
         </aside>
       </div>
     </>

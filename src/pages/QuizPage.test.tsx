@@ -25,6 +25,18 @@ describe('QuizPage', () => {
     await user.click(screen.getByRole('button', { name: /^books$/i }));
     expect(screen.getByRole('group', { name: /^books$/i })).toBeInTheDocument();
 
+    expect(screen.getByRole('button', { name: /10 passages/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: /all \d+ passages/i }));
+    expect(
+      screen.getByRole('button', { name: /all \d+ passages/i }),
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: /all verses/i }));
+    expect(screen.getByText(/every passage/i)).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: /start quiz/i }));
     await waitFor(() => {
       const keys = Object.keys(localStorage).filter((key) =>

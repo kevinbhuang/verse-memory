@@ -107,6 +107,12 @@ export function MorePage() {
             </p>
             <p>{appConfig.translationAttribution}</p>
             <p>
+              Shortcuts: <span className="text-ink">1</span> Library ·{' '}
+              <span className="text-ink">2</span> Practice ·{' '}
+              <span className="text-ink">3</span> Quiz ·{' '}
+              <span className="text-ink">4</span> More (also L / P / Q / M).
+            </p>
+            <p>
               <Link to="/practice" className="text-accent hover:underline">
                 Back to Practice
               </Link>

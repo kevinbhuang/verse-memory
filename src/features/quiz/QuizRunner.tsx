@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { LoadingState } from '@/components/ui/EmptyState';
+import { useHotkeys } from '@/hooks/useHotkeys';
 import { getVerse } from '@/data/verses';
 import {
   getQuizSession,
@@ -58,6 +59,21 @@ export function QuizRunner({ quizId }: { quizId: string }) {
     setPendingResult(null);
     setSession(next);
   }, [pendingResult, session, verse]);
+
+  const hotkeys = useMemo(
+    () => ({
+      enter: () => {
+        if (pendingResult) continueAfterAnswer();
+      },
+      escape: () => setConfirmExit(true),
+    }),
+    [continueAfterAnswer, pendingResult],
+  );
+
+  useHotkeys(hotkeys, {
+    enabled: Boolean(session && !session.completedAt),
+    allowWhileTyping: ['enter'],
+  });
 
   if (session === undefined) {
     return <LoadingState label={'Loading quiz\u2026'} />;
@@ -144,6 +160,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
             </p>
             <Button variant="primary" onClick={continueAfterAnswer}>
               {position >= total ? 'See results' : 'Next question'}
+              <span className="ml-1 text-xs opacity-70">(Enter)</span>
             </Button>
           </div>
         ) : (

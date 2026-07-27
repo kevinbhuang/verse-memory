@@ -14,17 +14,26 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * Registers review shortcuts.
+ * Registers keyboard shortcuts.
  *
  * Shortcuts are suppressed while the reader is typing in a field, except for
- * Escape, which always needs to work.
+ * Escape (always) and any keys listed in `allowWhileTyping`.
  */
 export function useHotkeys(
   map: HotkeyMap,
-  { enabled = true }: { enabled?: boolean } = {},
+  {
+    enabled = true,
+    allowWhileTyping = [],
+  }: { enabled?: boolean; allowWhileTyping?: readonly string[] } = {},
 ): void {
+  const allowKey = allowWhileTyping.join('\0');
+
   useEffect(() => {
     if (!enabled) return;
+
+    const allowedWhileTyping = new Set(
+      allowKey ? allowKey.split('\0').map((key) => key.toLowerCase()) : [],
+    );
 
     const handler = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -33,7 +42,8 @@ export function useHotkeys(
       const handlerForKey = map[key];
       if (!handlerForKey) return;
 
-      if (key !== 'escape' && isTypingTarget(event.target)) return;
+      const typing = isTypingTarget(event.target);
+      if (typing && key !== 'escape' && !allowedWhileTyping.has(key)) return;
 
       event.preventDefault();
       handlerForKey(event);
@@ -41,5 +51,5 @@ export function useHotkeys(
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [map, enabled]);
+  }, [map, enabled, allowKey]);
 }
