@@ -43,7 +43,7 @@ export function LibraryFilters({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2">
           <label className="sr-only" htmlFor="filter-book">
             Book
           </label>
@@ -77,46 +77,9 @@ export function LibraryFilters({
               </option>
             ))}
           </Select>
-
-          <label className="sr-only" htmlFor="filter-status">
-            Status
-          </label>
-          <Select
-            id="filter-status"
-            value={filters.status}
-            onChange={(event) =>
-              set('status', event.target.value as LibraryFilterState['status'])
-            }
-          >
-            <option value="all">Any status</option>
-            <option value="new">New</option>
-            <option value="learning">Learning</option>
-            <option value="memorized">Memorized</option>
-            <option value="needs-attention">Needs attention</option>
-          </Select>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <label className="flex items-center gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              className="size-4 accent-[var(--accent)]"
-              checked={filters.difficultOnly}
-              onChange={(event) => set('difficultOnly', event.target.checked)}
-            />
-            Difficult only
-          </label>
-
-          <label className="flex items-center gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              className="size-4 accent-[var(--accent)]"
-              checked={filters.neverReviewed}
-              onChange={(event) => set('neverReviewed', event.target.checked)}
-            />
-            Never reviewed
-          </label>
-
           <span className="ml-auto text-sm text-ink-muted" role="status">
             Showing {resultCount} of {totalCount} passages
           </span>

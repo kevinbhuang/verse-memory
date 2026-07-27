@@ -12,7 +12,7 @@ export function Footer() {
           appConfig.collectionSubtitle,
         ].join(' \u00b7 ')}
         {' \u00b7 '}
-        <Link to="/settings#about" className="underline hover:text-ink">
+        <Link to="/more" className="underline hover:text-ink">
           About
         </Link>
       </p>

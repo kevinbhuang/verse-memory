@@ -111,18 +111,14 @@ export function LibraryPage() {
     );
   };
 
-  const startSessionWith = async (
-    verseIds: string[],
-    label: string,
-    mode: 'first-letter' | 'voice' = 'first-letter',
-  ) => {
+  const startSessionWith = async (verseIds: string[], label: string) => {
     const session = await createSession(
       {
         source: 'custom',
         verseIds,
         size: 'all',
         modeStrategy: 'fixed',
-        fixedMode: mode,
+        fixedMode: 'first-letter',
       },
       label,
     );
@@ -239,16 +235,13 @@ export function LibraryPage() {
                     onToggleDifficult={(verseId, difficult) => {
                       void setDifficult(verseId, difficult);
                     }}
-                    onQuickReview={(verseId, mode) => {
+                    onQuickReview={(verseId) => {
                       const target = getVerse(verseId);
-                      const modeLabel =
-                        mode === 'first-letter' ? 'First letters' : 'Speak';
                       void startSessionWith(
                         [verseId],
                         target
-                          ? `${modeLabel} \u2014 ${target.reference}`
-                          : modeLabel,
-                        mode,
+                          ? `Practice \u2014 ${target.reference}`
+                          : 'Practice',
                       );
                     }}
                     onReset={(verseId) => setResetVerseId(verseId)}

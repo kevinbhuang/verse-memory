@@ -17,7 +17,7 @@ test('export, reset and restore brings progress back', async ({ page }) => {
   await second.click();
   await expect(second).toBeChecked();
 
-  await page.goto('/settings');
+  await page.goto('/more');
 
   const download = await Promise.race([
     page.waitForEvent('download'),
@@ -49,7 +49,7 @@ test('export, reset and restore brings progress back', async ({ page }) => {
     page.getByRole('checkbox', { name: `Mark ${FIRST_PASSAGE} as memorized` }),
   ).not.toBeChecked();
 
-  await page.goto('/settings');
+  await page.goto('/more');
   await page
     .locator('input[type="file"]')
     .setInputFiles(backupPath as string);
@@ -70,7 +70,7 @@ test('export, reset and restore brings progress back', async ({ page }) => {
 });
 
 test('an unreadable file is refused with an explanation', async ({ page }) => {
-  await page.goto('/settings');
+  await page.goto('/more');
 
   await page.locator('input[type="file"]').setInputFiles({
     name: 'not-a-backup.json',

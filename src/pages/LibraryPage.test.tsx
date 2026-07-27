@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import { requireVerse } from '@/data/verses';
-import { getProgress, setDifficult, setMemorized } from '@/services/progressService';
+import { getProgress, setMemorized } from '@/services/progressService';
 import { renderWithProviders } from '@/test/render';
 import { LibraryPage } from './LibraryPage';
 
@@ -134,22 +134,6 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     });
     expect(screen.getByRole('heading', { name: 'Acts' })).toBeInTheDocument();
     expect(screen.getByText(/4 passages/)).toBeInTheDocument();
-  });
-
-  it('filters to difficult passages only', async () => {
-    await setDifficult(passage.id, true);
-    const { user } = await renderLibrary();
-
-    await user.click(screen.getByLabelText(/difficult only/i));
-
-    await waitFor(() => {
-      expect(
-        screen.getAllByRole('link', { name: /\d?\w/ }).filter((link) =>
-          link.getAttribute('href')?.startsWith('/verses/verse-'),
-        ),
-      ).toHaveLength(1);
-    });
-    expect(screen.getByText(passage.reference)).toBeInTheDocument();
   });
 
   it('explains when nothing matches and offers a way back', async () => {

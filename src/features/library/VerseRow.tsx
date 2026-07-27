@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   EllipsisVertical,
   Flag,
   Keyboard,
-  Mic,
   RotateCcw,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -14,7 +15,7 @@ import {
   DueBadge,
   StatusBadge,
 } from '@/components/VerseBadges';
-import type { ReviewMode, Verse, VerseProgress } from '@/types';
+import type { Verse, VerseProgress } from '@/types';
 
 export function VerseRow({
   verse,
@@ -34,10 +35,7 @@ export function VerseRow({
   onToggleSelected: (verseId: string, selected: boolean) => void;
   onToggleMemorized: (verseId: string, memorized: boolean) => void;
   onToggleDifficult: (verseId: string, difficult: boolean) => void;
-  onQuickReview: (
-    verseId: string,
-    mode: Extract<ReviewMode, 'first-letter' | 'voice'>,
-  ) => void;
+  onQuickReview: (verseId: string) => void;
   onReset: (verseId: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -109,19 +107,10 @@ export function VerseRow({
             size="sm"
             variant="ghost"
             className="h-7 px-1.5"
-            onClick={() => onQuickReview(verse.id, 'first-letter')}
+            onClick={() => onQuickReview(verse.id)}
             aria-label={`Practice ${verse.reference} with first letters`}
           >
             <Keyboard className="size-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-1.5"
-            onClick={() => onQuickReview(verse.id, 'voice')}
-            aria-label={`Practice ${verse.reference} by speaking`}
-          >
-            <Mic className="size-3.5" aria-hidden="true" />
           </Button>
 
           <div className="relative">

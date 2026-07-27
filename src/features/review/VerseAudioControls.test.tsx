@@ -115,8 +115,8 @@ describe('VerseAudioControls', () => {
       screen.getByRole('button', { name: /play passage 5 times/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /play passage 10 times/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /play passage 10 times/i }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('group', { name: /playback speed/i })).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /playback speed 1\.5×/i }),
@@ -154,9 +154,9 @@ describe('VerseAudioControls', () => {
       <VerseAudioControls text="Jesus wept." passageKey="v1" />,
     );
 
-    await user.click(screen.getByRole('button', { name: /play passage 10 times/i }));
+    await user.click(screen.getByRole('button', { name: /play passage 5 times/i }));
     expect(await screen.findByRole('button', { name: /stop/i })).toBeInTheDocument();
-    expect(screen.getByText(/playing 1 of 10/i)).toBeInTheDocument();
+    expect(screen.getByText(/playing 1 of 5/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /stop/i }));
     expect(synthesis.cancel).toHaveBeenCalled();

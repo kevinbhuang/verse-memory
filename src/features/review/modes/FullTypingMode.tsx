@@ -155,11 +155,11 @@ export function FullTypingMode({
             </p>
           </div>
 
-          <div>
+          <div className="min-w-0 max-w-full">
             <h3 className="mb-2 text-sm font-semibold text-ink">
               Word-by-word comparison
             </h3>
-            <p className="scripture-sm rounded-lg border border-line bg-surface px-4 py-3 text-base">
+            <div className="scripture-sm flex max-w-full flex-wrap gap-x-1 gap-y-1.5 rounded-lg border border-line bg-surface px-4 py-3 text-base leading-relaxed break-words">
               {result.ops.map((op, index) => (
                 <span
                   key={`${op.type}-${index}`}
@@ -175,10 +175,10 @@ export function FullTypingMode({
                     </>
                   ) : (
                     (op.expected ?? op.received)
-                  )}{' '}
+                  )}
                 </span>
               ))}
-            </p>
+            </div>
             <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
               <li>Plain: correct</li>
               <li className="text-danger">Struck through in red: missing</li>

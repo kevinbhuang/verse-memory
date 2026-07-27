@@ -45,8 +45,8 @@ export function ReviewSessionPage() {
       <p className="mt-2 text-sm text-ink-muted">
         Build a session to choose which passages to review and how.
       </p>
-      <ButtonLink to="/review" variant="primary" className="mt-4">
-        Build a session
+      <ButtonLink to="/practice" variant="primary" className="mt-4">
+        Start practicing
       </ButtonLink>
     </div>
   );

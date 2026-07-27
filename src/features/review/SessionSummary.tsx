@@ -73,14 +73,14 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
       </ul>
 
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <ButtonLink to="/verses" variant="primary">
-          Back to library
+        <ButtonLink to="/practice" variant="primary">
+          Back to practice
         </ButtonLink>
-        <ButtonLink to="/review" variant="secondary">
-          Build another session
+        <ButtonLink to="/verses" variant="secondary">
+          Library
         </ButtonLink>
-        <ButtonLink to="/progress" variant="ghost">
-          See progress
+        <ButtonLink to="/more" variant="ghost">
+          More
         </ButtonLink>
       </div>
     </div>

@@ -4,11 +4,9 @@ import { SettingsProvider } from '@/hooks/useSettings';
 import { ToastProvider } from '@/components/ui/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { VerseDetailPage } from '@/pages/VerseDetailPage';
-import { LearnPage } from '@/pages/LearnPage';
-import { ReviewSetupPage } from '@/pages/ReviewSetupPage';
+import { PracticePage } from '@/pages/PracticePage';
 import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
-import { ProgressPage } from '@/pages/ProgressPage';
-import { SettingsPage } from '@/pages/SettingsPage';
+import { MorePage } from '@/pages/MorePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export function App() {
@@ -18,15 +16,20 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/verses" replace />} />
+              <Route path="/" element={<Navigate to="/practice" replace />} />
+              <Route path="/practice" element={<PracticePage />} />
               <Route path="/verses" element={<LibraryPage />} />
               <Route path="/verses/:verseId" element={<VerseDetailPage />} />
-              <Route path="/learn" element={<LearnPage />} />
-              <Route path="/review" element={<ReviewSetupPage />} />
               <Route path="/review/session" element={<ReviewSessionPage />} />
-              <Route path="/progress" element={<ProgressPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/index.html" element={<Navigate to="/verses" replace />} />
+              <Route path="/more" element={<MorePage />} />
+              <Route path="/learn" element={<Navigate to="/practice" replace />} />
+              <Route path="/review" element={<Navigate to="/practice" replace />} />
+              <Route path="/progress" element={<Navigate to="/more" replace />} />
+              <Route path="/settings" element={<Navigate to="/more" replace />} />
+              <Route
+                path="/index.html"
+                element={<Navigate to="/practice" replace />}
+              />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

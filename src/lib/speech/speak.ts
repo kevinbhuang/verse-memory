@@ -121,14 +121,12 @@ export type RepeatProgress = {
   plays: number;
 };
 
-export type SpeakRate = 1 | 1.1 | 1.2 | 1.3 | 1.4 | 1.5 | 2;
+export type SpeakRate = 1 | 1.5 | 2;
 
-export const SPEAK_RATES: readonly SpeakRate[] = [
-  1, 1.1, 1.2, 1.3, 1.4, 1.5, 2,
-];
+export const SPEAK_RATES: readonly SpeakRate[] = [1, 1.5, 2];
 
 export function formatSpeakRate(rate: SpeakRate): string {
-  return rate === 1 ? '1×' : rate === 2 ? '2×' : `${rate}×`;
+  return `${rate}×`;
 }
 
 type PlayPassageOptions = {

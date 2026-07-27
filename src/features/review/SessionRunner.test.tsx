@@ -40,12 +40,11 @@ const ratingButton = (name: RegExp) =>
   screen.getByRole('button', { name });
 
 describe('SessionRunner', () => {
-  it('shows the passage position and why it was recommended', async () => {
+  it('shows the passage position', async () => {
     const session = await startFlashcardSession();
     await renderSession(session);
 
     expect(await screen.findByText(/passage 1 of 2/i)).toBeInTheDocument();
-    expect(screen.getByText(/recommended because:/i)).toBeInTheDocument();
     expect(screen.getByText(first.reference)).toBeInTheDocument();
   });
 
@@ -81,8 +80,8 @@ describe('SessionRunner', () => {
       screen.getByRole('button', { name: /play passage 5 times/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /play passage 10 times/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /play passage 10 times/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('asks for a rating only once the exercise is finished', async () => {

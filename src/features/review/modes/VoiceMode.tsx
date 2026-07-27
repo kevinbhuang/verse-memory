@@ -71,18 +71,18 @@ const opLabels: Record<DiffOp['type'], string> = {
 
 function WordComparison({ ops }: { ops: DiffOp[] }) {
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <h3 className="mb-2 text-sm font-semibold text-ink">
         Word-by-word comparison
       </h3>
-      <p
-        className="scripture-sm rounded-lg border border-line bg-surface px-4 py-3 text-base leading-relaxed"
+      <div
+        className="scripture-sm flex max-w-full flex-wrap gap-x-1 gap-y-1.5 rounded-lg border border-line bg-surface px-4 py-3 text-base leading-relaxed break-words"
         aria-label="Comparison of what was heard with the passage"
       >
         {ops.map((op, index) => (
           <span
             key={`${op.type}-${index}`}
-            className={clsx('mr-1 inline rounded-sm px-0.5', opStyles[op.type])}
+            className={clsx('rounded-sm px-0.5', opStyles[op.type])}
             title={opLabels[op.type]}
           >
             {op.type === 'replaced' ? (
@@ -97,11 +97,17 @@ function WordComparison({ ops }: { ops: DiffOp[] }) {
             )}
           </span>
         ))}
-      </p>
+      </div>
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
-        <li className="text-success">Green: correct</li>
-        <li className="text-danger">Red: missing or wrong</li>
-        <li className="text-warning">Amber: extra words heard</li>
+        <li>
+          <span className="text-success">Green</span>: correct
+        </li>
+        <li>
+          <span className="text-danger">Red</span>: missing or wrong
+        </li>
+        <li>
+          <span className="text-warning">Amber</span>: extra words heard
+        </li>
       </ul>
     </div>
   );
@@ -230,7 +236,7 @@ export function VoiceMode({ verse, onComplete, attemptKey }: ReviewModeProps) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0 max-w-full">
       <div>
         <p className="font-serif text-xl font-semibold text-ink">
           {verse.reference}

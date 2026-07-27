@@ -15,8 +15,7 @@ type VerseAudioControlsProps = {
 };
 
 /**
- * Listen-along controls for review: play once, or loop 5 / 10 times,
- * with optional faster playback speeds.
+ * Listen-along controls: play once or ×5, with 1× / 1.5× / 2× speed.
  */
 export function VerseAudioControls({
   text,
@@ -75,14 +74,6 @@ export function VerseAudioControls({
               aria-label="Play passage 5 times"
             >
               ×5
-            </Button>
-            <Button
-              variant="quiet"
-              size="sm"
-              onClick={() => speech.play(10)}
-              aria-label="Play passage 10 times"
-            >
-              ×10
             </Button>
           </>
         )}

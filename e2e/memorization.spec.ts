@@ -28,10 +28,10 @@ test.describe('marking a passage memorized', () => {
     await memorizedCheckbox(page, FIRST_PASSAGE).click();
     await expect(memorizedCheckbox(page, FIRST_PASSAGE)).toBeChecked();
 
-    await page.goto('/progress');
+    await page.goto('/more');
 
+    await expect(page.getByText('Memorized')).toBeVisible();
     await expect(page.getByText('1').first()).toBeVisible();
-    await expect(page.getByText(/memorized/i).first()).toBeVisible();
   });
 
   test('can be undone without losing the passage', async ({ page }) => {

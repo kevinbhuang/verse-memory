@@ -17,7 +17,6 @@ import {
   skipCard,
 } from '@/services/sessionService';
 import { setDifficult } from '@/services/progressService';
-import { recommendationReason } from '@/lib/scheduler';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ModeResult, Rating, ReviewMode } from '@/types';
 import { RatingPanel } from './RatingPanel';
@@ -40,6 +39,10 @@ const MODE_COMPONENTS = {
   reference: ReferenceMode,
   voice: VoiceMode,
 } as const;
+
+/** Modes offered when a session asks the reader to choose each card. */
+const CHOOSE_EACH_MODES: ReviewMode[] = ['learn', 'first-letter'];
+
 
 export function SessionRunner({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate();
@@ -130,7 +133,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         <p className="text-sm text-ink-muted">
           That review session no longer exists.
         </p>
-        <ButtonLink to="/review" variant="primary" className="mt-4">
+        <ButtonLink to="/practice" variant="primary">
           Build a new session
         </ButtonLink>
       </div>
@@ -206,10 +209,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         />
       </div>
 
-      <p className="mt-3 text-xs text-ink-subtle">
-        {`Recommended because: ${recommendationReason(progress)}`}
-      </p>
-
       <VerseAudioControls
         text={verse.text}
         passageKey={cardKey}
@@ -223,10 +222,10 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
               {verse.reference}
             </h2>
             <p className="text-sm text-ink-muted">
-              Choose how you want to review this passage.
+              Choose how you want to practice this passage.
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {(Object.keys(MODE_COMPONENTS) as ReviewMode[]).map((option) => (
+              {CHOOSE_EACH_MODES.map((option) => (
                 <button
                   key={option}
                   type="button"
@@ -290,13 +289,13 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       <ConfirmDialog
         open={confirmExit}
         title="Leave this session?"
-        description="Your completed passages are already saved. You can resume this session from Learn or Review."
+        description="Your completed passages are already saved. You can resume this session from Practice."
         confirmLabel="Pause and leave"
-        cancelLabel="Keep reviewing"
+        cancelLabel="Keep practicing"
         onCancel={() => setConfirmExit(false)}
         onConfirm={() => {
           setConfirmExit(false);
-          navigate(session.fixedMode === 'learn' ? '/learn' : '/review');
+          navigate('/practice');
         }}
       >
         <div className="space-y-3 text-sm text-ink-muted">

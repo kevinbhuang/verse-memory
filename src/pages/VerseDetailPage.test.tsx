@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { requireVerse } from '@/data/verses';
-import { getProgress, setDifficult } from '@/services/progressService';
+import { getProgress } from '@/services/progressService';
 import { recordReview } from '@/services/reviewService';
 import {
   normalizeSpace,
@@ -74,11 +74,11 @@ describe('VerseDetailPage', () => {
     });
   });
 
-  it('offers first-letter and speak practice without notes', async () => {
+  it('offers practice without notes or speak mode', async () => {
     await renderDetail();
 
-    expect(screen.getByRole('button', { name: /first letters/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^speak$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^practice$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^speak$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /add note/i })).not.toBeInTheDocument();
     expect(visibleText()).toContain(passage);
   });
@@ -96,36 +96,6 @@ describe('VerseDetailPage', () => {
     expect(await screen.findByText(/1 recorded review\./)).toBeInTheDocument();
     expect(screen.getByText(/First letter · hard · 85%/)).toBeInTheDocument();
     expect(screen.getAllByText('Tomorrow').length).toBeGreaterThan(0);
-  });
-
-  it('explains why a passage counts as difficult', async () => {
-    await setDifficult(verse.id, true);
-    await recordReview({
-      verseId: verse.id,
-      rating: 'again',
-      result: modeResult({ accuracy: 0.3, hintCount: 5 }),
-      settings: { maximumIntervalDays: 365, difficultVerseIntervalDays: 7 },
-    });
-
-    await renderDetail();
-
-    expect(
-      await screen.findByText(/why this is difficult/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/marked difficult/i)).toBeInTheDocument();
-  });
-
-  it('pins the passage to a fixed review frequency', async () => {
-    const { user } = await renderDetail();
-
-    await user.selectOptions(screen.getByLabelText(/pin for frequent review/i), '7');
-
-    await waitFor(async () => {
-      expect(await getProgress(verse.id)).toMatchObject({
-        isPinned: true,
-        pinnedFrequencyDays: 7,
-      });
-    });
   });
 
   it('confirms before resetting the passage', async () => {

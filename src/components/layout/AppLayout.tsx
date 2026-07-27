@@ -1,22 +1,14 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import {
-  BookOpen,
-  ChartNoAxesColumn,
-  GraduationCap,
-  Repeat2,
-  Settings as SettingsIcon,
-} from 'lucide-react';
+import { BookOpen, Ellipsis, Repeat2 } from 'lucide-react';
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
 import { Footer } from './Footer';
 import { UpdatePrompt } from './UpdatePrompt';
 
 const NAV_ITEMS = [
+  { to: '/practice', label: 'Practice', icon: Repeat2, end: false },
   { to: '/verses', label: 'Library', icon: BookOpen, end: false },
-  { to: '/learn', label: 'Learn', icon: GraduationCap, end: false },
-  { to: '/review', label: 'Review', icon: Repeat2, end: false },
-  { to: '/progress', label: 'Progress', icon: ChartNoAxesColumn, end: false },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon, end: false },
+  { to: '/more', label: 'More', icon: Ellipsis, end: false },
 ];
 
 export function AppLayout() {

@@ -82,37 +82,40 @@ test.describe('completing a first-letter review', () => {
   });
 
   test('can be paused and resumed', async ({ page }) => {
-    await page.goto('/review');
+    await page.goto('/practice');
     await page.getByRole('button', { name: /deck 1/i }).click();
-    await page.getByRole('button', { name: '5' }).click();
-    await expect(page.getByText(/deck 1: 5 passages/i)).toBeVisible();
-    await page.getByRole('button', { name: 'Start session' }).click();
+    await page
+      .getByRole('button', { name: /type the first letter of each word/i })
+      .click();
+    await expect(page.getByText(/passages/i).first()).toBeVisible();
+    await page.getByRole('button', { name: /^start$/i }).click();
 
-    await expect(page.getByText(/passage 1 of 5/i)).toBeVisible();
+    await expect(page.getByText(/passage 1 of/i)).toBeVisible();
     await page.getByRole('button', { name: /skip/i }).click();
-    await expect(page.getByText(/passage 2 of 5/i)).toBeVisible();
+    await expect(page.getByText(/passage 2 of/i)).toBeVisible();
 
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Pause and leave' }).click();
 
     await expect(page.getByText(/you have an unfinished session/i)).toBeVisible();
-    await expect(page.getByText(/1 of 5 completed/i)).toBeVisible();
+    await expect(page.getByText(/1 of \d+ completed/i)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Resume session' }).click();
-    await expect(page.getByText(/passage 2 of 5/i)).toBeVisible();
+    await page.getByRole('button', { name: /^resume$/i }).click();
+    await expect(page.getByText(/passage 2 of/i)).toBeVisible();
   });
 
   test('a deck session stays inside that section', async ({ page }) => {
-    await page.goto('/review?section=Acts');
+    await page.goto('/practice?section=Acts');
     await expect(page.getByRole('button', { name: /deck 5/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    await page.getByRole('button', { name: /whole deck/i }).click();
-    await expect(page.getByText(/deck 5: 4 passages/i)).toBeVisible();
+    await expect(page.getByText(/4 passage/i)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Start session' }).click();
+    await page
+      .getByRole('button', { name: /type the first letter of each word/i })
+      .click();
+    await page.getByRole('button', { name: /^start$/i }).click();
     await expect(page.getByText(/passage 1 of 4/i)).toBeVisible();
-    await expect(page.getByText(/Acts /).first()).toBeVisible();
   });
 });
