@@ -1,0 +1,335 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Flag, NotebookPen, SkipForward, X } from 'lucide-react';
+import { Button, ButtonLink } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/Dialog';
+import { NoteDialog } from '@/components/NoteDialog';
+import { LoadingState } from '@/components/ui/EmptyState';
+import { useToast } from '@/components/ui/Toast';
+import { useHotkeys } from '@/hooks/useHotkeys';
+import { useSettings } from '@/hooks/useSettings';
+import { useSession, useVerseProgress, useWordStats } from '@/hooks/useProgressData';
+import { getVerse } from '@/data/verses';
+import { recordReview } from '@/services/reviewService';
+import {
+  advanceSession,
+  completeSession,
+  modeForIndex,
+  skipCard,
+} from '@/services/sessionService';
+import { saveNote, setDifficult } from '@/services/progressService';
+import { recommendationReason } from '@/lib/scheduler';
+import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
+import type { ModeResult, Rating, ReviewMode } from '@/types';
+import { RatingPanel } from './RatingPanel';
+import { FlashcardMode } from './modes/FlashcardMode';
+import { FirstLetterMode } from './modes/FirstLetterMode';
+import { ProgressiveHideMode } from './modes/ProgressiveHideMode';
+import { FullTypingMode } from './modes/FullTypingMode';
+import { ReferenceMode } from './modes/ReferenceMode';
+import { VoiceMode } from './modes/VoiceMode';
+import { SessionSummary } from './SessionSummary';
+
+const MODE_COMPONENTS = {
+  flashcard: FlashcardMode,
+  'first-letter': FirstLetterMode,
+  'progressive-hide': ProgressiveHideMode,
+  'full-typing': FullTypingMode,
+  reference: ReferenceMode,
+  voice: VoiceMode,
+} as const;
+
+export function SessionRunner({ sessionId }: { sessionId: string }) {
+  const navigate = useNavigate();
+  const { notify } = useToast();
+  const { settings } = useSettings();
+
+  const session = useSession(sessionId);
+  const verseId = session?.verseIds[session.currentIndex];
+  const verse = verseId ? getVerse(verseId) : undefined;
+  const progress = useVerseProgress(verseId);
+  const wordStats = useWordStats(verseId);
+
+  const [result, setResult] = useState<ModeResult | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const [chosenMode, setChosenMode] = useState<ReviewMode | null>(null);
+
+  const cardKey = `${sessionId}:${session?.currentIndex ?? 0}:${verseId ?? ''}`;
+
+  useEffect(() => {
+    setResult(null);
+    setChosenMode(null);
+  }, [cardKey]);
+
+  const mode: ReviewMode | null = useMemo(() => {
+    if (!session || !progress) return null;
+    if (session.modeStrategy === 'choose-each') return chosenMode;
+    return modeForIndex(
+      session,
+      progress,
+      session.currentIndex,
+      settings.defaultReviewMode,
+    );
+  }, [chosenMode, progress, session, settings.defaultReviewMode]);
+
+  const rate = useCallback(
+    async (rating: Rating) => {
+      if (!session || !verse || !result || saving) return;
+      setSaving(true);
+      try {
+        const { log } = await recordReview({
+          verseId: verse.id,
+          rating,
+          result,
+          settings,
+          sessionId: session.id,
+        });
+        await advanceSession(session, log.id, { requeue: rating === 'again' });
+        setResult(null);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [result, saving, session, settings, verse],
+  );
+
+  const hotkeys = useMemo(
+    () => ({
+      '1': () => void (result && rate('again')),
+      '2': () => void (result && rate('hard')),
+      '3': () => void (result && rate('good')),
+      '4': () => void (result && rate('easy')),
+      d: () => {
+        if (!verse || !progress) return;
+        void setDifficult(verse.id, !progress.isDifficult).then(() =>
+          notify(
+            progress.isDifficult
+              ? 'Difficult flag removed.'
+              : 'Marked difficult.',
+            'success',
+          ),
+        );
+      },
+      n: () => setNoteOpen(true),
+      escape: () => setConfirmExit(true),
+    }),
+    [notify, progress, rate, result, verse],
+  );
+
+  useHotkeys(hotkeys);
+
+  if (session === undefined) {
+    return <LoadingState label={'Loading session\u2026'} />;
+  }
+
+  if (session === null || !session) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-sm text-ink-muted">
+          That review session no longer exists.
+        </p>
+        <ButtonLink to="/review" variant="primary" className="mt-4">
+          Build a new session
+        </ButtonLink>
+      </div>
+    );
+  }
+
+  const finished =
+    session.completedAt !== null ||
+    session.currentIndex >= session.verseIds.length;
+
+  if (finished) {
+    return <SessionSummary session={session} />;
+  }
+
+  if (!verse || !progress || wordStats === undefined) {
+    return <LoadingState label={'Loading passage\u2026'} />;
+  }
+
+  const ModeComponent = mode ? MODE_COMPONENTS[mode] : null;
+  const position = session.currentIndex + 1;
+  const total = session.verseIds.length;
+
+  return (
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
+      <header className="flex items-center justify-between gap-3 border-b border-line pb-3">
+        <div className="min-w-0">
+          <p className="text-xs tracking-wide text-ink-subtle uppercase">
+            {session.label}
+          </p>
+          <p className="text-sm text-ink-muted tabular-nums">
+            {`Passage ${position} of ${total}${mode ? ` \u00b7 ${MODE_LABELS[mode]}` : ''}`}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void setDifficult(verse.id, !progress.isDifficult)}
+            aria-pressed={progress.isDifficult}
+            title="Toggle difficult (D)"
+          >
+            <Flag
+              className="size-4"
+              aria-hidden="true"
+              fill={progress.isDifficult ? 'currentColor' : 'none'}
+            />
+            <span className="sr-only">Toggle difficult</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setNoteOpen(true)}
+            title="Add a note (N)"
+          >
+            <NotebookPen className="size-4" aria-hidden="true" />
+            <span className="sr-only">Add note</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setConfirmExit(true)}
+            title="Leave session (Escape)"
+          >
+            <X className="size-4" aria-hidden="true" />
+            <span className="sr-only">Leave session</span>
+          </Button>
+        </div>
+      </header>
+
+      <div
+        className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface-sunken"
+        role="progressbar"
+        aria-valuenow={position}
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-label="Session progress"
+      >
+        <div
+          className="h-full bg-accent transition-[width]"
+          style={{ width: `${(session.currentIndex / total) * 100}%` }}
+        />
+      </div>
+
+      <p className="mt-3 text-xs text-ink-subtle">
+        {`Recommended because: ${recommendationReason(progress)}`}
+      </p>
+
+      <main className="flex-1 py-6">
+        {session.modeStrategy === 'choose-each' && !chosenMode ? (
+          <div className="space-y-4">
+            <h2 className="font-serif text-xl font-semibold text-ink">
+              {verse.reference}
+            </h2>
+            <p className="text-sm text-ink-muted">
+              Choose how you want to review this passage.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(Object.keys(MODE_COMPONENTS) as ReviewMode[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setChosenMode(option)}
+                  className="rounded-lg border border-line-strong bg-surface px-4 py-3 text-left hover:bg-surface-muted"
+                >
+                  <span className="block text-sm font-medium text-ink">
+                    {MODE_LABELS[option]}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : ModeComponent ? (
+          <ModeComponent
+            verse={verse}
+            progress={progress}
+            settings={settings}
+            wordStats={wordStats}
+            onComplete={setResult}
+            attemptKey={cardKey}
+          />
+        ) : (
+          <LoadingState />
+        )}
+      </main>
+
+      <footer className="sticky bottom-0 border-t border-line bg-paper/95 py-3 backdrop-blur">
+        {result ? (
+          <>
+            {result.accuracy !== null ? (
+              <p className="mb-2 text-xs text-ink-muted">
+                {`${formatAccuracy(result.accuracy)} accuracy \u00b7 ${formatDuration(result.elapsedMs)} \u00b7 ${result.hintCount} hint${result.hintCount === 1 ? '' : 's'}`}
+              </p>
+            ) : null}
+            <RatingPanel
+              progress={progress}
+              settings={settings}
+              suggested={result.suggestedRating}
+              disabled={saving}
+              onRate={(rating) => void rate(rating)}
+            />
+          </>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-ink-muted">
+              Finish the exercise to rate this passage.
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void skipCard(session)}
+            >
+              <SkipForward className="size-4" aria-hidden="true" />
+              Skip
+            </Button>
+          </div>
+        )}
+      </footer>
+
+      <NoteDialog
+        open={noteOpen}
+        reference={verse.reference}
+        initialNote={progress.note}
+        onClose={() => setNoteOpen(false)}
+        onSave={async (note) => {
+          await saveNote(verse.id, note);
+          setNoteOpen(false);
+          notify('Note saved.', 'success');
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmExit}
+        title="Leave this session?"
+        description="Your completed passages are already saved. You can resume this session from the dashboard."
+        confirmLabel="Pause and leave"
+        cancelLabel="Keep reviewing"
+        onCancel={() => setConfirmExit(false)}
+        onConfirm={() => {
+          setConfirmExit(false);
+          navigate('/review');
+        }}
+      >
+        <div className="space-y-3 text-sm text-ink-muted">
+          <p>
+            {`${session.currentIndex} of ${session.verseIds.length} passages completed.`}
+          </p>
+          <p>
+            <Link
+              to="/"
+              className="underline"
+              onClick={() => void completeSession(session)}
+            >
+              End the session instead
+            </Link>{' '}
+            if you do not intend to come back to it.
+          </p>
+        </div>
+      </ConfirmDialog>
+    </div>
+  );
+}

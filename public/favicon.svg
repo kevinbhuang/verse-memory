@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Verse Memory">
+  <rect width="64" height="64" rx="12" fill="#24425c" />
+  <g fill="#faf9f7">
+    <rect x="9" y="17" width="21" height="30" rx="2" />
+    <rect x="34" y="17" width="21" height="30" rx="2" />
+  </g>
+  <g fill="#9aa8b6">
+    <rect x="12" y="22" width="15" height="2.4" />
+    <rect x="12" y="28" width="15" height="2.4" />
+    <rect x="12" y="34" width="15" height="2.4" />
+    <rect x="12" y="40" width="7" height="2.4" />
+    <rect x="37" y="22" width="15" height="2.4" />
+    <rect x="37" y="28" width="15" height="2.4" />
+    <rect x="37" y="34" width="15" height="2.4" />
+    <rect x="37" y="40" width="7" height="2.4" />
+  </g>
+</svg>

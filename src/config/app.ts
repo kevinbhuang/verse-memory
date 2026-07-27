@@ -1,0 +1,39 @@
+import { SECTIONS, type Section } from '@/types';
+
+const env = import.meta.env;
+
+/**
+ * Presentation-level configuration. Everything here is overridable through
+ * `.env` so the collection can be re-titled without touching components.
+ */
+export const appConfig = {
+  appName: env.VITE_APP_NAME ?? 'Verse Memory',
+  collectionTitle:
+    env.VITE_COLLECTION_TITLE ?? '100 Verses Every Christian Should Know',
+  collectionSubtitle: env.VITE_COLLECTION_SUBTITLE ?? '171-Passage Collection',
+  translationAttribution:
+    env.VITE_TRANSLATION_ATTRIBUTION ??
+    'Scripture quotations are from the ESV\u00ae Bible (The Holy Bible, English Standard Version\u00ae), copyright \u00a9 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.',
+  expectedVerseCount: 171,
+} as const;
+
+export const SECTION_RANGES: ReadonlyArray<{
+  section: Section;
+  start: number;
+  end: number;
+}> = [
+  { section: SECTIONS[0], start: 1, end: 7 },
+  { section: SECTIONS[1], start: 8, end: 19 },
+  { section: SECTIONS[2], start: 20, end: 37 },
+  { section: SECTIONS[3], start: 38, end: 68 },
+  { section: SECTIONS[4], start: 69, end: 72 },
+  { section: SECTIONS[5], start: 73, end: 144 },
+  { section: SECTIONS[6], start: 145, end: 171 },
+];
+
+export function sectionForOrder(order: number): Section | null {
+  return (
+    SECTION_RANGES.find((range) => order >= range.start && order <= range.end)
+      ?.section ?? null
+  );
+}

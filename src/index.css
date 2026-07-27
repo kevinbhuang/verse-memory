@@ -1,0 +1,185 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * A single restrained accent, a warm off-white reading surface and a dark
+ * neutral ink. Colours are declared as CSS variables so the dark theme swaps
+ * values rather than duplicating every utility class.
+ */
+:root {
+  --paper: #faf9f7;
+  --surface: #ffffff;
+  --surface-muted: #f3f1ed;
+  --surface-sunken: #edeae4;
+  --border-subtle: #e5e1d9;
+  --border-strong: #d2ccc1;
+  --ink: #1b1a18;
+  --ink-muted: #5c574f;
+  --ink-subtle: #8b857b;
+  --accent: #2f5372;
+  --accent-strong: #24425c;
+  --accent-soft: #e8eef5;
+  --accent-contrast: #ffffff;
+  --success: #2f6a4f;
+  --success-soft: #e6f0ea;
+  --warning: #8a6320;
+  --warning-soft: #f7efdf;
+  --danger: #93362f;
+  --danger-soft: #f8e9e7;
+  --heat-1: #f6ecdf;
+  --heat-2: #f2ddc4;
+  --heat-3: #ecc8a4;
+}
+
+.dark {
+  --paper: #16171a;
+  --surface: #1d1f23;
+  --surface-muted: #24272c;
+  --surface-sunken: #2b2f35;
+  --border-subtle: #32363d;
+  --border-strong: #434952;
+  --ink: #e9e7e3;
+  --ink-muted: #a8a29a;
+  --ink-subtle: #7c7770;
+  --accent: #8ab0d8;
+  --accent-strong: #a6c4e5;
+  --accent-soft: #1f2c3a;
+  --accent-contrast: #10151b;
+  --success: #7fbf9d;
+  --success-soft: #1c2a24;
+  --warning: #d7b273;
+  --warning-soft: #2b2519;
+  --danger: #e0938c;
+  --danger-soft: #2e1e1d;
+  --heat-1: #2a2621;
+  --heat-2: #3a322a;
+  --heat-3: #4b3d30;
+}
+
+@theme inline {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-serif:
+    'Iowan Old Style', 'Palatino Linotype', Palatino, 'Source Serif 4', Georgia,
+    'Times New Roman', serif;
+
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'kern';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  /* Scripture is set in a serif face with generous leading on every screen. */
+  .scripture {
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    line-height: 1.85;
+    letter-spacing: 0.003em;
+    color: var(--ink);
+  }
+
+  @media (min-width: 768px) {
+    .scripture {
+      font-size: 1.25rem;
+      line-height: 1.9;
+    }
+  }
+
+  .scripture-sm {
+    font-family: var(--font-serif);
+    line-height: 1.7;
+  }
+
+  .card {
+    background-color: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
+
+  .skip-link:focus {
+    left: 0.75rem;
+    top: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.5rem;
+  }
+}
+
+/* Motion is minimal by default and removed entirely on request. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}

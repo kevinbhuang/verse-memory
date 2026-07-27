@@ -1,0 +1,60 @@
+{
+  "name": "verse-memory",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run validate:verses && tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc -b --force",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "validate:verses": "node scripts/validate-verses.mjs",
+    "validate:verses:report": "node scripts/validate-verses.mjs --report",
+    "hash:verses": "node scripts/validate-verses.mjs --write-hashes",
+    "verify:esv": "node scripts/verify-esv.mjs",
+    "icons": "node scripts/generate-icons.mjs",
+    "clean:js": "node scripts/clean-emitted-js.mjs"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "dexie": "^4.0.11",
+    "dexie-react-hooks": "^1.1.7",
+    "lucide-react": "^0.474.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@playwright/test": "^1.50.1",
+    "@tailwindcss/vite": "^4.0.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.13.1",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.19.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.18",
+    "fake-indexeddb": "^6.0.1",
+    "globals": "^15.14.0",
+    "jsdom": "^26.0.0",
+    "tailwindcss": "^4.0.3",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "^8.23.0",
+    "vite": "^6.1.0",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^3.0.5"
+  }
+}

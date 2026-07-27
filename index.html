@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f2937" />
+    <meta
+      name="description"
+      content="A focused Scripture memory workspace for learning, reviewing, and retaining a fixed collection of 171 passages."
+    />
+    <title>Verse Memory</title>
+    <script>
+      // Applied before first paint so the theme does not flash.
+      (function () {
+        try {
+          const stored = localStorage.getItem('verse-memory:theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const dark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
+          document.documentElement.classList.toggle('dark', dark);
+        } catch (error) {
+          void error;
+        }
+      })();
+    </script>
+  </head>
+  <body class="h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

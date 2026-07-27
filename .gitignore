@@ -1,0 +1,16 @@
+node_modules
+dist
+dev-dist
+coverage
+.tools
+.env
+.env.local
+.DS_Store
+playwright-report
+test-results
+*.tsbuildinfo
+
+# Accidental tsc emit next to TypeScript sources (noEmit should prevent this)
+vite.config.js
+vitest.config.js
+playwright.config.js
