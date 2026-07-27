@@ -12,6 +12,7 @@ import {
   getResumableSession,
   modeForIndex,
   selectVerseIds,
+  setSessionIndex,
   skipCard,
   type SessionCriteria,
 } from './sessionService';
@@ -355,6 +356,21 @@ describe('session persistence', () => {
     const next = await skipCard(session, NOW);
     expect(next.currentIndex).toBe(1);
     expect(next.results).toEqual([]);
+  });
+
+  it('moves to a specific passage index without recording a result', async () => {
+    const session = (await createSession(
+      criteria({ source: 'range', range: { start: 1, end: 3 } }),
+      'Passages 1 to 3',
+      NOW,
+    ))!;
+
+    const next = await setSessionIndex(session, 2);
+    expect(next.currentIndex).toBe(2);
+    expect(next.results).toEqual([]);
+
+    const back = await setSessionIndex(next, 0);
+    expect(back.currentIndex).toBe(0);
   });
 
   it('forgets an abandoned session', async () => {

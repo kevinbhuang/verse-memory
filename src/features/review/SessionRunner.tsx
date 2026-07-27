@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Flag, SkipForward, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Flag,
+  Keyboard,
+  Mic,
+  SkipForward,
+  X,
+} from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { LoadingState } from '@/components/ui/EmptyState';
@@ -14,6 +22,7 @@ import {
   advanceSession,
   completeSession,
   modeForIndex,
+  setSessionIndex,
   skipCard,
 } from '@/services/sessionService';
 import { setDifficult } from '@/services/progressService';
@@ -43,6 +52,7 @@ const MODE_COMPONENTS = {
 /** Modes offered when a session asks the reader to choose each card. */
 const CHOOSE_EACH_MODES: ReviewMode[] = ['learn', 'first-letter'];
 
+type LearnPracticeMode = Extract<ReviewMode, 'first-letter' | 'voice'>;
 
 export function SessionRunner({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate();
@@ -59,9 +69,12 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const [saving, setSaving] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [chosenMode, setChosenMode] = useState<ReviewMode | null>(null);
-  const [practiceMode, setPracticeMode] = useState<ReviewMode | null>(null);
+  const [practiceMode, setPracticeMode] = useState<LearnPracticeMode | null>(
+    null,
+  );
 
   const cardKey = `${sessionId}:${session?.currentIndex ?? 0}:${verseId ?? ''}`;
+  const isLearnSession = session?.fixedMode === 'learn';
 
   useEffect(() => {
     setResult(null);
@@ -102,6 +115,21 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     [result, saving, session, settings, verse],
   );
 
+  const goToIndex = useCallback(
+    (index: number) => {
+      if (!session) return;
+      setResult(null);
+      setPracticeMode(null);
+      void setSessionIndex(session, index);
+    },
+    [session],
+  );
+
+  const switchLearnPractice = useCallback((next: LearnPracticeMode | null) => {
+    setResult(null);
+    setPracticeMode(next);
+  }, []);
+
   const hotkeys = useMemo(
     () => ({
       '1': () => void (result && rate('again')),
@@ -120,8 +148,22 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         );
       },
       escape: () => setConfirmExit(true),
+      arrowleft: () => {
+        if (!session || !isLearnSession || session.currentIndex <= 0) return;
+        goToIndex(session.currentIndex - 1);
+      },
+      arrowright: () => {
+        if (
+          !session ||
+          !isLearnSession ||
+          session.currentIndex >= session.verseIds.length - 1
+        ) {
+          return;
+        }
+        goToIndex(session.currentIndex + 1);
+      },
     }),
-    [notify, progress, rate, result, verse],
+    [goToIndex, isLearnSession, notify, progress, rate, result, session, verse],
   );
 
   useHotkeys(hotkeys);
@@ -158,6 +200,8 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const ModeComponent = mode ? MODE_COMPONENTS[mode] : null;
   const position = session.currentIndex + 1;
   const total = session.verseIds.length;
+  const canGoPrev = session.currentIndex > 0;
+  const canGoNext = session.currentIndex < session.verseIds.length - 1;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
@@ -218,6 +262,67 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         className="mt-3 rounded-lg border border-line bg-surface px-3 py-2"
       />
 
+      {isLearnSession ? (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canGoPrev}
+              onClick={() => goToIndex(session.currentIndex - 1)}
+              aria-label="Previous passage"
+            >
+              <ChevronLeft className="size-4" aria-hidden="true" />
+              Previous
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canGoNext}
+              onClick={() => goToIndex(session.currentIndex + 1)}
+              aria-label="Next passage"
+            >
+              Next
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
+
+          {practiceMode ? (
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Practice mode"
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => switchLearnPractice(null)}
+              >
+                Show passage
+              </Button>
+              <Button
+                variant={practiceMode === 'first-letter' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => switchLearnPractice('first-letter')}
+                aria-pressed={practiceMode === 'first-letter'}
+              >
+                <Keyboard className="size-4" aria-hidden="true" />
+                First letters
+              </Button>
+              <Button
+                variant={practiceMode === 'voice' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => switchLearnPractice('voice')}
+                aria-pressed={practiceMode === 'voice'}
+              >
+                <Mic className="size-4" aria-hidden="true" />
+                Audio
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <main className="flex-1 py-6">
         {session.modeStrategy === 'choose-each' && !chosenMode ? (
           <div className="space-y-4">
@@ -250,10 +355,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
             wordStats={wordStats}
             onComplete={setResult}
             attemptKey={`${cardKey}:${mode}`}
-            onPractice={(next) => {
-              setResult(null);
-              setPracticeMode(next);
-            }}
+            onPractice={(next) => switchLearnPractice(next)}
           />
         ) : ModeComponent ? (
           <ModeComponent

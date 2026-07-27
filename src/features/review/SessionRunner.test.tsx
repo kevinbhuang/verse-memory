@@ -282,4 +282,46 @@ describe('SessionRunner', () => {
       await screen.findByText(/that review session no longer exists/i),
     ).toBeInTheDocument();
   });
+
+  it('lets learn sessions switch practice modes and move between passages', async () => {
+    const session = await createSession(
+      {
+        source: 'custom',
+        verseIds: [first.id, second.id],
+        size: 'all',
+        modeStrategy: 'fixed',
+        fixedMode: 'learn',
+      },
+      'Learn test',
+    );
+    const { user } = await renderSession(session!);
+
+    expect(await screen.findByText(first.reference)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /previous passage/i })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: /^audio$/i }));
+    expect(
+      await screen.findByRole('group', { name: /practice mode/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not provide speech recognition|start reciting/i),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(screen.getByRole('group', { name: /practice mode/i })).getByRole(
+        'button',
+        { name: /^first letters$/i },
+      ),
+    );
+    expect(
+      await screen.findByLabelText(/type the first letter of each word/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /next passage/i }));
+    expect(await screen.findByText(second.reference)).toBeInTheDocument();
+    expect(screen.getByText(/passage 2 of 2/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /previous passage/i }));
+    expect(await screen.findByText(first.reference)).toBeInTheDocument();
+  });
 });

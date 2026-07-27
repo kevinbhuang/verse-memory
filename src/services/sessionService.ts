@@ -341,6 +341,30 @@ export async function skipCard(
   return next;
 }
 
+/**
+ * Jump to another passage in the session without recording a review.
+ * Used while browsing during Learn sessions.
+ */
+export async function setSessionIndex(
+  session: ReviewSession,
+  index: number,
+): Promise<ReviewSession> {
+  if (session.verseIds.length === 0) return session;
+  const currentIndex = Math.max(
+    0,
+    Math.min(index, session.verseIds.length - 1),
+  );
+  if (currentIndex === session.currentIndex) return session;
+
+  const next: ReviewSession = {
+    ...session,
+    currentIndex,
+    completedAt: null,
+  };
+  await store().sessions.put(next);
+  return next;
+}
+
 export async function completeSession(
   session: ReviewSession,
   now: Date = new Date(),
