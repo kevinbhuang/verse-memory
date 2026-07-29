@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playPassageEsvAudio } from '@/lib/speech/esvAudio';
 import {
+  DEFAULT_SPEAK_RATE,
   playPassageSpeech,
   speechSupported,
   type SpeakRate,
@@ -31,17 +32,25 @@ export function useVerseSpeech(
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
   const [playTotal, setPlayTotal] = useState(0);
-  const [rate, setRate] = useState<SpeakRate>(1);
+  const [rate, setRateState] = useState<SpeakRate>(DEFAULT_SPEAK_RATE);
   const rateRef = useRef(rate);
   rateRef.current = rate;
   const stopRef = useRef<(() => void) | null>(null);
+  const liveSetRateRef = useRef<((next: SpeakRate) => void) | null>(null);
 
   const stop = useCallback(() => {
     stopRef.current?.();
     stopRef.current = null;
+    liveSetRateRef.current = null;
     setPlaying(false);
     setPlayIndex(0);
     setPlayTotal(0);
+  }, []);
+
+  const setRate = useCallback((next: SpeakRate) => {
+    setRateState(next);
+    rateRef.current = next;
+    liveSetRateRef.current?.(next);
   }, []);
 
   useEffect(() => {
@@ -53,6 +62,7 @@ export function useVerseSpeech(
   const play = useCallback(
     (times: SpeakRepeatCount = 1) => {
       stopRef.current?.();
+      liveSetRateRef.current = null;
       setPlaying(true);
       setPlayTotal(times);
       setPlayIndex(1);
@@ -65,6 +75,7 @@ export function useVerseSpeech(
       const finishIfCurrent = (controllerStop: () => void) => {
         if (stopRef.current === controllerStop) {
           stopRef.current = null;
+          liveSetRateRef.current = null;
           setPlaying(false);
           setPlayIndex(0);
           setPlayTotal(0);
@@ -83,6 +94,7 @@ export function useVerseSpeech(
           onProgress,
         });
         stopRef.current = controller.stop;
+        liveSetRateRef.current = controller.setRate;
         void controller.done.finally(() => finishIfCurrent(controller.stop));
       };
 
@@ -92,6 +104,7 @@ export function useVerseSpeech(
           onProgress,
         });
         stopRef.current = controller.stop;
+        liveSetRateRef.current = controller.setRate;
         void controller.done
           .then(() => finishIfCurrent(controller.stop))
           .catch(() => {

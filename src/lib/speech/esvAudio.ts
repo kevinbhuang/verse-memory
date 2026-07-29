@@ -1,9 +1,15 @@
 import type { SpeakRate, SpeakRepeatCount } from './speak';
-import { DEFAULT_REPEAT_GAP_MS } from './speak';
+import { DEFAULT_REPEAT_GAP_MS, DEFAULT_SPEAK_RATE } from './speak';
 
 export type EsvAudioProgress = {
   play: number;
   plays: number;
+};
+
+export type EsvAudioController = {
+  stop: () => void;
+  done: Promise<void>;
+  setRate: (rate: SpeakRate) => void;
 };
 
 type PlayEsvAudioOptions = {
@@ -20,16 +26,22 @@ export function esvAudioUrl(reference: string): string {
 /**
  * Play Crossway ESV narration for a reference (via `/api/esv-audio`).
  * Rejects if the audio cannot load so callers can fall back to TTS.
+ * `setRate` updates the active element immediately (and later repeats).
  */
 export function playPassageEsvAudio(
   reference: string,
   times: SpeakRepeatCount,
   options: PlayEsvAudioOptions = {},
-): { stop: () => void; done: Promise<void> } {
-  const { onProgress, gapMs = DEFAULT_REPEAT_GAP_MS, rate = 1 } = options;
+): EsvAudioController {
+  const {
+    onProgress,
+    gapMs = DEFAULT_REPEAT_GAP_MS,
+    rate = DEFAULT_SPEAK_RATE,
+  } = options;
   const signal = { cancelled: false };
   let gapTimer: ReturnType<typeof setTimeout> | null = null;
   let audio: HTMLAudioElement | null = null;
+  let currentRate = rate;
 
   const stop = () => {
     signal.cancelled = true;
@@ -41,6 +53,11 @@ export function playPassageEsvAudio(
       audio.load();
       audio = null;
     }
+  };
+
+  const setRate = (next: SpeakRate) => {
+    currentRate = next;
+    if (audio) audio.playbackRate = next;
   };
 
   const done = (async () => {
@@ -58,7 +75,7 @@ export function playPassageEsvAudio(
 
         const el = new Audio(url);
         audio = el;
-        el.playbackRate = rate;
+        el.playbackRate = currentRate;
         el.preload = 'auto';
 
         const cleanup = () => {
@@ -93,5 +110,5 @@ export function playPassageEsvAudio(
     }
   })();
 
-  return { stop, done };
+  return { stop, done, setRate };
 }

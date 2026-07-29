@@ -103,9 +103,8 @@ export function VerseAudioControls({
                 type="button"
                 aria-pressed={selected}
                 aria-label={`Playback speed ${formatSpeakRate(rate)}`}
-                disabled={speech.playing}
                 onClick={() => speech.setRate(rate as SpeakRate)}
-                className={`tabular-nums transition-colors disabled:opacity-40 ${
+                className={`tabular-nums transition-colors ${
                   selected
                     ? 'font-medium text-ink'
                     : 'text-ink-subtle hover:text-ink-muted'

@@ -11,7 +11,6 @@ import {
   X,
 } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
-import { ConfirmDialog } from '@/components/ui/Dialog';
 import { LoadingState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useHotkeys } from '@/hooks/useHotkeys';
@@ -22,7 +21,6 @@ import { recordReview } from '@/services/reviewService';
 import {
   abandonSession,
   advanceSession,
-  completeSession,
   modeForIndex,
   setSessionIndex,
   skipCard,
@@ -69,7 +67,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
 
   const [result, setResult] = useState<ModeResult | null>(null);
   const [saving, setSaving] = useState(false);
-  const [confirmExit, setConfirmExit] = useState(false);
   const [chosenMode, setChosenMode] = useState<ReviewMode | null>(null);
   const [practiceMode, setPracticeMode] = useState<LearnPracticeMode | null>(
     null,
@@ -165,7 +162,9 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           ),
         );
       },
-      escape: () => setConfirmExit(true),
+      escape: () => {
+        void leaveSession();
+      },
       arrowleft: () => {
         if (!session || !isLearnSession || session.currentIndex <= 0) return;
         goToIndex(session.currentIndex - 1);
@@ -181,7 +180,17 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         goToIndex(session.currentIndex + 1);
       },
     }),
-    [goNext, goToIndex, isLearnSession, mode, notify, progress, session, verse],
+    [
+      goNext,
+      goToIndex,
+      isLearnSession,
+      leaveSession,
+      mode,
+      notify,
+      progress,
+      session,
+      verse,
+    ],
   );
 
   useHotkeys(hotkeys);
@@ -281,7 +290,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setConfirmExit(true)}
+            onClick={() => void leaveSession()}
             title="Leave session (Escape)"
           >
             <X className="size-4" aria-hidden="true" />
@@ -461,41 +470,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           </p>
         )}
       </footer>
-
-      <ConfirmDialog
-        open={confirmExit}
-        title="Leave this session?"
-        description="This session will be discarded. Completed practice marks (Memorized / Needs Review) are already saved."
-        confirmLabel="Discard and leave"
-        cancelLabel="Keep practicing"
-        destructive
-        onCancel={() => setConfirmExit(false)}
-        onConfirm={() => {
-          setConfirmExit(false);
-          void leaveSession();
-        }}
-      >
-        <div className="space-y-3 text-sm text-ink-muted">
-          <p>
-            {`${session.currentIndex} of ${session.verseIds.length} passages completed.`}
-          </p>
-          <p>
-            <button
-              type="button"
-              className="underline"
-              onClick={() => {
-                void completeSession(session).then(() => {
-                  setConfirmExit(false);
-                  navigate('/practice');
-                });
-              }}
-            >
-              Mark the session complete instead
-            </button>{' '}
-            if you want a summary of what you finished.
-          </p>
-        </div>
-      </ConfirmDialog>
     </div>
   );
 }

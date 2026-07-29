@@ -17,6 +17,7 @@ import { useVerseProgress } from '@/hooks/useProgressData';
 import { verses } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { setDifficult, setMemorized } from '@/services/progressService';
+import { VerseAudioControls } from '@/features/review/VerseAudioControls';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
 const REVEALED_KEY = 'verse-memory:flashcards-revealed';
@@ -229,6 +230,12 @@ export function FlashCardsPage() {
           {settings.showSectionLabels ? (
             <p className="mt-1 text-sm text-ink-muted">{verse.section}</p>
           ) : null}
+          <VerseAudioControls
+            text={verse.text}
+            reference={verse.reference}
+            passageKey={verse.id}
+            className="mt-3"
+          />
         </div>
 
         {progress ? (

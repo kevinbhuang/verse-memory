@@ -138,7 +138,7 @@ describe('VerseAudioControls', () => {
     vi.unstubAllGlobals();
   });
 
-  it('offers playback speed options', async () => {
+  it('offers playback speed options including 1.2×', async () => {
     installSpeechMock();
     renderWithProviders(
       <VerseAudioControls text="Jesus wept." passageKey="v1" />,
@@ -152,11 +152,38 @@ describe('VerseAudioControls', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole('group', { name: /playback speed/i })).toBeInTheDocument();
     expect(
+      screen.getByRole('button', { name: /playback speed 1\.2×/i }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /playback speed 1\.5×/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /playback speed 2×/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /playback speed 1\.5×/i }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('defaults to 1.5× playback speed', async () => {
+    const { spoken } = installSpeechMock();
+    const rates: number[] = [];
+    const originalSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+    window.speechSynthesis.speak = ((utterance: FakeUtterance) => {
+      rates.push(utterance.rate);
+      originalSpeak(utterance as unknown as SpeechSynthesisUtterance);
+    }) as typeof window.speechSynthesis.speak;
+
+    const { user } = renderWithProviders(
+      <VerseAudioControls text="Jesus wept." passageKey="v1" />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /play passage once/i }));
+
+    await waitFor(() => {
+      expect(spoken).toEqual(['Jesus wept.']);
+    });
+    expect(rates).toEqual([1.5]);
   });
 
   it('plays at the selected speed', async () => {
@@ -172,13 +199,58 @@ describe('VerseAudioControls', () => {
       <VerseAudioControls text="Jesus wept." passageKey="v1" />,
     );
 
-    await user.click(screen.getByRole('button', { name: /playback speed 1\.5×/i }));
+    await user.click(screen.getByRole('button', { name: /playback speed 1\.2×/i }));
     await user.click(screen.getByRole('button', { name: /play passage once/i }));
 
     await waitFor(() => {
       expect(spoken).toEqual(['Jesus wept.']);
     });
-    expect(rates).toEqual([1.5]);
+    expect(rates).toEqual([1.2]);
+  });
+
+  it('can change ESV playback speed while playing', async () => {
+    installSpeechMock();
+    class PlayingAudio {
+      playbackRate = 1;
+      preload = 'auto';
+      onended: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      play() {
+        return Promise.resolve();
+      }
+      pause() {}
+      load() {}
+      removeAttribute() {}
+    }
+    const instances: PlayingAudio[] = [];
+    vi.stubGlobal(
+      'Audio',
+      class extends PlayingAudio {
+        constructor() {
+          super();
+          instances.push(this);
+        }
+      },
+    );
+
+    const { user } = renderWithProviders(
+      <VerseAudioControls
+        text="Jesus wept."
+        reference="John 11:35"
+        passageKey="v1"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /play passage once/i }));
+    await waitFor(() => {
+      expect(instances[0]?.playbackRate).toBe(1.5);
+    });
+
+    await user.click(screen.getByRole('button', { name: /playback speed 2×/i }));
+    expect(instances[0]?.playbackRate).toBe(2);
+
+    await user.click(screen.getByRole('button', { name: /stop/i }));
+    vi.unstubAllGlobals();
   });
 
   it('can stop mid-loop', async () => {

@@ -91,7 +91,6 @@ test.describe('completing a first-letter review', () => {
     await expect(page.getByText(/passage 2 of/i)).toBeVisible();
 
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Discard and leave' }).click();
 
     await expect(page.getByRole('heading', { level: 2, name: /^practice$/i })).toBeVisible();
     await expect(page.getByText(/you have an unfinished session/i)).toHaveCount(0);

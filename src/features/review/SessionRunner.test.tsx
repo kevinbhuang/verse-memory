@@ -201,25 +201,11 @@ describe('SessionRunner', () => {
     expect(screen.queryByRole('button', { name: /add note/i })).not.toBeInTheDocument();
   });
 
-  it('confirms before leaving a session', async () => {
+  it('leaves immediately and discards the session', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
     await user.keyboard('{Escape}');
-
-    expect(await screen.findByText(/leave this session\?/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 of 2 passages completed/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /discard and leave/i }),
-    ).toBeInTheDocument();
-  });
-
-  it('discards the session when leaving', async () => {
-    const session = await startFlashcardSession();
-    const { user } = await renderSession(session);
-
-    await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: /discard and leave/i }));
 
     await waitFor(async () => {
       expect(await getSession(session.id)).toBeUndefined();

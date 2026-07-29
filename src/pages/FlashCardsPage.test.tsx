@@ -35,6 +35,10 @@ describe('FlashCardsPage', () => {
       screen.getByRole('button', { name: /previous passage/i }),
     ).toBeDisabled();
     expect(screen.queryByLabelText(/first letter mode/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /passage audio/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /play passage once/i }),
+    ).toBeInTheDocument();
   });
 
   it('opens on a deep-linked verse and can move next', async () => {
