@@ -298,7 +298,6 @@ export function FlashCardsPage() {
           </Button>
 
           <p className="text-xs text-ink-subtle" aria-live="polite">
-            {firstLetterMode ? 'First letters on · ' : null}
             F toggle first letters · M toggle memorized · N toggle Needs Review ·
             Space{' '}
             {firstLetterMode ? 'show/hide first letters' : 'show/hide'} · ← →
