@@ -12,6 +12,7 @@ describe('FlashCardsPage', () => {
   beforeEach(() => {
     localStorage.removeItem('verse-memory:flashcards-first-letter');
     localStorage.removeItem('verse-memory:flashcards-revealed');
+    localStorage.removeItem('verse-memory:flashcards-cue-hidden');
   });
 
   it('starts on the first passage with the verse shown', async () => {
@@ -76,6 +77,30 @@ describe('FlashCardsPage', () => {
       screen.getByLabelText(/first letters of the passage/i),
     ).toHaveTextContent(firstLetterSkeleton(first.text).replace(/\u00A0/g, ' '));
     expect(visibleText()).not.toContain(first.text.slice(0, 24));
+  });
+
+  it('pressing Space from first letters hides the cue instead of revealing the verse', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    await user.keyboard('f');
+    expect(
+      screen.getByLabelText(/first letters of the passage/i),
+    ).toBeInTheDocument();
+
+    await user.keyboard(' ');
+    expect(
+      screen.queryByLabelText(/first letters of the passage/i),
+    ).not.toBeInTheDocument();
+    expect(visibleText()).not.toContain(first.text.slice(0, 24));
+    expect(visibleText()).toMatch(/hidden/i);
+
+    await user.keyboard(' ');
+    expect(
+      screen.getByLabelText(/first letters of the passage/i),
+    ).toBeInTheDocument();
   });
 
   it('keeps first-letter and hide preferences when moving to the next verse', async () => {

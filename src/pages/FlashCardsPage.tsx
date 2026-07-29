@@ -20,6 +20,7 @@ import { setDifficult, setMemorized } from '@/services/progressService';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
 const REVEALED_KEY = 'verse-memory:flashcards-revealed';
+const CUE_HIDDEN_KEY = 'verse-memory:flashcards-cue-hidden';
 
 function readBoolPref(key: string, fallback: boolean): boolean {
   try {
@@ -66,11 +67,16 @@ export function FlashCardsPage() {
   const [revealed, setRevealed] = useState(() =>
     readBoolPref(REVEALED_KEY, true),
   );
+  /** When first-letter mode is on and the full verse is hidden, hide the cue too. */
+  const [cueHidden, setCueHidden] = useState(() =>
+    readBoolPref(CUE_HIDDEN_KEY, false),
+  );
 
   const verse = verses[index] ?? verses[0]!;
   const progress = useVerseProgress(verse.id);
   const canGoPrev = index > 0;
   const canGoNext = index < verses.length - 1;
+  const showingFirstLetters = !revealed && firstLetterMode && !cueHidden;
 
   useEffect(() => {
     const next = indexForVerseId(startId);
@@ -85,6 +91,10 @@ export function FlashCardsPage() {
     writeBoolPref(REVEALED_KEY, revealed);
   }, [revealed]);
 
+  useEffect(() => {
+    writeBoolPref(CUE_HIDDEN_KEY, cueHidden);
+  }, [cueHidden]);
+
   const goTo = (nextIndex: number) => {
     const clamped = Math.min(Math.max(nextIndex, 0), verses.length - 1);
     setIndex(clamped);
@@ -94,9 +104,35 @@ export function FlashCardsPage() {
     }
   };
 
-  const toggleRevealed = () => setRevealed((open) => !open);
+  /**
+   * Space / H: show or hide the current card face.
+   * With first letters on, that face is the cue — Space must not jump to the
+   * full verse (use Show passage for that).
+   */
+  const toggleVisibility = () => {
+    if (revealed) {
+      setRevealed(false);
+      setCueHidden(false);
+      return;
+    }
+    if (firstLetterMode) {
+      setCueHidden((hidden) => !hidden);
+      return;
+    }
+    setRevealed(true);
+  };
 
-  /** F: turn first letters on (and hide the full verse so the cue is visible). */
+  const showFullPassage = () => {
+    setRevealed(true);
+    setCueHidden(false);
+  };
+
+  const hideFullPassage = () => {
+    setRevealed(false);
+    setCueHidden(false);
+  };
+
+  /** F: turn first letters on (and show the cue instead of the full verse). */
   const toggleFirstLetterMode = () => {
     if (firstLetterMode) {
       setFirstLetterMode(false);
@@ -104,6 +140,7 @@ export function FlashCardsPage() {
     }
     setFirstLetterMode(true);
     setRevealed(false);
+    setCueHidden(false);
   };
 
   const toggleMemorized = () => {
@@ -135,9 +172,9 @@ export function FlashCardsPage() {
     arrowright: () => {
       if (canGoNext) goTo(index + 1);
     },
-    space: () => toggleRevealed(),
-    enter: () => toggleRevealed(),
-    h: () => toggleRevealed(),
+    space: () => toggleVisibility(),
+    enter: () => toggleVisibility(),
+    h: () => toggleVisibility(),
     f: () => toggleFirstLetterMode(),
     m: () => toggleMemorized(),
     n: () => toggleNeedsReview(),
@@ -220,7 +257,7 @@ export function FlashCardsPage() {
           <div className="rounded-xl border border-line bg-surface px-5 py-6">
             <ScriptureText text={verse.text} />
           </div>
-        ) : firstLetterMode ? (
+        ) : showingFirstLetters ? (
           <div className="rounded-xl border border-line bg-surface px-5 py-6">
             <p
               className="font-serif text-lg leading-relaxed text-ink sm:text-xl sm:leading-relaxed"
@@ -232,13 +269,19 @@ export function FlashCardsPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-line-strong bg-surface-muted px-5 py-10 text-center">
             <p className="text-sm text-ink-muted">
-              Passage hidden. Press Space to show it again.
+              {firstLetterMode
+                ? 'Hidden. Press Space for first letters, or Show for the full passage.'
+                : 'Passage hidden. Press Space to show it again.'}
             </p>
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button variant="ghost" size="sm" onClick={toggleRevealed}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={revealed ? hideFullPassage : showFullPassage}
+          >
             {revealed ? (
               <>
                 <EyeOff className="size-4" aria-hidden="true" />
@@ -253,9 +296,11 @@ export function FlashCardsPage() {
           </Button>
 
           <p className="text-xs text-ink-subtle" aria-live="polite">
-            {firstLetterMode ? 'First letters on · F to turn off' : 'F first letters'}
-            {' · '}
-            M memorized · N Needs Review · Space show/hide · ← → move
+            {firstLetterMode ? 'First letters on · ' : null}
+            F toggle first letters · M toggle memorized · N toggle Needs Review ·
+            Space{' '}
+            {firstLetterMode ? 'show/hide first letters' : 'show/hide'} · ← →
+            move
           </p>
         </div>
       </div>
