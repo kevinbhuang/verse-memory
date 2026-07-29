@@ -60,7 +60,7 @@ export function FlashcardMode({
         <div className="space-y-4">
           <div className="rounded-xl border border-line bg-surface px-5 py-6">
             <p
-              className="font-serif text-lg leading-relaxed tracking-wide text-ink sm:text-xl sm:leading-relaxed"
+              className="font-serif text-lg leading-relaxed text-ink sm:text-xl sm:leading-relaxed"
               aria-label="First letters of the passage"
             >
               {firstLetterSkeleton(verse.text)}

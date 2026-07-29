@@ -97,7 +97,11 @@ describe('first letters', () => {
       'w',
     ]);
     expect(firstLetterSkeleton('For God so loved the world')).toBe(
-      'f g s l t w',
+      'F G s l t w',
+    );
+    expect(firstLetterSkeleton('Hear, O Israel\u2014')).toBe('H, O I\u2014');
+    expect(firstLetterSkeleton('\u201cHear, O Israel\u201d')).toBe(
+      '\u201cH, O I\u201d',
     );
   });
 

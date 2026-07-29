@@ -4,10 +4,12 @@ import { useHotkeys } from '@/hooks/useHotkeys';
 
 const NAV_SHORTCUTS: Record<string, string> = {
   '1': '/verses',
-  '2': '/practice',
-  '3': '/quiz',
-  '4': '/more',
+  '2': '/flashcards',
+  '3': '/practice',
+  '4': '/quiz',
+  '5': '/more',
   l: '/verses',
+  f: '/flashcards',
   p: '/practice',
   q: '/quiz',
   m: '/more',
@@ -15,7 +17,7 @@ const NAV_SHORTCUTS: Record<string, string> = {
 
 /**
  * Global tab shortcuts when not inside a focus-mode session.
- * Digits 1–4 and letters L / P / Q / M jump to Library, Practice, Quiz, More.
+ * Digits 1–5 and letters L / F / P / Q / M jump between primary tabs.
  */
 export function useAppNavHotkeys() {
   const navigate = useNavigate();

@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { SettingsProvider } from '@/hooks/useSettings';
 import { ToastProvider } from '@/components/ui/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
+import { FlashCardsPage } from '@/pages/FlashCardsPage';
 import { VerseDetailPage } from '@/pages/VerseDetailPage';
 import { PracticePage } from '@/pages/PracticePage';
 import { QuizPage } from '@/pages/QuizPage';
@@ -20,6 +21,7 @@ export function App() {
             <Route element={<AppLayout />}>
               <Route path="/" element={<Navigate to="/verses" replace />} />
               <Route path="/practice" element={<PracticePage />} />
+              <Route path="/flashcards" element={<FlashCardsPage />} />
               <Route path="/quiz" element={<QuizPage />} />
               <Route path="/quiz/session" element={<QuizSessionPage />} />
               <Route path="/verses" element={<LibraryPage />} />

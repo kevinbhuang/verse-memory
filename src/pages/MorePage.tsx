@@ -108,9 +108,10 @@ export function MorePage() {
             <p>{appConfig.translationAttribution}</p>
             <p>
               Shortcuts: <span className="text-ink">1</span> Library ·{' '}
-              <span className="text-ink">2</span> Practice ·{' '}
-              <span className="text-ink">3</span> Quiz ·{' '}
-              <span className="text-ink">4</span> More (also L / P / Q / M).
+              <span className="text-ink">2</span> Flash Cards ·{' '}
+              <span className="text-ink">3</span> Practice ·{' '}
+              <span className="text-ink">4</span> Quiz ·{' '}
+              <span className="text-ink">5</span> More (also L / F / P / Q / M).
             </p>
             <p>
               Questions or feedback?{' '}

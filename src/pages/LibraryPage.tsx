@@ -248,14 +248,8 @@ export function LibraryPage() {
                     onToggleDifficult={(verseId, difficult) => {
                       void setDifficult(verseId, difficult);
                     }}
-                    onQuickReview={(verseId) => {
-                      const target = getVerse(verseId);
-                      void startSessionWith(
-                        [verseId],
-                        target
-                          ? `Practice \u2014 ${target.reference}`
-                          : 'Practice',
-                      );
+                    onOpenFlashcards={(verseId) => {
+                      navigate(`/flashcards?verse=${verseId}`);
                     }}
                     onReset={(verseId) => setResetVerseId(verseId)}
                   />

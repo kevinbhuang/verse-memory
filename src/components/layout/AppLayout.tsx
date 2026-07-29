@@ -1,5 +1,11 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, ClipboardList, Ellipsis, Repeat2 } from 'lucide-react';
+import {
+  BookOpen,
+  ClipboardList,
+  Ellipsis,
+  Layers,
+  Repeat2,
+} from 'lucide-react';
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
 import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
@@ -7,10 +13,16 @@ import { Footer } from './Footer';
 import { UpdatePrompt } from './UpdatePrompt';
 
 const NAV_ITEMS = [
-  { to: '/verses', label: 'Library', icon: BookOpen, end: false },
-  { to: '/practice', label: 'Practice', icon: Repeat2, end: false },
-  { to: '/quiz', label: 'Quiz', icon: ClipboardList, end: false },
-  { to: '/more', label: 'More', icon: Ellipsis, end: false },
+  { to: '/verses', label: 'Library', shortLabel: 'Library', icon: BookOpen },
+  {
+    to: '/flashcards',
+    label: 'Flash Cards',
+    shortLabel: 'Cards',
+    icon: Layers,
+  },
+  { to: '/practice', label: 'Practice', shortLabel: 'Practice', icon: Repeat2 },
+  { to: '/quiz', label: 'Quiz', shortLabel: 'Quiz', icon: ClipboardList },
+  { to: '/more', label: 'More', shortLabel: 'More', icon: Ellipsis },
 ];
 
 export function AppLayout() {
@@ -53,7 +65,6 @@ export function AppLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.end}
                 className={({ isActive }) =>
                   clsx(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
@@ -103,7 +114,6 @@ export function AppLayout() {
             <li key={item.to} className="flex-1">
               <NavLink
                 to={item.to}
-                end={item.end}
                 className={({ isActive }) =>
                   clsx(
                     'flex flex-col items-center gap-1 py-2.5 text-[0.6875rem]',
@@ -118,7 +128,7 @@ export function AppLayout() {
                       aria-hidden="true"
                       strokeWidth={isActive ? 2.25 : 1.75}
                     />
-                    {item.label}
+                    {item.shortLabel}
                   </>
                 )}
               </NavLink>

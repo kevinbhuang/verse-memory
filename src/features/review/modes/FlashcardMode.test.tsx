@@ -38,7 +38,7 @@ describe('FlashcardMode', () => {
     expect(screen.getByText(verse.section)).toBeInTheDocument();
     expect(
       screen.getByLabelText(/first letters of the passage/i),
-    ).toHaveTextContent(skeleton);
+    ).toHaveTextContent(skeleton, { normalizeWhitespace: false });
     expect(visibleText()).not.toContain(passage);
   });
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   EllipsisVertical,
   Flag,
-  Keyboard,
+  Layers,
   RotateCcw,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -27,7 +27,7 @@ export function VerseRow({
   onToggleSelected,
   onToggleMemorized,
   onToggleDifficult,
-  onQuickReview,
+  onOpenFlashcards,
   onReset,
 }: {
   verse: Verse;
@@ -37,7 +37,7 @@ export function VerseRow({
   onToggleSelected: (verseId: string, selected: boolean) => void;
   onToggleMemorized: (verseId: string, memorized: boolean) => void;
   onToggleDifficult: (verseId: string, difficult: boolean) => void;
-  onQuickReview: (verseId: string) => void;
+  onOpenFlashcards: (verseId: string) => void;
   onReset: (verseId: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -106,10 +106,10 @@ export function VerseRow({
             size="sm"
             variant="ghost"
             className="h-7 px-1.5"
-            onClick={() => onQuickReview(verse.id)}
-            aria-label={`Practice ${verse.reference} with first letters`}
+            onClick={() => onOpenFlashcards(verse.id)}
+            aria-label={`Flash cards from ${verse.reference}`}
           >
-            <Keyboard className="size-3.5" aria-hidden="true" />
+            <Layers className="size-3.5" aria-hidden="true" />
           </Button>
 
           <div className="relative">

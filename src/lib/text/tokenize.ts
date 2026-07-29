@@ -91,14 +91,30 @@ export function firstLetterOf(word: string): string {
   return match ? match[0].toLowerCase() : '';
 }
 
+/** First letter/digit of a word with its original capitalisation preserved. */
+export function firstLetterGlyph(word: string): string {
+  const normalized = normalizeApostrophes(word.normalize('NFC'));
+  const match = normalized.match(/[\p{L}\p{N}]/u);
+  return match ? match[0] : '';
+}
+
 /** e.g. "For God so loved" -> ["f", "g", "s", "l"] */
 export function firstLetterSequence(text: string): string[] {
   return tokenize(text).map((token) => token.firstLetter);
 }
 
-/** e.g. "For God so loved" -> "f g s l" */
+/**
+ * Collapses each word to its first letter while keeping original capitalisation,
+ * spacing, and punctuation. e.g. "Hear, O Israel—" -> "H, O I—"
+ */
 export function firstLetterSkeleton(text: string): string {
-  return firstLetterSequence(text).join(' ');
+  return segmentText(text)
+    .map((segment) =>
+      segment.type === 'word'
+        ? firstLetterGlyph(segment.text)
+        : segment.text.replace(/\u00A0/g, ' '),
+    )
+    .join('');
 }
 
 /** True when the pressed key matches the expected first letter of a word. */

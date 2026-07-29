@@ -84,6 +84,16 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(within(bookList).getByRole('checkbox', { name: /^john\b/i })).toBeChecked();
   });
 
+  it('offers a flash cards button on each row', async () => {
+    await renderLibrary();
+
+    expect(
+      screen.getByRole('button', {
+        name: `Flash cards from ${passage.reference}`,
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('marks a passage memorized and keeps it checked', async () => {
     const { user } = await renderLibrary();
 
