@@ -3,13 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useHotkeys } from '@/hooks/useHotkeys';
 
 const NAV_SHORTCUTS: Record<string, string> = {
-  '1': '/verses',
-  '2': '/flashcards',
+  '1': '/flashcards',
+  '2': '/verses',
   '3': '/practice',
   '4': '/quiz',
   '5': '/more',
-  l: '/verses',
   f: '/flashcards',
+  l: '/verses',
   p: '/practice',
   q: '/quiz',
   m: '/more',

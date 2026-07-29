@@ -10,7 +10,7 @@ export function NotFoundPage() {
         That address does not match anything in the app.
       </p>
       <div className="mt-5 flex justify-center gap-2">
-        <ButtonLink to="/verses" variant="primary">
+        <ButtonLink to="/flashcards" variant="primary">
           Library
         </ButtonLink>
         <ButtonLink to="/practice" variant="secondary">

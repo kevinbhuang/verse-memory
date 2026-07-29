@@ -19,7 +19,7 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/verses" replace />} />
+              <Route path="/" element={<Navigate to="/flashcards" replace />} />
               <Route path="/practice" element={<PracticePage />} />
               <Route path="/flashcards" element={<FlashCardsPage />} />
               <Route path="/quiz" element={<QuizPage />} />
@@ -34,7 +34,7 @@ export function App() {
               <Route path="/settings" element={<Navigate to="/more" replace />} />
               <Route
                 path="/index.html"
-                element={<Navigate to="/verses" replace />}
+                element={<Navigate to="/flashcards" replace />}
               />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

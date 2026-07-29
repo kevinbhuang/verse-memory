@@ -13,13 +13,13 @@ import { Footer } from './Footer';
 import { UpdatePrompt } from './UpdatePrompt';
 
 const NAV_ITEMS = [
-  { to: '/verses', label: 'Library', shortLabel: 'Library', icon: BookOpen },
   {
     to: '/flashcards',
     label: 'Flash Cards',
     shortLabel: 'Cards',
     icon: Layers,
   },
+  { to: '/verses', label: 'Library', shortLabel: 'Library', icon: BookOpen },
   { to: '/practice', label: 'Practice', shortLabel: 'Practice', icon: Repeat2 },
   { to: '/quiz', label: 'Quiz', shortLabel: 'Quiz', icon: ClipboardList },
   { to: '/more', label: 'More', shortLabel: 'More', icon: Ellipsis },
