@@ -100,6 +100,12 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(
       within(dialog).getByRole('button', { name: /^needs review$/i }),
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('group', { name: /print text mode/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /^first letters$/i }),
+    ).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: /^books$/i }));
     const bookList = within(dialog).getByRole('group', { name: /^books$/i });
     expect(within(bookList).getByRole('checkbox', { name: /romans/i })).toBeChecked();

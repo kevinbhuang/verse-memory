@@ -7,8 +7,9 @@ const NAV_SHORTCUTS: Record<string, string> = {
   '2': '/verses',
   '3': '/practice',
   '4': '/quiz',
-  '5': '/more',
-  // F / M / N are reserved on Flash Cards; use digits 1 and 5 for those tabs.
+  '5': '/print',
+  '6': '/more',
+  // F / M / N are reserved on Flash Cards; use digits for those tabs.
   l: '/verses',
   p: '/practice',
   q: '/quiz',
@@ -16,7 +17,7 @@ const NAV_SHORTCUTS: Record<string, string> = {
 
 /**
  * Global tab shortcuts when not inside a focus-mode session.
- * Digits 1–5 and letters L / P / Q jump between primary tabs.
+ * Digits 1–6 and letters L / P / Q jump between primary tabs.
  * (F / M / N are reserved for Flash Cards actions.)
  */
 export function useAppNavHotkeys() {

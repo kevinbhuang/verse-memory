@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Ellipsis,
   Layers,
+  Printer,
   Repeat2,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/verses', label: 'Library', shortLabel: 'Library', icon: BookOpen },
   { to: '/practice', label: 'Practice', shortLabel: 'Practice', icon: Repeat2 },
   { to: '/quiz', label: 'Quiz', shortLabel: 'Quiz', icon: ClipboardList },
+  { to: '/print', label: 'Print', shortLabel: 'Print', icon: Printer },
   { to: '/more', label: 'More', shortLabel: 'More', icon: Ellipsis },
 ];
 

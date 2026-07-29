@@ -9,6 +9,7 @@ import { PracticePage } from '@/pages/PracticePage';
 import { QuizPage } from '@/pages/QuizPage';
 import { QuizSessionPage } from '@/pages/QuizSessionPage';
 import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
+import { PrintPage } from '@/pages/PrintPage';
 import { MorePage } from '@/pages/MorePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
@@ -27,6 +28,7 @@ export function App() {
               <Route path="/verses" element={<LibraryPage />} />
               <Route path="/verses/:verseId" element={<VerseDetailPage />} />
               <Route path="/review/session" element={<ReviewSessionPage />} />
+              <Route path="/print" element={<PrintPage />} />
               <Route path="/more" element={<MorePage />} />
               <Route path="/learn" element={<Navigate to="/practice" replace />} />
               <Route path="/review" element={<Navigate to="/practice" replace />} />

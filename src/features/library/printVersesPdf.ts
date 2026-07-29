@@ -1,8 +1,11 @@
 import { jsPDF } from 'jspdf';
 import type { Verse } from '@/types';
 import { appConfig } from '@/config/app';
+import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import sourceSerif4Regular from '@/assets/fonts/SourceSerif4-Regular.ttf?base64';
 import sourceSerif4Bold from '@/assets/fonts/SourceSerif4-Bold.ttf?base64';
+
+export type PrintTextMode = 'full' | 'first-letter';
 
 const PAGE_WIDTH = 612; // US Letter points
 const PAGE_HEIGHT = 792;
@@ -53,6 +56,16 @@ export function pdfSafeText(text: string): string {
     .trim();
 }
 
+/** Verse body for the PDF: full text, or first letters with punctuation kept. */
+export function verseTextForPrint(
+  text: string,
+  textMode: PrintTextMode = 'full',
+): string {
+  const source =
+    textMode === 'first-letter' ? firstLetterSkeleton(text) : text;
+  return pdfSafeText(source);
+}
+
 function registerSiteFonts(doc: jsPDF): void {
   doc.addFileToVFS('SourceSerif4-Regular.ttf', sourceSerif4Regular);
   doc.addFont('SourceSerif4-Regular.ttf', PDF_FONT, 'normal');
@@ -64,7 +77,11 @@ function setPdfFont(doc: jsPDF, style: 'normal' | 'bold' = 'normal'): void {
   doc.setFont(PDF_FONT, style);
 }
 
-function buildBlocks(doc: jsPDF, verses: readonly Verse[]): Block[] {
+function buildBlocks(
+  doc: jsPDF,
+  verses: readonly Verse[],
+  textMode: PrintTextMode,
+): Block[] {
   const blocks: Block[] = [];
   let lastSection: string | null = null;
   const textWidth = COL_WIDTH - CHECK_SIZE - 6;
@@ -75,7 +92,7 @@ function buildBlocks(doc: jsPDF, verses: readonly Verse[]): Block[] {
       lastSection = verse.section;
     }
 
-    const body = pdfSafeText(verse.text);
+    const body = verseTextForPrint(verse.text, textMode);
     setPdfFont(doc, 'normal');
     doc.setFontSize(BODY_SIZE);
     const lines = doc.splitTextToSize(body, textWidth) as string[];
@@ -163,6 +180,7 @@ export type PrintVersesPdfOptions = {
   verses: readonly Verse[];
   title?: string;
   filename?: string;
+  textMode?: PrintTextMode;
 };
 
 /**
@@ -171,6 +189,7 @@ export type PrintVersesPdfOptions = {
 export function buildVersesPdf({
   verses,
   title = appConfig.collectionTitle,
+  textMode = 'full',
 }: Omit<PrintVersesPdfOptions, 'filename'>): jsPDF {
   if (verses.length === 0) {
     throw new Error('No passages to print.');
@@ -183,7 +202,7 @@ export function buildVersesPdf({
   });
   registerSiteFonts(doc);
 
-  const blocks = buildBlocks(doc, verses);
+  const blocks = buildBlocks(doc, verses, textMode);
   let column: 0 | 1 = 0;
   let y = MARGIN_TOP;
   let contentBottom = PAGE_HEIGHT - MARGIN_BOTTOM;
@@ -234,8 +253,9 @@ export function downloadVersesPdf({
   verses,
   title = appConfig.collectionTitle,
   filename = 'verses.pdf',
+  textMode = 'full',
 }: PrintVersesPdfOptions): void {
-  buildVersesPdf({ verses, title }).save(filename);
+  buildVersesPdf({ verses, title, textMode }).save(filename);
 }
 
 

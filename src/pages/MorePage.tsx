@@ -107,11 +107,14 @@ export function MorePage() {
             </p>
             <p>{appConfig.translationAttribution}</p>
             <p>
-              Shortcuts: <span className="text-ink">1</span> Library ·{' '}
-              <span className="text-ink">2</span> Flash Cards ·{' '}
+              Shortcuts: <span className="text-ink">1</span> Flash Cards ·{' '}
+              <span className="text-ink">2</span> Library ·{' '}
               <span className="text-ink">3</span> Practice ·{' '}
               <span className="text-ink">4</span> Quiz ·{' '}
-              <span className="text-ink">5</span> More (also L / F / P / Q / M).
+              <span className="text-ink">5</span> Print ·{' '}
+              <span className="text-ink">6</span> More (also L / P / Q). On Flash
+              Cards, F / M / N / Space handle first letters, Memorized, Needs
+              Review, and show/hide.
             </p>
             <p>
               Questions or feedback?{' '}

@@ -30,7 +30,7 @@ export function SegmentedControl<T extends string>({
       role="group"
       aria-label={ariaLabel}
       className={clsx(
-        'inline-flex max-w-full flex-wrap rounded-lg bg-surface-sunken p-0.5',
+        'inline-flex w-fit max-w-full flex-wrap rounded-lg bg-surface-sunken p-0.5',
         className,
       )}
     >
