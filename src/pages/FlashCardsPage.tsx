@@ -106,6 +106,28 @@ export function FlashCardsPage() {
     setRevealed(false);
   };
 
+  const toggleMemorized = () => {
+    if (!progress) return;
+    void setMemorized(verse.id, !progress.isMemorized).then(() =>
+      notify(
+        progress.isMemorized ? 'Cleared memorized mark.' : 'Marked memorized.',
+        'success',
+      ),
+    );
+  };
+
+  const toggleNeedsReview = () => {
+    if (!progress) return;
+    void setDifficult(verse.id, !progress.isDifficult).then(() =>
+      notify(
+        progress.isDifficult
+          ? 'Cleared Needs Review.'
+          : 'Marked Needs Review.',
+        'success',
+      ),
+    );
+  };
+
   useHotkeys({
     arrowleft: () => {
       if (canGoPrev) goTo(index - 1);
@@ -117,6 +139,8 @@ export function FlashCardsPage() {
     enter: () => toggleRevealed(),
     h: () => toggleRevealed(),
     f: () => toggleFirstLetterMode(),
+    m: () => toggleMemorized(),
+    n: () => toggleNeedsReview(),
   });
 
   const positionLabel = useMemo(
@@ -173,34 +197,18 @@ export function FlashCardsPage() {
             <Button
               size="sm"
               variant={progress.isMemorized ? 'quiet' : 'secondary'}
-              onClick={() =>
-                void setMemorized(verse.id, !progress.isMemorized).then(() =>
-                  notify(
-                    progress.isMemorized
-                      ? 'Cleared memorized mark.'
-                      : 'Marked memorized.',
-                    'success',
-                  ),
-                )
-              }
+              onClick={toggleMemorized}
               aria-pressed={progress.isMemorized}
+              title="Toggle memorized (M)"
             >
               {progress.isMemorized ? 'Clear memorized' : 'Mark memorized'}
             </Button>
             <Button
               size="sm"
               variant={progress.isDifficult ? 'quiet' : 'secondary'}
-              onClick={() =>
-                void setDifficult(verse.id, !progress.isDifficult).then(() =>
-                  notify(
-                    progress.isDifficult
-                      ? 'Cleared Needs Review.'
-                      : 'Marked Needs Review.',
-                    'success',
-                  ),
-                )
-              }
+              onClick={toggleNeedsReview}
               aria-pressed={progress.isDifficult}
+              title="Toggle Needs Review (N)"
             >
               <Flag className="size-3.5" aria-hidden="true" />
               {progress.isDifficult ? 'Clear Needs Review' : 'Mark Needs Review'}
@@ -247,7 +255,7 @@ export function FlashCardsPage() {
           <p className="text-xs text-ink-subtle" aria-live="polite">
             {firstLetterMode ? 'First letters on · F to turn off' : 'F first letters'}
             {' · '}
-            Space show/hide · ← → move
+            M memorized · N Needs Review · Space show/hide · ← → move
           </p>
         </div>
       </div>

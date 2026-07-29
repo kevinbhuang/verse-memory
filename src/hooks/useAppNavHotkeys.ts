@@ -8,17 +8,16 @@ const NAV_SHORTCUTS: Record<string, string> = {
   '3': '/practice',
   '4': '/quiz',
   '5': '/more',
-  // F is reserved on Flash Cards for first-letter mode; use 1 to open the tab.
+  // F / M / N are reserved on Flash Cards; use digits 1 and 5 for those tabs.
   l: '/verses',
   p: '/practice',
   q: '/quiz',
-  m: '/more',
 };
 
 /**
  * Global tab shortcuts when not inside a focus-mode session.
- * Digits 1–5 and letters L / P / Q / M jump between primary tabs.
- * (F is reserved for first-letter mode on Flash Cards.)
+ * Digits 1–5 and letters L / P / Q jump between primary tabs.
+ * (F / M / N are reserved for Flash Cards actions.)
  */
 export function useAppNavHotkeys() {
   const navigate = useNavigate();

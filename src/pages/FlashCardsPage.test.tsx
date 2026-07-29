@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { requireVerse } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { renderWithProviders, visibleText } from '@/test/render';
@@ -98,5 +98,27 @@ describe('FlashCardsPage', () => {
       firstLetterSkeleton(second.text).replace(/\u00A0/g, ' '),
     );
     expect(visibleText()).not.toMatch(/Hear, O Israel/);
+  });
+
+  it('toggles Memorized with M and Needs Review with N', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    const memorized = await screen.findByRole('button', {
+      name: /mark memorized/i,
+    });
+    const needsReview = screen.getByRole('button', {
+      name: /mark needs review/i,
+    });
+
+    await user.keyboard('m');
+    await waitFor(() => expect(memorized).toHaveAttribute('aria-pressed', 'true'));
+
+    await user.keyboard('n');
+    await waitFor(() =>
+      expect(needsReview).toHaveAttribute('aria-pressed', 'true'),
+    );
   });
 });
