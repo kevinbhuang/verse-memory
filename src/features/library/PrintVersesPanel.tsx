@@ -4,15 +4,18 @@ import { BookCheckboxList } from '@/components/BookCheckboxList';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Select } from '@/components/ui/Field';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
+import { useAllProgress } from '@/hooks/useProgressData';
 import { DECKS, appConfig } from '@/config/app';
 import { getVerse, verses, versesInSection } from '@/data/verses';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { booksLabel } from '@/lib/text/bookSelection';
-import type { Section } from '@/types';
+import type { Section, Verse, VerseProgress } from '@/types';
 import { downloadVersesPdf, versesPdfFilename } from './printVersesPdf';
 
 type PrintMode = 'all' | 'deck' | 'books';
+type PrintStatusFilter = 'all' | 'memorized' | 'needs-review';
 
 function versesForBooks(names: readonly string[]) {
   const selected = new Set(names);
@@ -24,13 +27,35 @@ function versesForBooks(names: readonly string[]) {
   );
 }
 
+function filterByStatus(
+  list: readonly Verse[],
+  status: PrintStatusFilter,
+  progressById: Map<string, VerseProgress>,
+): Verse[] {
+  if (status === 'all') return [...list];
+  return list.filter((verse) => {
+    const progress = progressById.get(verse.id);
+    if (!progress) return false;
+    if (status === 'memorized') return progress.isMemorized;
+    return progress.isDifficult;
+  });
+}
+
+function statusLabel(status: PrintStatusFilter): string | null {
+  if (status === 'memorized') return 'Memorized';
+  if (status === 'needs-review') return 'Needs Review';
+  return null;
+}
+
 /**
  * Subtle library print control: one button, then a dialog to choose the set.
  */
 export function PrintVersesPanel() {
   const { notify } = useToast();
+  const progressList = useAllProgress();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<PrintMode>('all');
+  const [statusFilter, setStatusFilter] = useState<PrintStatusFilter>('all');
   const [section, setSection] = useState<Section>(
     DECKS[0]?.section ?? 'Law and History',
   );
@@ -40,25 +65,40 @@ export function PrintVersesPanel() {
   });
   const [busy, setBusy] = useState(false);
 
-  const selectedVerses = useMemo(() => {
-    if (mode === 'all') return [...verses];
-    if (mode === 'deck') return versesInSection(section);
-    return versesForBooks(books);
-  }, [books, mode, section]);
+  const progressById = useMemo(
+    () => new Map((progressList ?? []).map((item) => [item.verseId, item])),
+    [progressList],
+  );
 
-  const scopeLabel =
-    mode === 'all'
-      ? 'Collection'
-      : mode === 'deck'
-        ? section
-        : booksLabel(books);
+  const selectedVerses = useMemo(() => {
+    const scoped =
+      mode === 'all'
+        ? [...verses]
+        : mode === 'deck'
+          ? versesInSection(section)
+          : versesForBooks(books);
+    return filterByStatus(scoped, statusFilter, progressById);
+  }, [books, mode, progressById, section, statusFilter]);
+
+  const scopeLabel = useMemo(() => {
+    const base =
+      mode === 'all'
+        ? 'Collection'
+        : mode === 'deck'
+          ? section
+          : booksLabel(books);
+    const status = statusLabel(statusFilter);
+    return status ? `${base} — ${status}` : base;
+  }, [books, mode, section, statusFilter]);
 
   const onDownload = () => {
     if (selectedVerses.length === 0) {
       notify(
         mode === 'books' && books.length === 0
           ? 'Select at least one book to print.'
-          : 'No passages in that selection.',
+          : statusFilter !== 'all'
+            ? `No ${statusLabel(statusFilter)?.toLowerCase() ?? ''} passages in that selection.`
+            : 'No passages in that selection.',
         'error',
       );
       return;
@@ -166,6 +206,21 @@ export function PrintVersesPanel() {
               onChange={setBooks}
             />
           ) : null}
+
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium text-ink">Include</p>
+            <SegmentedControl
+              aria-label="Print status filter"
+              size="sm"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'memorized', label: 'Memorized' },
+                { value: 'needs-review', label: 'Needs Review' },
+              ]}
+            />
+          </div>
         </div>
       </Dialog>
     </>

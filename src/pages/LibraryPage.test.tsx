@@ -89,11 +89,19 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(screen.getByRole('button', { name: /^print$/i })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: /^print$/i }));
 
+    const dialog = await screen.findByRole('dialog', { name: /print passages/i });
+    expect(dialog).toBeInTheDocument();
     expect(
-      await screen.findByRole('dialog', { name: /print passages/i }),
+      within(dialog).getByRole('group', { name: /print status filter/i }),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^books$/i }));
-    const bookList = screen.getByRole('group', { name: /^books$/i });
+    expect(
+      within(dialog).getByRole('button', { name: /^memorized$/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /^needs review$/i }),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: /^books$/i }));
+    const bookList = within(dialog).getByRole('group', { name: /^books$/i });
     expect(within(bookList).getByRole('checkbox', { name: /romans/i })).toBeChecked();
 
     await user.click(within(bookList).getByRole('checkbox', { name: /^john\b/i }));
