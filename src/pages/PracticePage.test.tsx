@@ -124,7 +124,7 @@ describe('PracticePage', () => {
     ).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('offers to resume an unfinished session', async () => {
+  it('does not offer to resume an unfinished session', async () => {
     await createSession(
       {
         source: 'section',
@@ -139,8 +139,11 @@ describe('PracticePage', () => {
     renderWithProviders(<PracticePage />, { route: '/practice' });
 
     expect(
-      await screen.findByText(/you have an unfinished session/i),
+      await screen.findByRole('heading', { level: 2, name: /^practice$/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^resume$/i })).toBeInTheDocument();
+    expect(
+      screen.queryByText(/you have an unfinished session/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^resume$/i })).not.toBeInTheDocument();
   });
 });

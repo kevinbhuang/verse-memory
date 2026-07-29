@@ -5,7 +5,6 @@ import {
   GraduationCap,
   Keyboard,
   Play,
-  RotateCcw,
 } from 'lucide-react';
 import { BookCheckboxList } from '@/components/BookCheckboxList';
 import { booksLabel, passageCountForBooks } from '@/lib/text/bookSelection';
@@ -15,7 +14,7 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
-import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
+import { useAllProgress } from '@/hooks/useProgressData';
 import { DECKS } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
@@ -25,7 +24,6 @@ import {
   selectVerseIds,
   type SessionCriteria,
 } from '@/services/sessionService';
-import { formatRelativeDay } from '@/utils/format';
 
 type Scope = 'deck' | 'book';
 type PracticeKind = 'learn' | 'flashcard' | 'first-letter';
@@ -70,7 +68,6 @@ export function PracticePage() {
   const navigate = useNavigate();
   const { notify } = useToast();
   const progressList = useAllProgress();
-  const openSession = useOpenSession();
   const [searchParams] = useSearchParams();
 
   const bookParam = searchParams.get('book');
@@ -189,28 +186,6 @@ export function PracticePage() {
   return (
     <>
       <PageHeader title="Practice" />
-
-      {openSession ? (
-        <Card className="mb-4 border-accent/40 bg-accent-soft">
-          <CardBody className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-ink">
-                You have an unfinished session
-              </p>
-              <p className="text-sm text-ink-muted">
-                {`${openSession.label} \u00b7 ${openSession.currentIndex} of ${openSession.verseIds.length} completed \u00b7 started ${formatRelativeDay(openSession.createdAt)}`}
-              </p>
-            </div>
-            <Button
-              variant="primary"
-              onClick={() => navigate(`/review/session?id=${openSession.id}`)}
-            >
-              <RotateCcw className="size-4" aria-hidden="true" />
-              Resume
-            </Button>
-          </CardBody>
-        </Card>
-      ) : null}
 
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_16rem] lg:items-stretch">
         <Card className="flex flex-col">

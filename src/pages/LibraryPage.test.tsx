@@ -145,6 +145,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(
       await screen.findByRole('status', { name: /1 of 171 memorized/i }),
     ).toBeInTheDocument();
+    expect(rowFor(passage.reference)).toHaveClass('bg-success-soft');
   });
 
   it('unmarks a memorized passage', async () => {
@@ -176,6 +177,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(
       within(rowFor(passage.reference)).getByText('Needs Review'),
     ).toBeInTheDocument();
+    expect(rowFor(passage.reference)).toHaveClass('bg-warning-soft');
   });
 
   it('filters the library to a single book', async () => {
@@ -242,5 +244,35 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     ).toBeInTheDocument();
     expect(sectionHeading('Gospels')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/search passages/i)).toBeInTheDocument();
+  });
+
+  it('shows a progress chart of all 171 passages by deck', async () => {
+    const { user } = await renderLibrary();
+
+    await user.click(screen.getByRole('button', { name: /^progress chart$/i }));
+
+    expect(
+      screen.getByRole('region', { name: /progress chart by deck/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('checkbox', { name: /as memorized$/i }),
+    ).toHaveLength(171);
+    expect(
+      screen.getAllByRole('checkbox', { name: /as needs review$/i }),
+    ).toHaveLength(171);
+    expect(screen.getByRole('heading', { name: /deck 1/i })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('heading', { name: /deck 6/i }).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Ex 19:4-6')).toBeInTheDocument();
+  });
+
+  it('opens the progress chart from the view query', async () => {
+    renderWithProviders(<LibraryPage />, { route: '/verses?view=chart' });
+
+    expect(
+      await screen.findByRole('region', { name: /progress chart by deck/i }),
+    ).toBeInTheDocument();
+    expect(sectionHeading('Law and History')).not.toBeInTheDocument();
   });
 });

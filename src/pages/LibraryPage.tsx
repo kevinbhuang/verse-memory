@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
 import { useAllProgress } from '@/hooks/useProgressData';
 import { useSettings } from '@/hooks/useSettings';
@@ -26,8 +27,11 @@ import { LibraryFilters } from '@/features/library/LibraryFilters';
 import { LibraryProgressStrip } from '@/features/library/LibraryProgressStrip';
 import { PrintVersesPanel } from '@/features/library/PrintVersesPanel';
 import { LibraryCheckboxHeader } from '@/features/library/LibraryCheckboxHeader';
+import { ProgressChart } from '@/features/library/ProgressChart';
 import { VerseRow } from '@/features/library/VerseRow';
 import { computeCollectionStats } from '@/services/statsService';
+
+type LibraryView = 'list' | 'chart';
 
 function filtersFromParams(params: URLSearchParams): LibraryFilterState {
   const section = params.get('section');
@@ -70,15 +74,22 @@ function filtersFromParams(params: URLSearchParams): LibraryFilterState {
   };
 }
 
+function viewFromParams(params: URLSearchParams): LibraryView {
+  return params.get('view') === 'chart' ? 'chart' : 'list';
+}
+
 export function LibraryPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
   const { settings } = useSettings();
   const progressList = useAllProgress();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<LibraryFilterState>(() =>
     filtersFromParams(searchParams),
+  );
+  const [view, setView] = useState<LibraryView>(() =>
+    viewFromParams(searchParams),
   );
   const [resetVerseId, setResetVerseId] = useState<string | null>(null);
 
@@ -99,18 +110,54 @@ export function LibraryPage() {
     [progressList],
   );
 
+  const setLibraryView = (next: LibraryView) => {
+    setView(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === 'chart') params.set('view', 'chart');
+    else params.delete('view');
+    setSearchParams(params, { replace: true });
+  };
+
   if (!progressList || !collectionStats) {
     return <LoadingState label={'Loading the collection\u2026'} />;
   }
 
   const resetTarget = resetVerseId ? getVerse(resetVerseId) : null;
 
+  const onToggleMemorized = (verseId: string, memorized: boolean) => {
+    void setMemorized(verseId, memorized).then(() =>
+      notify(
+        memorized ? 'Marked memorized.' : 'Cleared memorized mark.',
+        'success',
+      ),
+    );
+  };
+
+  const onToggleNeedsReview = (verseId: string, needsReview: boolean) => {
+    void setDifficult(verseId, needsReview).then(() =>
+      notify(
+        needsReview ? 'Marked Needs Review.' : 'Cleared Needs Review.',
+        'success',
+      ),
+    );
+  };
+
   return (
     <>
-      <PageHeader
-        title="Library"
-        actions={<PrintVersesPanel />}
-      />
+      <PageHeader title="Library" actions={<PrintVersesPanel />} />
+
+      <div className="mb-3">
+        <SegmentedControl
+          aria-label="Library view"
+          size="sm"
+          value={view}
+          onChange={setLibraryView}
+          options={[
+            { value: 'list', label: 'List' },
+            { value: 'chart', label: 'Progress Chart' },
+          ]}
+        />
+      </div>
 
       <LibraryProgressStrip
         memorized={collectionStats.memorized}
@@ -118,86 +165,82 @@ export function LibraryPage() {
         percentMemorized={collectionStats.percentMemorized}
       />
 
-      <LibraryFilters
-        filters={filters}
-        onChange={setFilters}
-        resultCount={entries.length}
-        totalCount={verses.length}
-      />
-
-      {entries.length === 0 ? (
-        <div className="card">
-          <EmptyState
-            icon={<BookOpen className="size-6" aria-hidden="true" />}
-            title="No passages match these filters"
-            description="Try clearing the search box or widening the filters. The collection itself always contains all 171 passages."
-            action={
-              <Button
-                variant="secondary"
-                onClick={() => setFilters(DEFAULT_FILTERS)}
-              >
-                Clear filters
-              </Button>
-            }
-          />
-        </div>
+      {view === 'chart' ? (
+        <ProgressChart
+          progressById={progressById}
+          onToggleMemorized={onToggleMemorized}
+          onToggleNeedsReview={onToggleNeedsReview}
+        />
       ) : (
-        <div className="space-y-4">
-          <LibraryCheckboxHeader />
-          {groups.map((group) => (
-            <section key={group.section} aria-labelledby={`section-${group.section}`}>
-              <div className="mb-1 flex items-baseline justify-between gap-3">
-                <h2
-                  id={`section-${group.section}`}
-                  className="font-serif text-base font-semibold text-ink"
-                >
-                  {group.section}
-                </h2>
-                <span className="text-xs text-ink-muted">
-                  {group.entries.length} passage
-                  {group.entries.length === 1 ? '' : 's'}
-                </span>
-              </div>
+        <>
+          <LibraryFilters
+            filters={filters}
+            onChange={setFilters}
+            resultCount={entries.length}
+            totalCount={verses.length}
+          />
 
-              <ul className="card overflow-hidden">
-                {group.entries.map(({ verse, progress }) => (
-                  <VerseRow
-                    key={verse.id}
-                    verse={verse}
-                    progress={progress}
-                    showSectionLabel={
-                      settings.showSectionLabels && filters.sort !== 'canonical'
-                    }
-                    onToggleMemorized={(verseId, memorized) => {
-                      void setMemorized(verseId, memorized).then(() =>
-                        notify(
-                          memorized
-                            ? 'Marked memorized.'
-                            : 'Cleared memorized mark.',
-                          'success',
-                        ),
-                      );
-                    }}
-                    onToggleNeedsReview={(verseId, needsReview) => {
-                      void setDifficult(verseId, needsReview).then(() =>
-                        notify(
-                          needsReview
-                            ? 'Marked Needs Review.'
-                            : 'Cleared Needs Review.',
-                          'success',
-                        ),
-                      );
-                    }}
-                    onOpenFlashcards={(verseId) => {
-                      navigate(`/flashcards?verse=${verseId}`);
-                    }}
-                    onReset={(verseId) => setResetVerseId(verseId)}
-                  />
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+          {entries.length === 0 ? (
+            <div className="card">
+              <EmptyState
+                icon={<BookOpen className="size-6" aria-hidden="true" />}
+                title="No passages match these filters"
+                description="Try clearing the search box or widening the filters. The collection itself always contains all 171 passages."
+                action={
+                  <Button
+                    variant="secondary"
+                    onClick={() => setFilters(DEFAULT_FILTERS)}
+                  >
+                    Clear filters
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <LibraryCheckboxHeader />
+              {groups.map((group) => (
+                <section
+                  key={group.section}
+                  aria-labelledby={`section-${group.section}`}
+                >
+                  <div className="mb-1 flex items-baseline justify-between gap-3">
+                    <h2
+                      id={`section-${group.section}`}
+                      className="font-serif text-base font-semibold text-ink"
+                    >
+                      {group.section}
+                    </h2>
+                    <span className="text-xs text-ink-muted">
+                      {group.entries.length} passage
+                      {group.entries.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+
+                  <ul className="card overflow-hidden">
+                    {group.entries.map(({ verse, progress }) => (
+                      <VerseRow
+                        key={verse.id}
+                        verse={verse}
+                        progress={progress}
+                        showSectionLabel={
+                          settings.showSectionLabels &&
+                          filters.sort !== 'canonical'
+                        }
+                        onToggleMemorized={onToggleMemorized}
+                        onToggleNeedsReview={onToggleNeedsReview}
+                        onOpenFlashcards={(verseId) => {
+                          navigate(`/flashcards?verse=${verseId}`);
+                        }}
+                        onReset={(verseId) => setResetVerseId(verseId)}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <ConfirmDialog

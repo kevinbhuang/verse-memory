@@ -3,7 +3,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { getDatabase } from '@/db/db';
 import { ButtonLink } from '@/components/ui/Button';
 import { getVerse } from '@/data/verses';
-import { MODE_LABELS, formatAccuracy, formatDuration, formatInterval } from '@/utils/format';
+import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ReviewSession } from '@/types';
 
 export function SessionSummary({ session }: { session: ReviewSession }) {
@@ -19,7 +19,6 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
       ? graded.reduce((sum, log) => sum + (log?.accuracy ?? 0), 0) / graded.length
       : null;
   const totalTime = completed.reduce((sum, log) => sum + (log?.elapsedMs ?? 0), 0);
-  const againCount = completed.filter((log) => log?.rating === 'again').length;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
@@ -32,17 +31,12 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
           Session complete
         </h1>
         <p className="mt-1 text-sm text-ink-muted">
-          {`${completed.length} passage${completed.length === 1 ? '' : 's'} reviewed \u00b7 ${formatDuration(totalTime)}${
+          {`${completed.length} passage${completed.length === 1 ? '' : 's'} practiced \u00b7 ${formatDuration(totalTime)}${
             averageAccuracy !== null
               ? ` \u00b7 ${formatAccuracy(averageAccuracy)} average accuracy`
               : ''
           }`}
         </p>
-        {againCount > 0 ? (
-          <p className="mt-1 text-sm text-warning">
-            {`${againCount} passage${againCount === 1 ? '' : 's'} rated Again and returned to a short interval.`}
-          </p>
-        ) : null}
       </div>
 
       <ul className="card mt-6 divide-y divide-[var(--border-subtle)]">
@@ -57,7 +51,7 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
                   {getVerse(log.verseId)?.reference ?? log.verseId}
                 </p>
                 <p className="text-xs text-ink-muted">
-                  {`${MODE_LABELS[log.mode]} \u00b7 rated ${log.rating}${
+                  {`${MODE_LABELS[log.mode]}${
                     log.accuracy !== null
                       ? ` \u00b7 ${formatAccuracy(log.accuracy)}`
                       : ''
@@ -65,7 +59,7 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
                 </p>
               </div>
               <p className="text-xs text-ink-subtle">
-                {`Next in ${formatInterval(log.nextIntervalDays)}`}
+                {formatDuration(log.elapsedMs)}
               </p>
             </li>
           ) : null,

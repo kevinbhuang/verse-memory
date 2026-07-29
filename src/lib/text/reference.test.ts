@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookOf, matchBookAndChapter, matchReference, normalizeReference, parseReference } from './reference';
+import { bookOf, matchBookAndChapter, matchReference, normalizeReference, parseReference, abbreviateReference } from './reference';
 import { verses } from '@/data/verses';
 
 describe('parseReference', () => {
@@ -101,5 +101,21 @@ describe('matchBookAndChapter', () => {
     expect(matchBookAndChapter('Jn 3:16', 'John 3:16').isMatch).toBe(true);
     expect(matchBookAndChapter('John 4', 'John 3:16').isMatch).toBe(false);
     expect(matchBookAndChapter('Romans 3', 'John 3:16').isMatch).toBe(false);
+  });
+});
+
+describe('abbreviateReference', () => {
+  it('shortens common books while keeping verse ranges', () => {
+    expect(abbreviateReference('Exodus 19:4-6')).toBe('Ex 19:4-6');
+    expect(abbreviateReference('1 Thessalonians 5:16-18')).toBe('1 Th 5:16-18');
+    expect(abbreviateReference('John 3:16')).toBe('Jn 3:16');
+  });
+
+  it('abbreviates every collection reference', () => {
+    for (const verse of verses) {
+      const abbrev = abbreviateReference(verse.reference);
+      expect(abbrev.length).toBeGreaterThan(0);
+      expect(abbrev.length).toBeLessThanOrEqual(verse.reference.length);
+    }
   });
 });

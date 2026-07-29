@@ -59,15 +59,6 @@ export function useWordStats(verseId?: string): WordStat[] | undefined {
   }, [verseId]);
 }
 
-export function useOpenSession() {
-  return useLiveQuery(async () => {
-    const sessions = await getDatabase()
-      .sessions.filter((session) => session.completedAt === null)
-      .toArray();
-    return sessions.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-  }, []);
-}
-
 /**
  * Resolves to `null` when the session is not stored, so callers can tell a
  * session that is still loading (`undefined`) from one that does not exist.

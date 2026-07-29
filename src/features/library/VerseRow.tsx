@@ -5,6 +5,7 @@ import {
   Layers,
   RotateCcw,
 } from 'lucide-react';
+import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { NeedsReviewBadge } from '@/components/VerseBadges';
 import type { Verse, VerseProgress } from '@/types';
@@ -33,7 +34,13 @@ export function VerseRow({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <li className="relative border-b border-line last:border-b-0">
+    <li
+      className={clsx(
+        'relative border-b border-line last:border-b-0',
+        progress.isMemorized && 'bg-success-soft',
+        !progress.isMemorized && progress.isDifficult && 'bg-warning-soft',
+      )}
+    >
       <div className="flex items-start gap-2.5 px-2 py-2 sm:px-3">
         <div className="flex shrink-0 gap-2 pt-0.5">
           <span className={`${LIBRARY_MEMORIZED_COL} flex justify-center`}>

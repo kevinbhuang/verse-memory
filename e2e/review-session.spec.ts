@@ -34,31 +34,27 @@ async function typeWholePassage(page: Page) {
 }
 
 test.describe('completing a first-letter review', () => {
-  test('saves the rating, the history and the next due date', async ({ page }) => {
+  test('saves the practice attempt and history', async ({ page }) => {
     await startFirstLetterSession(page);
 
     await expect(page.getByText(/0 of \d+ words/)).toBeVisible();
     await typeWholePassage(page);
 
     await expect(page.getByText('Passage complete.')).toBeVisible();
-    await expect(page.getByText(/how well did you recall it\?/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /^finish$/i })).toBeVisible();
 
-    await page.getByRole('button', { name: /^Good/ }).click();
+    await page.getByRole('button', { name: /^finish$/i }).click();
 
     await expect(page.getByText(/session complete/i)).toBeVisible();
 
     await page.goto('/verses/verse-001');
     await expect(page.getByText('1 recorded review')).toBeVisible();
-    await expect(
-      page.getByRole('definition').filter({ hasText: 'Tomorrow' }).first(),
-    ).toBeVisible();
-    await expect(page.getByText('1 day').first()).toBeVisible();
   });
 
-  test('keeps the due date after a reload', async ({ page }) => {
+  test('keeps the history after a reload', async ({ page }) => {
     await startFirstLetterSession(page);
     await typeWholePassage(page);
-    await page.getByRole('button', { name: /^Good/ }).click();
+    await page.getByRole('button', { name: /^finish$/i }).click();
     await expect(page.getByText(/session complete/i)).toBeVisible();
 
     await page.goto('/verses/verse-001');
@@ -81,7 +77,7 @@ test.describe('completing a first-letter review', () => {
     await expect(page.getByText(/0 of \d+ words · 1 wrong keys/)).toBeVisible();
   });
 
-  test('can be paused and resumed', async ({ page }) => {
+  test('discards a session when leaving mid-way', async ({ page }) => {
     await page.goto('/practice');
     await page.getByRole('button', { name: /deck 1/i }).click();
     await page
@@ -95,13 +91,10 @@ test.describe('completing a first-letter review', () => {
     await expect(page.getByText(/passage 2 of/i)).toBeVisible();
 
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Pause and leave' }).click();
+    await page.getByRole('button', { name: 'Discard and leave' }).click();
 
-    await expect(page.getByText(/you have an unfinished session/i)).toBeVisible();
-    await expect(page.getByText(/1 of \d+ completed/i)).toBeVisible();
-
-    await page.getByRole('button', { name: /^resume$/i }).click();
-    await expect(page.getByText(/passage 2 of/i)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: /^practice$/i })).toBeVisible();
+    await expect(page.getByText(/you have an unfinished session/i)).toHaveCount(0);
   });
 
   test('a deck session stays inside that section', async ({ page }) => {

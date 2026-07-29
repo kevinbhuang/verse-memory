@@ -373,7 +373,7 @@ export function FirstLetterMode({
       <ConfirmDialog
         open={confirmReveal}
         title="Reveal the whole passage?"
-        description="This counts as an assisted review and will suggest a rating of Again."
+        description="This counts as an assisted review."
         confirmLabel="Reveal passage"
         onCancel={() => setConfirmReveal(false)}
         onConfirm={() => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Check,
   ChevronLeft,
@@ -20,6 +20,7 @@ import { useSession, useVerseProgress, useWordStats } from '@/hooks/useProgressD
 import { getVerse } from '@/data/verses';
 import { recordReview } from '@/services/reviewService';
 import {
+  abandonSession,
   advanceSession,
   completeSession,
   modeForIndex,
@@ -28,8 +29,7 @@ import {
 } from '@/services/sessionService';
 import { setDifficult, setMemorized } from '@/services/progressService';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
-import type { ModeResult, Rating, ReviewMode } from '@/types';
-import { RatingPanel } from './RatingPanel';
+import type { ModeResult, ReviewMode } from '@/types';
 import { VerseAudioControls } from './VerseAudioControls';
 import { emptyResult } from './modeTypes';
 import { FlashcardMode } from './modes/FlashcardMode';
@@ -96,27 +96,25 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     );
   }, [chosenMode, practiceMode, progress, session, settings.defaultReviewMode]);
 
-  const rate = useCallback(
-    async (rating: Rating) => {
-      if (!session || !verse || !mode || saving) return;
-      const attempt = result ?? emptyResult(mode);
-      setSaving(true);
-      try {
-        const { log } = await recordReview({
-          verseId: verse.id,
-          rating,
-          result: attempt,
-          settings,
-          sessionId: session.id,
-        });
-        await advanceSession(session, log.id, { requeue: rating === 'again' });
-        setResult(null);
-      } finally {
-        setSaving(false);
-      }
-    },
-    [mode, result, saving, session, settings, verse],
-  );
+  const goNext = useCallback(async () => {
+    if (!session || !verse || !mode || saving) return;
+    const attempt = result ?? emptyResult(mode);
+    setSaving(true);
+    try {
+      // Practice no longer asks for a 1–4 grade; log the attempt neutrally.
+      const { log } = await recordReview({
+        verseId: verse.id,
+        rating: 'good',
+        result: attempt,
+        settings,
+        sessionId: session.id,
+      });
+      await advanceSession(session, log.id, { requeue: false });
+      setResult(null);
+    } finally {
+      setSaving(false);
+    }
+  }, [mode, result, saving, session, settings, verse]);
 
   const goToIndex = useCallback(
     (index: number) => {
@@ -133,12 +131,18 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     setPracticeMode(next);
   }, []);
 
+  const leaveSession = useCallback(async () => {
+    if (session) {
+      await abandonSession(session.id);
+    }
+    navigate('/practice');
+  }, [navigate, session]);
+
   const hotkeys = useMemo(
     () => ({
-      '1': () => void (mode && rate('again')),
-      '2': () => void (mode && rate('hard')),
-      '3': () => void (mode && rate('good')),
-      '4': () => void (mode && rate('easy')),
+      enter: () => {
+        if (mode) void goNext();
+      },
       d: () => {
         if (!verse || !progress) return;
         void setDifficult(verse.id, !progress.isDifficult).then(() =>
@@ -177,7 +181,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         goToIndex(session.currentIndex + 1);
       },
     }),
-    [goToIndex, isLearnSession, mode, notify, progress, rate, session, verse],
+    [goNext, goToIndex, isLearnSession, mode, notify, progress, session, verse],
   );
 
   useHotkeys(hotkeys);
@@ -190,7 +194,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-sm text-ink-muted">
-          That review session no longer exists.
+          That practice session no longer exists.
         </p>
         <ButtonLink to="/practice" variant="primary">
           Build a new session
@@ -416,31 +420,39 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
 
       <footer className="sticky bottom-0 border-t border-line bg-paper/95 py-3 backdrop-blur">
         {mode ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              {result?.accuracy !== null && result ? (
-                <p className="text-xs text-ink-muted">
-                  {`${formatAccuracy(result.accuracy)} accuracy \u00b7 ${formatDuration(result.elapsedMs)} \u00b7 ${result.hintCount} hint${result.hintCount === 1 ? '' : 's'}`}
-                </p>
-              ) : (
-                <p className="text-xs text-ink-muted">Rate when ready</p>
-              )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {result?.accuracy !== null && result ? (
+              <p className="text-xs text-ink-muted">
+                {`${formatAccuracy(result.accuracy)} accuracy \u00b7 ${formatDuration(result.elapsedMs)} \u00b7 ${result.hintCount} hint${result.hintCount === 1 ? '' : 's'}`}
+              </p>
+            ) : (
+              <p className="text-xs text-ink-muted">
+                Ready when you are · Enter for next
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => void skipCard(session)}
+                disabled={saving}
               >
                 <SkipForward className="size-4" aria-hidden="true" />
                 Skip
               </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void goNext()}
+                disabled={saving}
+              >
+                {saving
+                  ? 'Saving\u2026'
+                  : position >= total
+                    ? 'Finish'
+                    : 'Next'}
+              </Button>
             </div>
-            <RatingPanel
-              progress={progress}
-              settings={settings}
-              suggested={result?.suggestedRating ?? null}
-              disabled={saving}
-              onRate={(rating) => void rate(rating)}
-            />
           </div>
         ) : (
           <p className="text-xs text-ink-muted">
@@ -452,13 +464,14 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       <ConfirmDialog
         open={confirmExit}
         title="Leave this session?"
-        description="Your completed passages are already saved. You can resume this session from Practice."
-        confirmLabel="Pause and leave"
+        description="This session will be discarded. Completed practice marks (Memorized / Needs Review) are already saved."
+        confirmLabel="Discard and leave"
         cancelLabel="Keep practicing"
+        destructive
         onCancel={() => setConfirmExit(false)}
         onConfirm={() => {
           setConfirmExit(false);
-          navigate('/practice');
+          void leaveSession();
         }}
       >
         <div className="space-y-3 text-sm text-ink-muted">
@@ -466,14 +479,19 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
             {`${session.currentIndex} of ${session.verseIds.length} passages completed.`}
           </p>
           <p>
-            <Link
-              to="/verses"
+            <button
+              type="button"
               className="underline"
-              onClick={() => void completeSession(session)}
+              onClick={() => {
+                void completeSession(session).then(() => {
+                  setConfirmExit(false);
+                  navigate('/practice');
+                });
+              }}
             >
-              End the session instead
-            </Link>{' '}
-            if you do not intend to come back to it.
+              Mark the session complete instead
+            </button>{' '}
+            if you want a summary of what you finished.
           </p>
         </div>
       </ConfirmDialog>

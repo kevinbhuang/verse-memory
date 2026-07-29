@@ -191,7 +191,7 @@ export function FlashCardsPage() {
     <>
       <PageHeader
         title="Flash Cards"
-        description="Flip through the collection. Hide a passage to test yourself, or press F for first-letter cues."
+        description="Press spacebar to hide, or press F for first-letter only."
       />
 
       <div className="mb-5 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">

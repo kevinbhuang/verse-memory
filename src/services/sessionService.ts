@@ -269,6 +269,10 @@ export async function createSession(
   const verseIds = selectVerseIds(criteria, progressList, now);
   if (verseIds.length === 0) return null;
 
+  // Drop any unfinished session — practice is not meant to be paused/resumed.
+  const open = await store().sessions.latestOpen();
+  if (open) await store().sessions.remove(open.id);
+
   const session: ReviewSession = {
     id: createId('session'),
     createdAt: now.toISOString(),

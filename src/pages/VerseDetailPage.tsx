@@ -175,7 +175,7 @@ export function VerseDetailPage() {
                         {formatDate(log.reviewedAt)}
                       </span>
                       <span className="text-xs text-ink-muted">
-                        {`${MODE_LABELS[log.mode]} \u00b7 ${log.rating}${
+                        {`${MODE_LABELS[log.mode]}${
                           log.accuracy !== null
                             ? ` \u00b7 ${formatAccuracy(log.accuracy)}`
                             : ''
@@ -277,10 +277,6 @@ export function VerseDetailPage() {
               <CardBody className="space-y-1.5 text-sm">
                 <Row label="Successful" value={String(progress.successCount)} />
                 <Row label="Failed" value={String(progress.lapseCount)} />
-                <Row
-                  label="Most recent result"
-                  value={progress.lastRating ?? 'None yet'}
-                />
               </CardBody>
             </Card>
           ) : null}

@@ -36,9 +36,6 @@ async function renderSession(session: ReviewSession) {
   return view;
 }
 
-const ratingButton = (name: RegExp) =>
-  screen.getByRole('button', { name });
-
 describe('SessionRunner', () => {
   it('shows the passage position', async () => {
     const session = await startFlashcardSession();
@@ -84,103 +81,76 @@ describe('SessionRunner', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('lets the reader rate without finishing the exercise first', async () => {
+  it('does not offer 1-4 recall ratings', async () => {
+    const session = await startFlashcardSession();
+    await renderSession(session);
+
+    expect(screen.queryByText(/how well did you recall it\?/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^again/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^good/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeInTheDocument();
+  });
+
+  it('advances with Next without finishing the exercise first', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
-    expect(
-      await screen.findByText(/how well did you recall it\?/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/finish the exercise to rate this passage/i),
-    ).not.toBeInTheDocument();
-
-    await user.click(ratingButton(/^Good/));
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
 
     await waitFor(async () => {
       const progress = await getProgress(first.id);
       expect(progress.reviewCount).toBe(1);
-      expect(progress.lastRating).toBe('good');
     });
     expect(await screen.findByText(/passage 2 of 2/i)).toBeInTheDocument();
   });
 
-  it('shows recall quality choices without interval previews', async () => {
+  it('records a practice log and moves to the next passage', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
     await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-
-    expect(within(ratingButton(/^Again/)).getByText(/could not recall/i)).toBeInTheDocument();
-    expect(within(ratingButton(/^Good/)).getByText(/recalled correctly/i)).toBeInTheDocument();
-    expect(screen.queryByText('1 day')).not.toBeInTheDocument();
-    expect(screen.queryByText('3 days')).not.toBeInTheDocument();
-  });
-
-  it('records the rating and moves to the next passage', async () => {
-    const session = await startFlashcardSession();
-    const { user } = await renderSession(session);
-
-    await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-    await user.click(ratingButton(/^Good/));
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
 
     await waitFor(async () => {
       const progress = await getProgress(first.id);
       expect(progress.reviewCount).toBe(1);
-      expect(progress.lastRating).toBe('good');
-      expect(progress.nextDueAt).not.toBeNull();
     });
 
     expect(await screen.findByText(/passage 2 of 2/i)).toBeInTheDocument();
     expect(screen.getByText(second.reference)).toBeInTheDocument();
-  });
-
-  it('writes a review log tied to the session', async () => {
-    const session = await startFlashcardSession();
-    const { user } = await renderSession(session);
-
-    await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-    await user.click(ratingButton(/^Hard/));
-
-    await screen.findByText(/passage 2 of 2/i);
 
     const logs = await getDataStore().reviewLogs.forVerse(first.id);
     expect(logs).toHaveLength(1);
     expect(logs[0]).toMatchObject({
       mode: 'flashcard',
-      rating: 'hard',
       sessionId: session.id,
     });
   });
 
-  it('accepts number keys 1 to 4 as ratings', async () => {
+  it('accepts Enter to move to the next passage', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
-    await user.keyboard(' ');
-    await screen.findByText(/how well did you recall it\?/i);
-    await user.keyboard('4');
+    await user.keyboard('{Enter}');
 
     await waitFor(async () => {
-      expect((await getProgress(first.id)).lastRating).toBe('easy');
+      expect((await getProgress(first.id)).reviewCount).toBe(1);
     });
-    // Wait for the card to turn over too, so the session write has settled
-    // before the test tears the database down.
     await screen.findByText(/passage 2 of 2/i);
   });
 
-  it('queues a failed passage again before the session ends', async () => {
+  it('does not requeue a passage when advancing', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
     await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-    await user.click(ratingButton(/^Again/));
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
 
     await waitFor(async () => {
       const stored = await getSession(session.id);
-      expect(stored?.verseIds).toEqual([first.id, second.id, first.id]);
+      expect(stored?.verseIds).toEqual([first.id, second.id]);
     });
-    expect(await screen.findByText(/passage 2 of 3/i)).toBeInTheDocument();
+    expect(await screen.findByText(/passage 2 of 2/i)).toBeInTheDocument();
   });
 
   it('saves progress card by card so nothing is lost part way through', async () => {
@@ -188,7 +158,7 @@ describe('SessionRunner', () => {
     const { user, unmount } = await renderSession(session);
 
     await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-    await user.click(ratingButton(/^Good/));
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
     await screen.findByText(/passage 2 of 2/i);
 
     unmount();
@@ -200,28 +170,12 @@ describe('SessionRunner', () => {
     expect((await getProgress(first.id)).reviewCount).toBe(1);
   });
 
-  it('resumes an interrupted session at the right card', async () => {
-    const session = await startFlashcardSession();
-    const { user, unmount } = await renderSession(session);
-
-    await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-    await user.click(ratingButton(/^Good/));
-    await screen.findByText(/passage 2 of 2/i);
-    unmount();
-
-    const resumed = await getSession(session.id);
-    await renderSession(resumed!);
-
-    expect(await screen.findByText(/passage 2 of 2/i)).toBeInTheDocument();
-    expect(screen.getByText(second.reference)).toBeInTheDocument();
-  });
-
   it('summarises the session once every passage is done', async () => {
     const session = await startFlashcardSession([first.id]);
     const { user } = await renderSession(session);
 
     await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
-    await user.click(ratingButton(/^Good/));
+    await user.click(screen.getByRole('button', { name: /^finish$/i }));
 
     expect(await screen.findByText(/session complete/i)).toBeInTheDocument();
   });
@@ -255,6 +209,21 @@ describe('SessionRunner', () => {
 
     expect(await screen.findByText(/leave this session\?/i)).toBeInTheDocument();
     expect(screen.getByText(/0 of 2 passages completed/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /discard and leave/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('discards the session when leaving', async () => {
+    const session = await startFlashcardSession();
+    const { user } = await renderSession(session);
+
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', { name: /discard and leave/i }));
+
+    await waitFor(async () => {
+      expect(await getSession(session.id)).toBeUndefined();
+    });
   });
 
   it('picks first-letter typing automatically for a Needs Review passage', async () => {
@@ -286,7 +255,7 @@ describe('SessionRunner', () => {
   it('explains when the session no longer exists', async () => {
     renderWithProviders(<SessionRunner sessionId="session-missing" />);
     expect(
-      await screen.findByText(/that review session no longer exists/i),
+      await screen.findByText(/that practice session no longer exists/i),
     ).toBeInTheDocument();
   });
 

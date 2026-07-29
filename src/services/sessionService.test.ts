@@ -384,7 +384,7 @@ describe('session persistence', () => {
     expect(await getResumableSession()).toBeUndefined();
   });
 
-  it('resumes the most recent unfinished session', async () => {
+  it('replaces any unfinished session when starting a new one', async () => {
     const older = (await createSession(
       criteria({ source: 'range', range: { start: 1, end: 2 } }),
       'Older',
@@ -396,8 +396,8 @@ describe('session persistence', () => {
       NOW,
     ))!;
 
-    const resumable = (await getResumableSession()) as ReviewSession;
-    expect(resumable.id).toBe(newer.id);
-    expect(resumable.id).not.toBe(older.id);
+    expect(await getDataStore().sessions.get(older.id)).toBeUndefined();
+    const open = (await getResumableSession()) as ReviewSession;
+    expect(open.id).toBe(newer.id);
   });
 });
