@@ -41,7 +41,6 @@ export function AppLayout() {
   const focusMode =
     location.pathname.startsWith('/review/session') ||
     location.pathname.startsWith('/quiz/session');
-  const compactChrome = location.pathname === '/progress-chart';
 
   if (focusMode) {
     return (
@@ -106,18 +105,11 @@ export function AppLayout() {
             </p>
           </header>
 
-          <main
-            id="main"
-            className={
-              compactChrome
-                ? 'flex-1 px-3 pt-3 pb-20 sm:px-4 lg:px-5 lg:pb-4'
-                : 'flex-1 px-4 pt-5 pb-24 sm:px-6 lg:px-8 lg:pb-10'
-            }
-          >
+          <main id="main" className="flex-1 px-4 pt-5 pb-24 sm:px-6 lg:px-8 lg:pb-10">
             <Outlet />
           </main>
 
-          {compactChrome ? null : <Footer />}
+          <Footer />
         </div>
       </div>
 

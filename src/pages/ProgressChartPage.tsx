@@ -5,14 +5,11 @@ import { useToast } from '@/components/ui/Toast';
 import { useAllProgress } from '@/hooks/useProgressData';
 import { LibraryProgressStrip } from '@/features/library/LibraryProgressStrip';
 import { ProgressChart } from '@/features/library/ProgressChart';
-import {
-  setDifficult,
-  setMemorized,
-} from '@/services/progressService';
+import { setDifficult, setMemorized } from '@/services/progressService';
 import { computeCollectionStats } from '@/services/statsService';
 
 /**
- * Standalone progress chart: all 171 passages by deck, with Memorized /
+ * Standalone progress chart: every passage in one table, with Memorized /
  * Needs Review toggles.
  */
 export function ProgressChartPage() {
@@ -34,15 +31,14 @@ export function ProgressChartPage() {
   }
 
   return (
-    <div className="pb-2">
-      <PageHeader title="Progress Chart" className="mb-2 flex flex-wrap items-end justify-between gap-3" />
+    <>
+      <PageHeader title="Progress Chart" />
 
       <LibraryProgressStrip
-          memorized={collectionStats.memorized}
-          total={collectionStats.total}
-          percentMemorized={collectionStats.percentMemorized}
-          className="mb-1.5"
-        />
+        memorized={collectionStats.memorized}
+        total={collectionStats.total}
+        percentMemorized={collectionStats.percentMemorized}
+      />
 
       <ProgressChart
         progressById={progressById}
@@ -63,6 +59,6 @@ export function ProgressChartPage() {
           );
         }}
       />
-    </div>
+    </>
   );
 }
