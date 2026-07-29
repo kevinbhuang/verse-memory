@@ -215,214 +215,214 @@ export function PracticePage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
-        <div className="space-y-5">
-          <Card>
-            <CardHeader title="What to practice" />
-            <CardBody className="space-y-4">
-              <SegmentedControl
-                aria-label="Practice scope"
-                value={scope}
-                onChange={setScope}
-                options={[
-                  { value: 'deck', label: 'Decks' },
-                  { value: 'book', label: 'Books' },
-                ]}
-              />
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_17rem] lg:items-start">
+        <Card>
+          <CardHeader title="What to practice" className="px-4 py-3" />
+          <CardBody className="space-y-3 px-4 py-3">
+            <SegmentedControl
+              aria-label="Practice scope"
+              value={scope}
+              onChange={setScope}
+              options={[
+                { value: 'deck', label: 'Decks' },
+                { value: 'book', label: 'Books' },
+              ]}
+            />
 
-              {scope === 'deck' ? (
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-accent hover:underline"
-                      onClick={() =>
-                        setSections(DECKS.map((deck) => deck.section))
-                      }
-                    >
-                      Select all decks
-                    </button>
-                    <span className="text-xs text-ink-subtle" aria-hidden="true">
-                      ·
-                    </span>
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-ink-muted hover:underline"
-                      onClick={() => setSections([SECTIONS[0]])}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                  <div
-                    className="divide-y divide-line border-y border-line"
-                    role="group"
-                    aria-label="Decks"
+            {scope === 'deck' ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-accent hover:underline"
+                    onClick={() =>
+                      setSections(DECKS.map((deck) => deck.section))
+                    }
                   >
-                    {DECKS.map((deck) => {
-                      const selected = sections.includes(deck.section);
-                      return (
-                        <button
-                          key={deck.section}
-                          type="button"
-                          onClick={() => toggleSection(deck.section)}
-                          aria-pressed={selected}
-                          className={`flex w-full items-baseline justify-between gap-3 px-1 py-2.5 text-left transition-colors ${
-                            selected
-                              ? 'bg-accent-soft/50 text-accent'
-                              : 'text-ink hover:bg-surface-muted'
-                          }`}
-                        >
-                          <span className="min-w-0">
-                            <span className="block text-xs text-ink-subtle">
-                              {deck.label}
-                            </span>
-                            <span className="block text-sm font-medium">
-                              {deck.section}
-                            </span>
-                          </span>
-                          <span className="shrink-0 text-xs text-ink-muted tabular-nums">
-                            {deck.passageCount}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {allDecksSelected ? (
-                    <p className="text-xs text-ink-muted">All decks selected.</p>
-                  ) : null}
+                    Select all decks
+                  </button>
+                  <span className="text-xs text-ink-subtle" aria-hidden="true">
+                    ·
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-ink-muted hover:underline"
+                    onClick={() => setSections([SECTIONS[0]])}
+                  >
+                    Reset
+                  </button>
                 </div>
-              ) : (
+                <div
+                  className="max-h-56 divide-y divide-line overflow-y-auto border-y border-line"
+                  role="group"
+                  aria-label="Decks"
+                >
+                  {DECKS.map((deck) => {
+                    const selected = sections.includes(deck.section);
+                    return (
+                      <button
+                        key={deck.section}
+                        type="button"
+                        onClick={() => toggleSection(deck.section)}
+                        aria-pressed={selected}
+                        className={`flex w-full items-baseline justify-between gap-3 px-1 py-2 text-left transition-colors ${
+                          selected
+                            ? 'bg-accent-soft/50 text-accent'
+                            : 'text-ink hover:bg-surface-muted'
+                        }`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-xs text-ink-subtle">
+                            {deck.label}
+                          </span>
+                          <span className="block text-sm font-medium">
+                            {deck.section}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-xs text-ink-muted tabular-nums">
+                          {deck.passageCount}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {allDecksSelected ? (
+                  <p className="text-xs text-ink-muted">All decks selected.</p>
+                ) : null}
+              </div>
+            ) : (
+              <div className="max-h-56 overflow-y-auto">
                 <BookCheckboxList
                   idPrefix="practice-book"
                   selected={books}
                   onChange={setBooks}
                   requireOne
                 />
-              )}
-
-              <div>
-                <p className="mb-2 text-sm font-medium text-ink">How many</p>
-                <SegmentedControl
-                  aria-label="Session length"
-                  size="sm"
-                  value={sizeChoice === 'all' ? 'all' : '10'}
-                  onChange={(next) =>
-                    setSizeChoice(next === 'all' ? 'all' : 10)
-                  }
-                  options={[
-                    {
-                      value: '10',
-                      label: '10 passages',
-                      disabled: matchingTotal === 0,
-                    },
-                    {
-                      value: 'all',
-                      label:
-                        matchingTotal > 0
-                          ? `All ${matchingTotal} passages`
-                          : 'All passages',
-                      disabled: matchingTotal === 0,
-                    },
-                  ]}
-                />
               </div>
-            </CardBody>
-          </Card>
+            )}
 
-          <Card>
-            <CardHeader title="How" />
-            <CardBody className="space-y-4">
-              <div
-                className="divide-y divide-line border-y border-line"
-                role="group"
-                aria-label="Practice style"
-              >
-                <button
-                  type="button"
-                  onClick={() => setKind('learn')}
-                  aria-pressed={kind === 'learn'}
-                  className={`flex w-full items-start gap-3 px-1 py-3 text-left transition-colors ${
-                    kind === 'learn'
-                      ? 'bg-accent-soft/50 text-accent'
-                      : 'text-ink hover:bg-surface-muted'
-                  }`}
-                >
-                  <GraduationCap
-                    className="mt-0.5 size-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>
-                    <span className="block text-sm font-semibold">Learn</span>
-                    <span className="mt-0.5 block text-xs opacity-80">
-                      See the reference and passage, then review.
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setKind('flashcard')}
-                  aria-pressed={kind === 'flashcard'}
-                  className={`flex w-full items-start gap-3 px-1 py-3 text-left transition-colors ${
-                    kind === 'flashcard'
-                      ? 'bg-accent-soft/50 text-accent'
-                      : 'text-ink hover:bg-surface-muted'
-                  }`}
-                >
-                  <ALargeSmall
-                    className="mt-0.5 size-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>
-                    <span className="block text-sm font-semibold">
-                      First letter
-                    </span>
-                    <span className="mt-0.5 block text-xs opacity-80">
-                      See first letters, then reveal the full passage.
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setKind('first-letter')}
-                  aria-pressed={kind === 'first-letter'}
-                  className={`flex w-full items-start gap-3 px-1 py-3 text-left transition-colors ${
-                    kind === 'first-letter'
-                      ? 'bg-accent-soft/50 text-accent'
-                      : 'text-ink hover:bg-surface-muted'
-                  }`}
-                >
-                  <Keyboard
-                    className="mt-0.5 size-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>
-                    <span className="block text-sm font-semibold">Practice</span>
-                    <span className="mt-0.5 block text-xs opacity-80">
-                      Type the first letter of each word.
-                    </span>
-                  </span>
-                </button>
-              </div>
-
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-ink">How many</p>
               <SegmentedControl
-                aria-label="Passage filter"
+                aria-label="Session length"
                 size="sm"
-                value={filter}
-                onChange={setFilter}
+                value={sizeChoice === 'all' ? 'all' : '10'}
+                onChange={(next) =>
+                  setSizeChoice(next === 'all' ? 'all' : 10)
+                }
                 options={[
-                  { value: 'all', label: 'All' },
-                  { value: 'memorized', label: 'Memorized' },
-                  { value: 'needs-review', label: 'Needs Review' },
+                  {
+                    value: '10',
+                    label: '10 passages',
+                    disabled: matchingTotal === 0,
+                  },
+                  {
+                    value: 'all',
+                    label:
+                      matchingTotal > 0
+                        ? `All ${matchingTotal} passages`
+                        : 'All passages',
+                    disabled: matchingTotal === 0,
+                  },
                 ]}
               />
-            </CardBody>
-          </Card>
-        </div>
+            </div>
+          </CardBody>
+        </Card>
 
-        <aside className="lg:sticky lg:top-4 lg:self-start">
+        <Card>
+          <CardHeader title="How" className="px-4 py-3" />
+          <CardBody className="space-y-3 px-4 py-3">
+            <div
+              className="divide-y divide-line border-y border-line"
+              role="group"
+              aria-label="Practice style"
+            >
+              <button
+                type="button"
+                onClick={() => setKind('learn')}
+                aria-pressed={kind === 'learn'}
+                className={`flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors ${
+                  kind === 'learn'
+                    ? 'bg-accent-soft/50 text-accent'
+                    : 'text-ink hover:bg-surface-muted'
+                }`}
+              >
+                <GraduationCap
+                  className="mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>
+                  <span className="block text-sm font-semibold">Learn</span>
+                  <span className="mt-0.5 block text-xs opacity-80">
+                    See the reference and passage, then review.
+                  </span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setKind('flashcard')}
+                aria-pressed={kind === 'flashcard'}
+                className={`flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors ${
+                  kind === 'flashcard'
+                    ? 'bg-accent-soft/50 text-accent'
+                    : 'text-ink hover:bg-surface-muted'
+                }`}
+              >
+                <ALargeSmall
+                  className="mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>
+                  <span className="block text-sm font-semibold">
+                    First letter
+                  </span>
+                  <span className="mt-0.5 block text-xs opacity-80">
+                    See first letters, then reveal the full passage.
+                  </span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setKind('first-letter')}
+                aria-pressed={kind === 'first-letter'}
+                className={`flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors ${
+                  kind === 'first-letter'
+                    ? 'bg-accent-soft/50 text-accent'
+                    : 'text-ink hover:bg-surface-muted'
+                }`}
+              >
+                <Keyboard
+                  className="mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>
+                  <span className="block text-sm font-semibold">Practice</span>
+                  <span className="mt-0.5 block text-xs opacity-80">
+                    Type the first letter of each word.
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            <SegmentedControl
+              aria-label="Passage filter"
+              size="sm"
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'memorized', label: 'Memorized' },
+                { value: 'needs-review', label: 'Needs Review' },
+              ]}
+            />
+          </CardBody>
+        </Card>
+
+        <aside className="lg:col-span-2 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">
           <Card>
-            <CardHeader title="Session" />
-            <CardBody>
+            <CardHeader title="Session" className="px-4 py-3" />
+            <CardBody className="px-4 py-3">
               {preview.length === 0 ? (
                 <EmptyState
                   title="Nothing matches"
@@ -435,7 +435,7 @@ export function PracticePage() {
                       ? `All ${preview.length} passages`
                       : `${preview.length} of ${matchingTotal} passages`}
                   </p>
-                  <ol className="mt-3 max-h-64 space-y-1 overflow-y-auto text-sm">
+                  <ol className="mt-2 max-h-40 space-y-1 overflow-y-auto text-sm">
                     {preview.slice(0, 20).map((verseId) => {
                       const verse = getVerse(verseId);
                       return (
@@ -459,7 +459,7 @@ export function PracticePage() {
               <Button
                 variant="primary"
                 size="lg"
-                className="mt-4 w-full"
+                className="mt-3 w-full"
                 disabled={preview.length === 0 || starting}
                 onClick={() => void start()}
               >

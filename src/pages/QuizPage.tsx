@@ -134,146 +134,146 @@ export function QuizPage() {
         description="Test yourself on the collection, decks, or books with a scored quiz."
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
-        <div className="space-y-5">
-          <Card>
-            <CardHeader title="What to quiz" />
-            <CardBody className="space-y-4">
-              <SegmentedControl
-                aria-label="Quiz scope"
-                value={scope}
-                onChange={setScope}
-                options={[
-                  { value: 'all', label: 'All verses' },
-                  { value: 'deck', label: 'Decks' },
-                  { value: 'book', label: 'Books' },
-                ]}
-              />
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_16rem] lg:items-start">
+        <Card>
+          <CardHeader title="What to quiz" className="px-4 py-3" />
+          <CardBody className="space-y-3 px-4 py-3">
+            <SegmentedControl
+              aria-label="Quiz scope"
+              value={scope}
+              onChange={setScope}
+              options={[
+                { value: 'all', label: 'All verses' },
+                { value: 'deck', label: 'Decks' },
+                { value: 'book', label: 'Books' },
+              ]}
+            />
 
-              {scope === 'all' ? (
-                <p className="text-sm text-ink-muted">
-                  {`Every passage in ${appConfig.collectionTitle} (${verses.length}).`}
-                </p>
-              ) : null}
+            {scope === 'all' ? (
+              <p className="text-sm text-ink-muted">
+                {`Every passage in ${appConfig.collectionTitle} (${verses.length}).`}
+              </p>
+            ) : null}
 
-              {scope === 'deck' ? (
-                <div
-                  className="divide-y divide-line border-y border-line"
-                  role="group"
-                  aria-label="Decks"
-                >
-                  {DECKS.map((deck) => {
-                    const selected = sections.includes(deck.section);
-                    return (
-                      <button
-                        key={deck.section}
-                        type="button"
-                        onClick={() => toggleSection(deck.section)}
-                        aria-pressed={selected}
-                        className={`flex w-full items-baseline justify-between gap-3 px-1 py-2.5 text-left transition-colors ${
-                          selected
-                            ? 'bg-accent-soft/50 text-accent'
-                            : 'text-ink hover:bg-surface-muted'
-                        }`}
-                      >
-                        <span className="min-w-0">
-                          <span className="block text-xs text-ink-subtle">
-                            {deck.label}
-                          </span>
-                          <span className="block text-sm font-medium">
-                            {deck.section}
-                          </span>
+            {scope === 'deck' ? (
+              <div
+                className="max-h-56 divide-y divide-line overflow-y-auto border-y border-line"
+                role="group"
+                aria-label="Decks"
+              >
+                {DECKS.map((deck) => {
+                  const selected = sections.includes(deck.section);
+                  return (
+                    <button
+                      key={deck.section}
+                      type="button"
+                      onClick={() => toggleSection(deck.section)}
+                      aria-pressed={selected}
+                      className={`flex w-full items-baseline justify-between gap-3 px-1 py-2 text-left transition-colors ${
+                        selected
+                          ? 'bg-accent-soft/50 text-accent'
+                          : 'text-ink hover:bg-surface-muted'
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-xs text-ink-subtle">
+                          {deck.label}
                         </span>
-                        <span className="shrink-0 text-xs text-ink-muted tabular-nums">
-                          {deck.passageCount}
+                        <span className="block text-sm font-medium">
+                          {deck.section}
                         </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+                      </span>
+                      <span className="shrink-0 text-xs text-ink-muted tabular-nums">
+                        {deck.passageCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
 
-              {scope === 'book' ? (
+            {scope === 'book' ? (
+              <div className="max-h-56 overflow-y-auto">
                 <BookCheckboxList
                   idPrefix="quiz-book"
                   selected={books}
                   onChange={setBooks}
                   requireOne
                 />
-              ) : null}
-
-              <div>
-                <p className="mb-2 text-sm font-medium text-ink">How many</p>
-                <SegmentedControl
-                  aria-label="Quiz length"
-                  size="sm"
-                  value={sizeChoice === 'all' ? 'all' : '10'}
-                  onChange={(next) =>
-                    setSizeChoice(next === 'all' ? 'all' : 10)
-                  }
-                  options={[
-                    {
-                      value: '10',
-                      label: '10 passages',
-                      disabled: matchingTotal === 0,
-                    },
-                    {
-                      value: 'all',
-                      label:
-                        matchingTotal > 0
-                          ? `All ${matchingTotal} passages`
-                          : 'All passages',
-                      disabled: matchingTotal === 0,
-                    },
-                  ]}
-                />
               </div>
-            </CardBody>
-          </Card>
+            ) : null}
 
-          <Card>
-            <CardHeader title="Quiz type" />
-            <CardBody className="!p-0">
-              <div className="divide-y divide-line">
-                {QUIZ_MODES.map((option) => {
-                  const Icon = MODE_ICONS[option];
-                  const selected = mode === option;
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setMode(option)}
-                      aria-pressed={selected}
-                      className={`flex w-full items-start gap-3 px-5 py-3 text-left transition-colors ${
-                        selected
-                          ? 'bg-accent-soft/50 text-accent'
-                          : 'text-ink hover:bg-surface-muted'
-                      }`}
-                    >
-                      <Icon
-                        className="mt-0.5 size-5 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span>
-                        <span className="block text-sm font-semibold">
-                          {QUIZ_MODE_LABELS[option]}
-                        </span>
-                        <span className="mt-0.5 block text-xs opacity-80">
-                          {QUIZ_MODE_DESCRIPTIONS[option]}
-                        </span>
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-ink">How many</p>
+              <SegmentedControl
+                aria-label="Quiz length"
+                size="sm"
+                value={sizeChoice === 'all' ? 'all' : '10'}
+                onChange={(next) =>
+                  setSizeChoice(next === 'all' ? 'all' : 10)
+                }
+                options={[
+                  {
+                    value: '10',
+                    label: '10 passages',
+                    disabled: matchingTotal === 0,
+                  },
+                  {
+                    value: 'all',
+                    label:
+                      matchingTotal > 0
+                        ? `All ${matchingTotal} passages`
+                        : 'All passages',
+                    disabled: matchingTotal === 0,
+                  },
+                ]}
+              />
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader title="Quiz type" className="px-4 py-3" />
+          <CardBody className="!p-0">
+            <div className="divide-y divide-line">
+              {QUIZ_MODES.map((option) => {
+                const Icon = MODE_ICONS[option];
+                const selected = mode === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setMode(option)}
+                    aria-pressed={selected}
+                    className={`flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors ${
+                      selected
+                        ? 'bg-accent-soft/50 text-accent'
+                        : 'text-ink hover:bg-surface-muted'
+                    }`}
+                  >
+                    <Icon
+                      className="mt-0.5 size-4 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold">
+                        {QUIZ_MODE_LABELS[option]}
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardBody>
-          </Card>
-        </div>
+                      <span className="mt-0.5 block text-xs opacity-80">
+                        {QUIZ_MODE_DESCRIPTIONS[option]}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </CardBody>
+        </Card>
 
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+        <aside className="space-y-3 lg:col-span-2 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">
           <Card>
-            <CardHeader title="Ready" />
-            <CardBody className="space-y-4">
+            <CardHeader title="Ready" className="px-4 py-3" />
+            <CardBody className="space-y-3 px-4 py-3">
               {previewCount === 0 ? (
                 <EmptyState
                   icon={<ClipboardList className="size-6" aria-hidden="true" />}
@@ -299,11 +299,6 @@ export function QuizPage() {
               </Button>
             </CardBody>
           </Card>
-
-          <p className="px-1 text-xs text-ink-subtle">
-            Shortcuts: 1 Library · 2 Practice · 3 Quiz · 4 More. In a quiz, Enter
-            checks or goes to the next question.
-          </p>
         </aside>
       </div>
     </>
