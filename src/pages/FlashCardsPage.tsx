@@ -132,10 +132,12 @@ export function FlashCardsPage() {
     setCueHidden(false);
   };
 
-  /** F: turn first letters on (and show the cue instead of the full verse). */
+  /** F: toggle between first-letter cue and the full verse. */
   const toggleFirstLetterMode = () => {
     if (firstLetterMode) {
       setFirstLetterMode(false);
+      setRevealed(true);
+      setCueHidden(false);
       return;
     }
     setFirstLetterMode(true);

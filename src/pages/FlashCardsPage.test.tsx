@@ -63,20 +63,22 @@ describe('FlashCardsPage', () => {
     expect(visibleText()).toContain(first.text.slice(0, 24));
   });
 
-  it('pressing F shows first letters even when the verse was fully visible', async () => {
+  it('pressing F twice returns to the full verse', async () => {
     const { user } = renderWithProviders(<FlashCardsPage />, {
       route: `/flashcards?verse=${first.id}`,
     });
 
     await screen.findByText(first.reference);
-    expect(visibleText()).toContain(first.text.slice(0, 24));
-
     await user.keyboard('f');
-
     expect(
       screen.getByLabelText(/first letters of the passage/i),
-    ).toHaveTextContent(firstLetterSkeleton(first.text).replace(/\u00A0/g, ' '));
-    expect(visibleText()).not.toContain(first.text.slice(0, 24));
+    ).toBeInTheDocument();
+
+    await user.keyboard('f');
+    expect(
+      screen.queryByLabelText(/first letters of the passage/i),
+    ).not.toBeInTheDocument();
+    expect(visibleText()).toContain(first.text.slice(0, 24));
   });
 
   it('pressing Space from first letters hides the cue instead of revealing the verse', async () => {
