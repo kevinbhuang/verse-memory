@@ -19,7 +19,6 @@ import { useAllProgress, useOpenSession } from '@/hooks/useProgressData';
 import { DECKS } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { getVerse } from '@/data/verses';
-import { dueState } from '@/lib/scheduler';
 import { SECTIONS, type ReviewMode, type Section } from '@/types';
 import {
   createSession,
@@ -30,9 +29,14 @@ import { formatRelativeDay } from '@/utils/format';
 
 type Scope = 'deck' | 'book';
 type PracticeKind = 'learn' | 'flashcard' | 'first-letter';
-type PassageFilter = 'all' | 'difficult' | 'memorized';
+type PassageFilter = 'all' | 'needs-review' | 'memorized';
 type SizeChoice = 10 | 'all';
 
+function parsePassageFilter(param: string | null): PassageFilter {
+  if (param === 'memorized') return 'memorized';
+  if (param === 'needs-review' || param === 'difficult') return 'needs-review';
+  return 'all';
+}
 function initialSections(param: string | null): Section[] {
   if (param && (SECTIONS as readonly string[]).includes(param)) {
     return [param as Section];
@@ -60,7 +64,7 @@ function decksLabel(sections: readonly Section[]): string {
 
 /**
  * Single entry point for sessions: pick deck(s)/book(s), how to review,
- * size and difficulty, then start.
+ * size and status filter, then start.
  */
 export function PracticePage() {
   const navigate = useNavigate();
@@ -85,10 +89,8 @@ export function PracticePage() {
     }
     return 'learn';
   });
-  const [filter, setFilter] = useState<PassageFilter>(
-    filterParam === 'difficult' || filterParam === 'memorized'
-      ? filterParam
-      : 'all',
+  const [filter, setFilter] = useState<PassageFilter>(() =>
+    parsePassageFilter(filterParam),
   );
   const [starting, setStarting] = useState(false);
 
@@ -114,7 +116,7 @@ export function PracticePage() {
 
   const criteria: SessionCriteria = useMemo(() => {
     const source =
-      filter === 'difficult'
+      filter === 'needs-review'
         ? 'difficult'
         : filter === 'memorized'
           ? 'memorized'
@@ -137,27 +139,6 @@ export function PracticePage() {
     () => (progressList ? selectVerseIds(criteria, progressList) : []),
     [criteria, progressList],
   );
-
-  const dueCriteria = useMemo<SessionCriteria>(
-    () => ({
-      source: 'due',
-      size: 'all',
-      modeStrategy: 'fixed',
-      fixedMode: 'first-letter',
-    }),
-    [],
-  );
-
-  const dueVerseIds = useMemo(
-    () => (progressList ? selectVerseIds(dueCriteria, progressList) : []),
-    [dueCriteria, progressList],
-  );
-
-  const overdueCount = useMemo(() => {
-    if (!progressList) return 0;
-    return progressList.filter((progress) => dueState(progress) === 'overdue')
-      .length;
-  }, [progressList]);
 
   const allDecksSelected =
     scope === 'deck' && sections.length === DECKS.length;
@@ -186,8 +167,8 @@ export function PracticePage() {
             ? 'First letter'
             : 'Practice';
       const filterLabel =
-        filter === 'difficult'
-          ? ' · Difficult'
+        filter === 'needs-review'
+          ? ' · Needs Review'
           : filter === 'memorized'
             ? ' · Memorized'
             : '';
@@ -205,32 +186,11 @@ export function PracticePage() {
     }
   };
 
-  const startDueToday = async () => {
-    setStarting(true);
-    try {
-      const session = await createSession(dueCriteria, 'Due today');
-      if (!session) {
-        notify('Nothing is due right now.', 'error');
-        return;
-      }
-      navigate(`/review/session?id=${session.id}`);
-    } finally {
-      setStarting(false);
-    }
-  };
-
-  const dueDetail =
-    dueVerseIds.length === 0
-      ? null
-      : overdueCount > 0
-        ? `${overdueCount} overdue`
-        : 'Ready to review';
-
   return (
     <>
       <PageHeader
         title="Practice"
-        description="Review what's due, or build a Learn/Practice session by deck or book."
+        description="Build a Learn or Practice session by deck or book."
       />
 
       {openSession ? (
@@ -254,41 +214,6 @@ export function PracticePage() {
           </CardBody>
         </Card>
       ) : null}
-
-      <div
-        className={`mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5 ${
-          dueVerseIds.length === 0 ? 'opacity-70' : ''
-        }`}
-      >
-        <div className="min-w-0">
-          <p className="text-sm text-ink-muted">Due today</p>
-          {dueVerseIds.length === 0 ? (
-            <p className="mt-1 text-sm text-ink-muted">Nothing due right now.</p>
-          ) : (
-            <>
-              <p className="mt-0.5 font-serif text-3xl font-semibold tracking-tight text-ink tabular-nums">
-                {dueVerseIds.length}
-              </p>
-              {dueDetail ? (
-                <p className="mt-0.5 text-sm text-ink-muted">{dueDetail}</p>
-              ) : null}
-            </>
-          )}
-        </div>
-        <Button
-          variant="primary"
-          disabled={dueVerseIds.length === 0 || starting}
-          onClick={() => void startDueToday()}
-          aria-label={
-            dueVerseIds.length === 0
-              ? 'Nothing due today'
-              : `Start ${dueVerseIds.length} due passage${dueVerseIds.length === 1 ? '' : 's'}`
-          }
-        >
-          <Play className="size-4" aria-hidden="true" />
-          Start
-        </Button>
-      </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-5">
@@ -486,8 +411,8 @@ export function PracticePage() {
                 onChange={setFilter}
                 options={[
                   { value: 'all', label: 'All' },
-                  { value: 'memorized', label: 'Memorized only' },
-                  { value: 'difficult', label: 'Difficult only' },
+                  { value: 'memorized', label: 'Memorized' },
+                  { value: 'needs-review', label: 'Needs Review' },
                 ]}
               />
             </CardBody>

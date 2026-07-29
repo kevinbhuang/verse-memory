@@ -109,41 +109,23 @@ describe('filterLibrary', () => {
     expect(orders(entries)).toEqual([4, 9]);
   });
 
-  it('filters by memorized in both directions', () => {
+  it('filters by memorized review state', () => {
     const progress = buildProgress({ 3: { isMemorized: true } });
 
     expect(
-      orders(filterLibrary(progress, filters({ memorized: 'memorized' }), NOW)),
+      orders(
+        filterLibrary(progress, filters({ reviewState: 'memorized' }), NOW),
+      ),
     ).toEqual([3]);
-    expect(
-      filterLibrary(progress, filters({ memorized: 'not-memorized' }), NOW),
-    ).toHaveLength(verses.length - 1);
   });
 
-  it('filters by the difficult flag', () => {
+  it('filters by Needs Review', () => {
     const entries = filterLibrary(
       buildProgress({ 12: { isDifficult: true } }),
-      filters({ difficultOnly: true }),
+      filters({ reviewState: 'needs-review' }),
       NOW,
     );
     expect(orders(entries)).toEqual([12]);
-  });
-
-  it('separates due from overdue', () => {
-    const progress = buildProgress({
-      1: { nextDueAt: NOW.toISOString() },
-      2: { nextDueAt: subDays(NOW, 5).toISOString() },
-      3: { nextDueAt: addDays(NOW, 5).toISOString() },
-    });
-
-    expect(orders(filterLibrary(progress, filters({ due: 'due' }), NOW))).toEqual([1]);
-    expect(orders(filterLibrary(progress, filters({ due: 'overdue' }), NOW))).toEqual([2]);
-    expect(
-      orders(filterLibrary(progress, filters({ due: 'due-or-overdue' }), NOW)),
-    ).toEqual([1, 2]);
-    expect(
-      orders(filterLibrary(progress, filters({ due: 'scheduled' }), NOW)),
-    ).toEqual([3]);
   });
 
   it('filters passages that have never been reviewed', () => {
@@ -175,10 +157,15 @@ describe('filterLibrary', () => {
         70: { isDifficult: true },
         1: { isDifficult: true, isMemorized: true },
       }),
-      filters({ section: 'Acts', difficultOnly: true, memorized: 'memorized' }),
+      filters({
+        section: 'Acts',
+        reviewState: 'needs-review',
+        status: 'all',
+      }),
       NOW,
     );
-    expect(orders(entries)).toEqual([69]);
+    // reviewState needs-review alone — both 69 and 70 in Acts
+    expect(orders(entries)).toEqual([69, 70]);
   });
 });
 
@@ -270,7 +257,7 @@ describe('isFilterActive', () => {
 
   it('is true once anything narrows the list', () => {
     expect(isFilterActive(filters({ search: 'love' }))).toBe(true);
-    expect(isFilterActive(filters({ difficultOnly: true }))).toBe(true);
+    expect(isFilterActive(filters({ reviewState: 'needs-review' }))).toBe(true);
     expect(isFilterActive(filters({ section: 'Gospels' }))).toBe(true);
   });
 });

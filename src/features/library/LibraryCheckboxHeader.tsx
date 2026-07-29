@@ -1,9 +1,10 @@
 /** Shared widths so library checkbox headers stay aligned with row controls. */
 export const LIBRARY_SELECT_COL = 'w-12';
 export const LIBRARY_MEMORIZED_COL = 'w-16';
+export const LIBRARY_REVIEW_COL = 'w-16';
 
 /**
- * Persistent labels for the library’s select / memorized checkbox columns.
+ * Persistent labels for the library’s select / status checkbox columns.
  */
 export function LibraryCheckboxHeader() {
   return (
@@ -24,6 +25,12 @@ export function LibraryCheckboxHeader() {
             className={`${LIBRARY_MEMORIZED_COL} text-center text-[10px] leading-tight font-medium text-ink-subtle`}
           >
             Memorized
+          </span>
+          <span
+            role="columnheader"
+            className={`${LIBRARY_REVIEW_COL} text-center text-[10px] leading-tight font-medium text-ink-subtle`}
+          >
+            Needs Review
           </span>
         </div>
         <span className="sr-only" role="columnheader">

@@ -70,8 +70,8 @@ export function WhyDifficultPanel({
 
       {progress.isDifficult ? (
         <p className="rounded-md bg-warning-soft px-3 py-2 text-xs text-warning">
-          You flagged this passage manually. That flag stays until you remove
-          it, even if the score falls.
+          You marked this passage Needs Review. That mark stays until you clear
+          it.
         </p>
       ) : null}
     </div>

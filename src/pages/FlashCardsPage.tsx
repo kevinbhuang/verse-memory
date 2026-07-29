@@ -5,15 +5,19 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Flag,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ScriptureText } from '@/components/ScriptureText';
 import { Button } from '@/components/ui/Button';
 import { Toggle } from '@/components/ui/Field';
+import { useToast } from '@/components/ui/Toast';
 import { useHotkeys } from '@/hooks/useHotkeys';
 import { useSettings } from '@/hooks/useSettings';
+import { useVerseProgress } from '@/hooks/useProgressData';
 import { verses } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
+import { setDifficult, setMemorized } from '@/services/progressService';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
 
@@ -41,6 +45,7 @@ export function FlashCardsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { settings } = useSettings();
+  const { notify } = useToast();
 
   const startId = searchParams.get('verse');
   const [index, setIndex] = useState(() => indexForVerseId(startId));
@@ -48,6 +53,7 @@ export function FlashCardsPage() {
   const [revealed, setRevealed] = useState(false);
 
   const verse = verses[index] ?? verses[0]!;
+  const progress = useVerseProgress(verse.id);
   const canGoPrev = index > 0;
   const canGoNext = index < verses.length - 1;
 
@@ -150,6 +156,46 @@ export function FlashCardsPage() {
             <p className="mt-1 text-sm text-ink-muted">{verse.section}</p>
           ) : null}
         </div>
+
+        {progress ? (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={progress.isMemorized ? 'quiet' : 'secondary'}
+              onClick={() =>
+                void setMemorized(verse.id, !progress.isMemorized).then(() =>
+                  notify(
+                    progress.isMemorized
+                      ? 'Cleared memorized mark.'
+                      : 'Marked memorized.',
+                    'success',
+                  ),
+                )
+              }
+              aria-pressed={progress.isMemorized}
+            >
+              {progress.isMemorized ? 'Clear memorized' : 'Mark memorized'}
+            </Button>
+            <Button
+              size="sm"
+              variant={progress.isDifficult ? 'quiet' : 'secondary'}
+              onClick={() =>
+                void setDifficult(verse.id, !progress.isDifficult).then(() =>
+                  notify(
+                    progress.isDifficult
+                      ? 'Cleared Needs Review.'
+                      : 'Marked Needs Review.',
+                    'success',
+                  ),
+                )
+              }
+              aria-pressed={progress.isDifficult}
+            >
+              <Flag className="size-3.5" aria-hidden="true" />
+              {progress.isDifficult ? 'Clear Needs Review' : 'Mark Needs Review'}
+            </Button>
+          </div>
+        ) : null}
 
         {revealed ? (
           <div className="space-y-4">

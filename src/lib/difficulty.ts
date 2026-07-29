@@ -161,10 +161,10 @@ export function assessDifficulty(
   if (progress.isDifficult) {
     addFactor(
       'manual-flag',
-      'Marked difficult',
+      'Marked Needs Review',
       12,
       12,
-      'You flagged this passage as difficult',
+      'You marked this passage as Needs Review',
     );
   }
 

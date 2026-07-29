@@ -33,19 +33,16 @@ export function BulkActionBar({
           variant="secondary"
           onClick={() => onAction('mark-not-memorized')}
         >
-          Mark not memorized
+          Clear memorized
         </Button>
         <Button size="sm" variant="secondary" onClick={() => onAction('mark-difficult')}>
-          Mark difficult
+          Mark Needs Review
         </Button>
         <Button size="sm" variant="secondary" onClick={() => onAction('clear-difficult')}>
-          Remove difficult
+          Clear Needs Review
         </Button>
         <Button size="sm" variant="secondary" onClick={onStartSession}>
           Review these
-        </Button>
-        <Button size="sm" variant="danger" onClick={() => onAction('reset-scheduling')}>
-          Reset scheduling
         </Button>
       </div>
 

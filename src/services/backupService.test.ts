@@ -57,7 +57,7 @@ async function seed() {
   });
   await createSession(
     { source: 'difficult', size: 'all', modeStrategy: 'fixed', fixedMode: 'flashcard' },
-    'Difficult passages',
+    'Needs Review',
     NOW,
   );
   await getDataStore().settings.save({

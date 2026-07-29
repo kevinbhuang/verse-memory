@@ -15,8 +15,7 @@ import { LoadingState } from '@/components/ui/EmptyState';
 import { ScriptureText } from '@/components/ScriptureText';
 import { useToast } from '@/components/ui/Toast';
 import {
-  DifficultBadge,
-  DueBadge,
+  NeedsReviewBadge,
   StatusBadge,
 } from '@/components/VerseBadges';
 import { useReviewLogs, useVerseProgress } from '@/hooks/useProgressData';
@@ -32,7 +31,6 @@ import {
   MODE_LABELS,
   formatAccuracy,
   formatDate,
-  formatInterval,
   formatRelativeDay,
 } from '@/utils/format';
 
@@ -124,9 +122,10 @@ export function VerseDetailPage() {
           {verse.reference}
         </h1>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={progress.status} />
-          <DueBadge progress={progress} />
-          <DifficultBadge progress={progress} />
+          {progress.status === 'learning' || progress.status === 'memorized' ? (
+            <StatusBadge status={progress.status} />
+          ) : null}
+          <NeedsReviewBadge progress={progress} />
           <span className="text-xs text-ink-muted">{verse.section}</span>
           <span className="text-xs text-ink-muted">{verse.translation}</span>
           {settings.showVerificationStatus ? (
@@ -180,7 +179,7 @@ export function VerseDetailPage() {
                           log.accuracy !== null
                             ? ` \u00b7 ${formatAccuracy(log.accuracy)}`
                             : ''
-                        } \u00b7 next in ${formatInterval(log.nextIntervalDays)}`}
+                        }`}
                       </span>
                     </li>
                   ))}
@@ -210,25 +209,36 @@ export function VerseDetailPage() {
                   void setMemorized(verse.id, !progress.isMemorized).then(() =>
                     notify(
                       progress.isMemorized
-                        ? 'No longer marked memorized. History kept.'
-                        : 'Marked memorized. First retention review scheduled.',
+                        ? 'Cleared memorized mark.'
+                        : 'Marked memorized.',
                       'success',
                     ),
                   )
                 }
               >
                 {progress.isMemorized
-                  ? 'Unmark as memorized'
+                  ? 'Clear memorized'
                   : 'Mark as memorized'}
               </Button>
 
               <Button
                 variant={progress.isDifficult ? 'quiet' : 'secondary'}
                 className="w-full"
-                onClick={() => void setDifficult(verse.id, !progress.isDifficult)}
+                onClick={() =>
+                  void setDifficult(verse.id, !progress.isDifficult).then(() =>
+                    notify(
+                      progress.isDifficult
+                        ? 'Cleared Needs Review.'
+                        : 'Marked Needs Review.',
+                      'success',
+                    ),
+                  )
+                }
               >
                 <Flag className="size-4" aria-hidden="true" />
-                {progress.isDifficult ? 'Remove difficult flag' : 'Mark difficult'}
+                {progress.isDifficult
+                  ? 'Clear Needs Review'
+                  : 'Mark Needs Review'}
               </Button>
 
               <Button
@@ -243,21 +253,13 @@ export function VerseDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Schedule" />
+            <CardHeader title="Activity" />
             <CardBody className="space-y-1.5 text-sm">
-              <Row
-                label="Next due"
-                value={formatRelativeDay(progress.nextDueAt)}
-              />
-              <Row
-                label="Interval"
-                value={
-                  progress.intervalDays > 0
-                    ? formatInterval(progress.intervalDays)
-                    : 'Not scheduled'
-                }
-              />
               <Row label="Reviews" value={String(progress.reviewCount)} />
+              <Row
+                label="Last reviewed"
+                value={formatRelativeDay(progress.lastReviewedAt)}
+              />
             </CardBody>
           </Card>
 
@@ -271,12 +273,8 @@ export function VerseDetailPage() {
 
           {showDetails ? (
             <Card>
-              <CardHeader title="More schedule detail" />
+              <CardHeader title="More detail" />
               <CardBody className="space-y-1.5 text-sm">
-                <Row
-                  label="Last reviewed"
-                  value={formatRelativeDay(progress.lastReviewedAt)}
-                />
                 <Row label="Successful" value={String(progress.successCount)} />
                 <Row label="Failed" value={String(progress.lapseCount)} />
                 <Row
@@ -292,7 +290,7 @@ export function VerseDetailPage() {
       <ConfirmDialog
         open={confirmReset}
         title={`Reset ${verse.reference}?`}
-        description="Scheduling, review history and word statistics for this passage are deleted. The difficult flag is kept."
+        description="Review history and word statistics for this passage are deleted. Memorized and Needs Review marks are kept."
         confirmLabel="Reset passage"
         destructive
         onCancel={() => setConfirmReset(false)}

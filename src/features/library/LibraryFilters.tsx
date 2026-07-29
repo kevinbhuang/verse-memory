@@ -1,12 +1,14 @@
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select, TextInput } from '@/components/ui/Field';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { SECTIONS } from '@/types';
 import {
   DEFAULT_FILTERS,
   isFilterActive,
   type LibraryFilterState,
+  type ReviewStateFilter,
 } from './filters';
 
 export function LibraryFilters({
@@ -77,6 +79,18 @@ export function LibraryFilters({
           ))}
         </Select>
       </div>
+
+      <SegmentedControl
+        aria-label="Review state"
+        size="sm"
+        value={filters.reviewState}
+        onChange={(value) => set('reviewState', value as ReviewStateFilter)}
+        options={[
+          { value: 'all', label: 'All' },
+          { value: 'memorized', label: 'Memorized' },
+          { value: 'needs-review', label: 'Needs Review' },
+        ]}
+      />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="text-sm text-ink-muted" role="status">

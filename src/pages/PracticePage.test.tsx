@@ -1,30 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { subDays } from 'date-fns';
 import { requireVerse } from '@/data/verses';
 import { getDataStore } from '@/repositories';
-import { getProgress, setDifficult, setMemorized } from '@/services/progressService';
+import { setDifficult, setMemorized } from '@/services/progressService';
 import { createSession } from '@/services/sessionService';
 import { renderWithProviders } from '@/test/render';
 import { PracticePage } from './PracticePage';
 
 const actsOne = requireVerse('verse-069');
 const romansOne = requireVerse('verse-073');
-
-async function markDue(
-  verseId: string,
-  when: Date,
-  extras: Partial<Awaited<ReturnType<typeof getProgress>>> = {},
-) {
-  const current = await getProgress(verseId);
-  await getDataStore().progress.put({
-    ...current,
-    isMemorized: true,
-    status: 'memorized',
-    nextDueAt: when.toISOString(),
-    ...extras,
-  });
-}
 
 describe('PracticePage', () => {
   it('defaults to learn mode on a deck', async () => {
@@ -42,10 +26,7 @@ describe('PracticePage', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByText(/nothing due right now/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /nothing due today/i }),
-    ).toBeDisabled();
+    expect(screen.queryByText(/due today/i)).not.toBeInTheDocument();
   });
 
   it('can start a first-letter reveal session', async () => {
@@ -63,28 +44,6 @@ describe('PracticePage', () => {
       const [session] = await getDataStore().sessions.all();
       expect(session.fixedMode).toBe('flashcard');
       expect(session.label).toMatch(/^First letter/i);
-    });
-  });
-
-  it('starts a due-today session in one tap', async () => {
-    const now = new Date();
-    await markDue(actsOne.id, now);
-    await markDue(romansOne.id, subDays(now, 5));
-
-    const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
-    await screen.findByRole('heading', { name: /^practice$/i });
-
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText(/1 overdue/i)).toBeInTheDocument();
-    await user.click(
-      screen.getByRole('button', { name: /start 2 due passages/i }),
-    );
-
-    await waitFor(async () => {
-      const [session] = await getDataStore().sessions.all();
-      expect(session.label).toBe('Due today');
-      expect(session.fixedMode).toBe('first-letter');
-      expect(session.verseIds).toEqual([romansOne.id, actsOne.id]);
     });
   });
 
@@ -117,7 +76,7 @@ describe('PracticePage', () => {
     expect(screen.getAllByText(/all 171 passages/i).length).toBeGreaterThan(0);
   });
 
-  it('practices only difficult passages in a deck', async () => {
+  it('practices only Needs Review passages in a deck', async () => {
     await setDifficult(actsOne.id, true);
     const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
     await screen.findByRole('heading', { name: /^practice$/i });
@@ -125,7 +84,7 @@ describe('PracticePage', () => {
     await user.click(screen.getByRole('button', { name: /deck 5/i }));
     await user.click(screen.getByRole('button', { name: /deck 1/i }));
     await user.click(screen.getByRole('button', { name: /all \d+ passages/i }));
-    await user.click(screen.getByRole('button', { name: /difficult only/i }));
+    await user.click(screen.getByRole('button', { name: /^needs review$/i }));
     await user.click(
       screen.getByRole('button', { name: /type the first letter of each word/i }),
     );
@@ -142,7 +101,7 @@ describe('PracticePage', () => {
     await user.click(screen.getByRole('button', { name: /deck 5/i }));
     await user.click(screen.getByRole('button', { name: /deck 1/i }));
     await user.click(screen.getByRole('button', { name: /all \d+ passages/i }));
-    await user.click(screen.getByRole('button', { name: /memorized only/i }));
+    await user.click(screen.getByRole('button', { name: /^memorized$/i }));
 
     expect(await screen.findByText(/1 passage/i)).toBeInTheDocument();
     expect(screen.getByText(actsOne.reference)).toBeInTheDocument();

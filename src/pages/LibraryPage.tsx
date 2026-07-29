@@ -17,7 +17,6 @@ import {
   resetVerse,
   setDifficult,
   setMemorized,
-  type BulkAction,
 } from '@/services/progressService';
 import { createSession } from '@/services/sessionService';
 import {
@@ -37,8 +36,22 @@ function filtersFromParams(params: URLSearchParams): LibraryFilterState {
   const section = params.get('section');
   const book = params.get('book');
   const status = params.get('status');
-  const memorized = params.get('memorized');
-  const due = params.get('due');
+  const review = params.get('review');
+  const legacyMemorized = params.get('memorized');
+  const legacyDifficult = params.get('difficult');
+
+  let reviewState: LibraryFilterState['reviewState'] = 'all';
+  if (review === 'memorized' || review === 'needs-review') {
+    reviewState = review;
+  } else if (legacyDifficult === 'true' || review === 'difficult') {
+    reviewState = 'needs-review';
+  } else if (legacyMemorized === 'memorized') {
+    reviewState = 'memorized';
+  } else if (status === 'memorized') {
+    reviewState = 'memorized';
+  } else if (status === 'needs-attention') {
+    reviewState = 'needs-review';
+  }
 
   return {
     ...DEFAULT_FILTERS,
@@ -50,18 +63,13 @@ function filtersFromParams(params: URLSearchParams): LibraryFilterState {
     book:
       book && COLLECTION_BOOKS.some((item) => item.name === book) ? book : 'all',
     status:
-      status && (VERSE_STATUSES as readonly string[]).includes(status)
+      status &&
+      (VERSE_STATUSES as readonly string[]).includes(status) &&
+      status !== 'memorized' &&
+      status !== 'needs-attention'
         ? (status as LibraryFilterState['status'])
         : 'all',
-    memorized:
-      memorized === 'memorized' || memorized === 'not-memorized'
-        ? memorized
-        : 'all',
-    difficultOnly: params.get('difficult') === 'true',
-    due:
-      due === 'due' || due === 'overdue' || due === 'due-or-overdue'
-        ? due
-        : 'all',
+    reviewState,
   };
 }
 
@@ -77,7 +85,6 @@ export function LibraryPage() {
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [resetVerseId, setResetVerseId] = useState<string | null>(null);
-  const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
 
   const progressById = useMemo(
     () => new Map((progressList ?? []).map((item) => [item.verseId, item])),
@@ -109,7 +116,7 @@ export function LibraryPage() {
     });
   };
 
-  const runBulk = async (action: BulkAction) => {
+  const runBulk = async (action: Parameters<typeof applyBulkAction>[1]) => {
     const ids = [...selected];
     await applyBulkAction(ids, action);
     setSelected(new Set());
@@ -178,10 +185,6 @@ export function LibraryPage() {
       <BulkActionBar
         selectedCount={selected.size}
         onAction={(action) => {
-          if (action === 'reset-scheduling') {
-            setPendingBulk(action);
-            return;
-          }
           void runBulk(action);
         }}
         onStartSession={() =>
@@ -239,14 +242,21 @@ export function LibraryPage() {
                       void setMemorized(verseId, memorized).then(() =>
                         notify(
                           memorized
-                            ? 'Marked memorized. First retention review scheduled for tomorrow.'
-                            : 'No longer marked memorized. Review history kept.',
+                            ? 'Marked memorized.'
+                            : 'Cleared memorized mark.',
                           'success',
                         ),
                       );
                     }}
-                    onToggleDifficult={(verseId, difficult) => {
-                      void setDifficult(verseId, difficult);
+                    onToggleNeedsReview={(verseId, needsReview) => {
+                      void setDifficult(verseId, needsReview).then(() =>
+                        notify(
+                          needsReview
+                            ? 'Marked Needs Review.'
+                            : 'Cleared Needs Review.',
+                          'success',
+                        ),
+                      );
                     }}
                     onOpenFlashcards={(verseId) => {
                       navigate(`/flashcards?verse=${verseId}`);
@@ -263,7 +273,7 @@ export function LibraryPage() {
       <ConfirmDialog
         open={resetVerseId !== null}
         title={`Reset ${resetTarget?.reference ?? 'this passage'}?`}
-        description="Scheduling, review history and word statistics for this passage are deleted. The difficult flag is kept."
+        description="Review history and word statistics for this passage are deleted. Memorized and Needs Review marks are kept."
         confirmLabel="Reset passage"
         destructive
         onCancel={() => setResetVerseId(null)}
@@ -273,20 +283,6 @@ export function LibraryPage() {
             notify('Passage reset.', 'success');
             setResetVerseId(null);
           });
-        }}
-      />
-
-      <ConfirmDialog
-        open={pendingBulk !== null}
-        title={`Reset scheduling for ${selected.size} passage${selected.size === 1 ? '' : 's'}?`}
-        description="Due dates and intervals are cleared. Review history and flags are kept."
-        confirmLabel="Reset scheduling"
-        destructive
-        onCancel={() => setPendingBulk(null)}
-        onConfirm={() => {
-          const action = pendingBulk;
-          setPendingBulk(null);
-          if (action) void runBulk(action);
         }}
       />
     </>

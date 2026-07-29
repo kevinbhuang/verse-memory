@@ -54,20 +54,20 @@ describe('VerseDetailPage', () => {
       expect((await getProgress(verse.id)).isMemorized).toBe(true);
     });
     expect(
-      await screen.findByRole('button', { name: /unmark as memorized/i }),
+      await screen.findByRole('button', { name: /clear memorized/i }),
     ).toBeInTheDocument();
   });
 
-  it('flags and unflags the passage as difficult', async () => {
+  it('flags and clears Needs Review', async () => {
     const { user } = await renderDetail();
 
-    await user.click(screen.getByRole('button', { name: /mark difficult/i }));
+    await user.click(screen.getByRole('button', { name: /mark needs review/i }));
     await waitFor(async () => {
       expect((await getProgress(verse.id)).isDifficult).toBe(true);
     });
 
     await user.click(
-      await screen.findByRole('button', { name: /remove difficult flag/i }),
+      await screen.findByRole('button', { name: /clear needs review/i }),
     );
     await waitFor(async () => {
       expect((await getProgress(verse.id)).isDifficult).toBe(false);
@@ -83,7 +83,7 @@ describe('VerseDetailPage', () => {
     expect(visibleText()).toContain(passage);
   });
 
-  it('reports the review history and the schedule', async () => {
+  it('reports the review history', async () => {
     await recordReview({
       verseId: verse.id,
       rating: 'hard',
@@ -95,7 +95,8 @@ describe('VerseDetailPage', () => {
 
     expect(await screen.findByText(/1 recorded review\./)).toBeInTheDocument();
     expect(screen.getByText(/Letter typing · hard · 85%/)).toBeInTheDocument();
-    expect(screen.getAllByText('Tomorrow').length).toBeGreaterThan(0);
+    expect(screen.getByText('Reviews')).toBeInTheDocument();
+    expect(screen.queryByText('Next due')).not.toBeInTheDocument();
   });
 
   it('confirms before resetting the passage', async () => {

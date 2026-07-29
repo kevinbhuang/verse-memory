@@ -1,102 +1,49 @@
-import {
-  AlertTriangle,
-  CalendarClock,
-  CircleDot,
-  Flag,
-  Pin,
-} from 'lucide-react';
+import { Flag, Pin } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { dueState } from '@/lib/scheduler';
-import { formatRelativeDay } from '@/utils/format';
 import type { VerseProgress, VerseStatus } from '@/types';
 
 export function StatusBadge({
   status,
-  exceptionalOnly = false,
 }: {
   status: VerseStatus;
-  /** When true, only “needs attention” is shown. */
+  /** @deprecated Unused — kept for call-site compatibility. */
   exceptionalOnly?: boolean;
 }) {
-  if (exceptionalOnly && status !== 'needs-attention') return null;
-
   switch (status) {
     case 'memorized':
       return <Badge tone="success">Memorized</Badge>;
     case 'learning':
       return <Badge tone="accent">Learning</Badge>;
     case 'needs-attention':
-      return (
-        <Badge
-          tone="warning"
-          icon={<AlertTriangle className="size-3" aria-hidden="true" />}
-        >
-          Needs attention
-        </Badge>
-      );
     case 'new':
-      return (
-        <Badge tone="outline" icon={<CircleDot className="size-3" aria-hidden="true" />}>
-          New
-        </Badge>
-      );
+      return null;
   }
 }
 
-export function DueBadge({
-  progress,
-  now = new Date(),
-  exceptionalOnly = false,
-}: {
+/** @deprecated Timing cues removed from the UI. Always returns null. */
+export function DueBadge(_props: {
   progress: VerseProgress;
   now?: Date;
-  /** When true, hide routine “scheduled” dates — keep due/overdue only. */
   exceptionalOnly?: boolean;
 }) {
-  const state = dueState(progress, now);
-  if (state === 'new') return null;
-
-  if (state === 'overdue') {
-    return (
-      <Badge tone="danger" icon={<CalendarClock className="size-3" aria-hidden="true" />}>
-        {`Overdue \u00b7 ${formatRelativeDay(progress.nextDueAt, now)}`}
-      </Badge>
-    );
-  }
-
-  if (state === 'due') {
-    return (
-      <Badge tone="accent" icon={<CalendarClock className="size-3" aria-hidden="true" />}>
-        Due today
-      </Badge>
-    );
-  }
-
-  if (exceptionalOnly) return null;
-
-  return (
-    <Badge tone="outline" icon={<CalendarClock className="size-3" aria-hidden="true" />}>
-      {formatRelativeDay(progress.nextDueAt, now)}
-    </Badge>
-  );
+  return null;
 }
 
-export function DifficultBadge({ progress }: { progress: VerseProgress }) {
+export function NeedsReviewBadge({ progress }: { progress: VerseProgress }) {
   if (!progress.isDifficult) return null;
   return (
     <Badge
       tone="warning"
       icon={<Flag className="size-3" aria-hidden="true" />}
-      title={
-        progress.difficultyReasons.length > 0
-          ? progress.difficultyReasons.join(', ')
-          : 'Marked difficult'
-      }
+      title="Marked Needs Review"
     >
-      Difficult
+      Needs Review
     </Badge>
   );
 }
+
+/** @deprecated Use NeedsReviewBadge */
+export const DifficultBadge = NeedsReviewBadge;
 
 export function PinnedBadge({ progress }: { progress: VerseProgress }) {
   if (progress.pinnedFrequencyDays === null) return null;

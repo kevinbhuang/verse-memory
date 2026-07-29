@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import { RATINGS, type Rating, type VerseProgress } from '@/types';
-import { previewIntervals, type SchedulerSettings } from '@/lib/scheduler';
-import { formatInterval } from '@/utils/format';
+import type { SchedulerSettings } from '@/lib/scheduler';
 
 const RATING_LABELS: Record<Rating, string> = {
   again: 'Again',
@@ -18,8 +17,8 @@ const RATING_HINTS: Record<Rating, string> = {
 };
 
 export function RatingPanel({
-  progress,
-  settings,
+  progress: _progress,
+  settings: _settings,
   suggested,
   onRate,
   disabled,
@@ -30,8 +29,6 @@ export function RatingPanel({
   onRate: (rating: Rating) => void;
   disabled?: boolean;
 }) {
-  const intervals = previewIntervals(progress, new Date(), settings);
-
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-ink">How well did you recall it?</p>
@@ -59,9 +56,6 @@ export function RatingPanel({
             </span>
             <span className="mt-0.5 block text-xs text-ink-muted">
               {RATING_HINTS[rating]}
-            </span>
-            <span className="mt-1 block text-xs font-medium text-accent">
-              {formatInterval(intervals[rating])}
             </span>
           </button>
         ))}

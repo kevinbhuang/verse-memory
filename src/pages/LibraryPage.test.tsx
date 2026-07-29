@@ -45,6 +45,9 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(
       screen.getByRole('columnheader', { name: /^memorized$/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: /^needs review$/i }),
+    ).toBeInTheDocument();
     for (const section of [
       'Law and History',
       'Wisdom and Poetry',
@@ -108,9 +111,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
       expect((await getProgress(passage.id)).isMemorized).toBe(true);
     });
     await waitFor(() => expect(checkbox).toBeChecked());
-    expect(
-      await screen.findByText(/first retention review scheduled for tomorrow/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/marked memorized/i)).toBeInTheDocument();
     expect(
       await screen.findByRole('status', { name: /1 of 171 memorized/i }),
     ).toBeInTheDocument();
@@ -132,19 +133,18 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     });
   });
 
-  it('marks a passage difficult from the overflow menu', async () => {
+  it('marks a passage Needs Review from the checkbox', async () => {
     const { user } = await renderLibrary();
 
     await user.click(
-      screen.getByLabelText(`More actions for ${passage.reference}`),
+      screen.getByLabelText(`Mark ${passage.reference} as Needs Review`),
     );
-    await user.click(screen.getByRole('menuitem', { name: /mark difficult/i }));
 
     await waitFor(async () => {
       expect((await getProgress(passage.id)).isDifficult).toBe(true);
     });
     expect(
-      within(rowFor(passage.reference)).getByText('Difficult'),
+      within(rowFor(passage.reference)).getByText('Needs Review'),
     ).toBeInTheDocument();
   });
 
@@ -227,16 +227,16 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     });
   });
 
-  it('confirms before resetting scheduling in bulk', async () => {
+  it('offers Needs Review in bulk actions', async () => {
     const { user } = await renderLibrary();
 
     await user.click(
       screen.getByLabelText(`Select ${passage.reference} for bulk actions`),
     );
-    await user.click(screen.getByRole('button', { name: /reset scheduling/i }));
+    await user.click(screen.getByRole('button', { name: /mark needs review/i }));
 
-    expect(
-      await screen.findByText(/reset scheduling for 1 passage\?/i),
-    ).toBeInTheDocument();
+    await waitFor(async () => {
+      expect((await getProgress(passage.id)).isDifficult).toBe(true);
+    });
   });
 });

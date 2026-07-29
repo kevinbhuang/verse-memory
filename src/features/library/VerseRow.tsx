@@ -2,20 +2,16 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   EllipsisVertical,
-  Flag,
   Layers,
   RotateCcw,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
-import {
-  DifficultBadge,
-  DueBadge,
-  StatusBadge,
-} from '@/components/VerseBadges';
+import { NeedsReviewBadge } from '@/components/VerseBadges';
 import type { Verse, VerseProgress } from '@/types';
 import {
   LIBRARY_MEMORIZED_COL,
+  LIBRARY_REVIEW_COL,
   LIBRARY_SELECT_COL,
 } from './LibraryCheckboxHeader';
 
@@ -26,7 +22,7 @@ export function VerseRow({
   showSectionLabel,
   onToggleSelected,
   onToggleMemorized,
-  onToggleDifficult,
+  onToggleNeedsReview,
   onOpenFlashcards,
   onReset,
 }: {
@@ -36,7 +32,7 @@ export function VerseRow({
   showSectionLabel: boolean;
   onToggleSelected: (verseId: string, selected: boolean) => void;
   onToggleMemorized: (verseId: string, memorized: boolean) => void;
-  onToggleDifficult: (verseId: string, difficult: boolean) => void;
+  onToggleNeedsReview: (verseId: string, needsReview: boolean) => void;
   onOpenFlashcards: (verseId: string) => void;
   onReset: (verseId: string) => void;
 }) {
@@ -73,6 +69,17 @@ export function VerseRow({
               aria-label={`Mark ${verse.reference} as memorized`}
             />
           </span>
+          <span className={`${LIBRARY_REVIEW_COL} flex justify-center`}>
+            <input
+              type="checkbox"
+              className="size-3.5 accent-[var(--accent)]"
+              checked={progress.isDifficult}
+              onChange={(event) =>
+                onToggleNeedsReview(verse.id, event.target.checked)
+              }
+              aria-label={`Mark ${verse.reference} as Needs Review`}
+            />
+          </span>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -90,9 +97,7 @@ export function VerseRow({
               <span className="text-[11px] text-ink-subtle">{verse.section}</span>
             ) : null}
             <span className="inline-flex flex-wrap items-center gap-1">
-              <StatusBadge status={progress.status} exceptionalOnly />
-              <DueBadge progress={progress} exceptionalOnly />
-              <DifficultBadge progress={progress} />
+              <NeedsReviewBadge progress={progress} />
             </span>
           </div>
 
@@ -146,20 +151,6 @@ export function VerseRow({
                   >
                     Open passage details
                   </Link>
-                  <button
-                    role="menuitem"
-                    type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-muted"
-                    onClick={() => {
-                      onToggleDifficult(verse.id, !progress.isDifficult);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <Flag className="size-3.5" aria-hidden="true" />
-                    {progress.isDifficult
-                      ? 'Remove difficult flag'
-                      : 'Mark difficult'}
-                  </button>
                   <button
                     role="menuitem"
                     type="button"

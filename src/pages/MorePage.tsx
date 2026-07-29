@@ -47,7 +47,7 @@ export function MorePage() {
           label="Memorized"
           value={stats.memorized}
           detail={formatPercent(stats.percentMemorized, 1)}
-          to="/verses?status=memorized"
+          to="/verses?review=memorized"
           tone="success"
         />
         <StatTile
@@ -57,10 +57,10 @@ export function MorePage() {
           tone="accent"
         />
         <StatTile
-          label="Difficult"
+          label="Needs Review"
           value={stats.difficult}
           tone={stats.difficult > 0 ? 'warning' : 'neutral'}
-          to="/practice?filter=difficult"
+          to="/verses?review=needs-review"
         />
         <StatTile
           label="Streak"

@@ -58,8 +58,8 @@ export type SessionCriteria = {
 export const SOURCE_LABELS: Record<SessionSource, string> = {
   due: 'Due today',
   overdue: 'Overdue',
-  difficult: 'Difficult passages',
-  'needs-attention': 'Needs attention',
+  difficult: 'Needs Review',
+  'needs-attention': 'Needs Review',
   weak: 'Weak passages',
   section: 'A section',
   book: 'A book',

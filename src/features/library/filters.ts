@@ -1,13 +1,11 @@
 import { verses } from '@/data/verses';
-import { dueState } from '@/lib/scheduler';
 import { bookFromReference } from '@/lib/text/books';
 import { normalizeReference, parseReference } from '@/lib/text/reference';
 import { collapseWhitespace } from '@/lib/text/normalize';
 import type { Section, Verse, VerseProgress, VerseStatus } from '@/types';
 
 export type StatusFilter = 'all' | VerseStatus;
-export type MemorizedFilter = 'all' | 'memorized' | 'not-memorized';
-export type DueFilter = 'all' | 'due' | 'overdue' | 'due-or-overdue' | 'scheduled';
+export type ReviewStateFilter = 'all' | 'memorized' | 'needs-review';
 export type SortOption =
   | 'canonical'
   | 'due-date'
@@ -19,9 +17,8 @@ export type LibraryFilterState = {
   section: Section | 'all';
   book: string | 'all';
   status: StatusFilter;
-  memorized: MemorizedFilter;
-  difficultOnly: boolean;
-  due: DueFilter;
+  /** Primary status filter: Memorized or Needs Review. */
+  reviewState: ReviewStateFilter;
   neverReviewed: boolean;
   sort: SortOption;
 };
@@ -31,9 +28,7 @@ export const DEFAULT_FILTERS: LibraryFilterState = {
   section: 'all',
   book: 'all',
   status: 'all',
-  memorized: 'all',
-  difficultOnly: false,
-  due: 'all',
+  reviewState: 'all',
   neverReviewed: false,
   sort: 'canonical',
 };
@@ -44,9 +39,7 @@ export function isFilterActive(filters: LibraryFilterState): boolean {
     filters.section !== 'all' ||
     filters.book !== 'all' ||
     filters.status !== 'all' ||
-    filters.memorized !== 'all' ||
-    filters.difficultOnly ||
-    filters.due !== 'all' ||
+    filters.reviewState !== 'all' ||
     filters.neverReviewed
   );
 }
@@ -96,7 +89,7 @@ export type LibraryEntry = {
 export function filterLibrary(
   progressById: Map<string, VerseProgress>,
   filters: LibraryFilterState,
-  now: Date = new Date(),
+  _now: Date = new Date(),
 ): LibraryEntry[] {
   const entries: LibraryEntry[] = [];
 
@@ -114,24 +107,11 @@ export function filterLibrary(
     }
     if (filters.status !== 'all' && progress.status !== filters.status) continue;
 
-    if (filters.memorized === 'memorized' && !progress.isMemorized) continue;
-    if (filters.memorized === 'not-memorized' && progress.isMemorized) continue;
-    if (filters.difficultOnly && !progress.isDifficult) continue;
-    if (filters.neverReviewed && progress.reviewCount > 0) continue;
-
-    if (filters.due !== 'all') {
-      const state = dueState(progress, now);
-      if (filters.due === 'due' && state !== 'due') continue;
-      if (filters.due === 'overdue' && state !== 'overdue') continue;
-      if (
-        filters.due === 'due-or-overdue' &&
-        state !== 'due' &&
-        state !== 'overdue'
-      ) {
-        continue;
-      }
-      if (filters.due === 'scheduled' && state !== 'scheduled') continue;
+    if (filters.reviewState === 'memorized' && !progress.isMemorized) continue;
+    if (filters.reviewState === 'needs-review' && !progress.isDifficult) {
+      continue;
     }
+    if (filters.neverReviewed && progress.reviewCount > 0) continue;
 
     entries.push({ verse, progress });
   }

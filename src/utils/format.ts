@@ -12,7 +12,7 @@ export const STATUS_LABELS: Record<VerseStatus, string> = {
   new: 'New',
   learning: 'Learning',
   memorized: 'Memorized',
-  'needs-attention': 'Needs attention',
+  'needs-attention': 'Needs Review',
 };
 
 export function formatDate(value: string | Date | null | undefined): string {

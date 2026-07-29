@@ -105,15 +105,16 @@ describe('SessionRunner', () => {
     expect(await screen.findByText(/passage 2 of 2/i)).toBeInTheDocument();
   });
 
-  it('shows the interval each rating would produce before choosing', async () => {
+  it('shows recall quality choices without interval previews', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
     await user.click(await screen.findByRole('button', { name: /reveal passage/i }));
 
-    expect(within(ratingButton(/^Again/)).getByText('1 day')).toBeInTheDocument();
-    expect(within(ratingButton(/^Good/)).getByText('1 day')).toBeInTheDocument();
-    expect(within(ratingButton(/^Easy/)).getByText('3 days')).toBeInTheDocument();
+    expect(within(ratingButton(/^Again/)).getByText(/could not recall/i)).toBeInTheDocument();
+    expect(within(ratingButton(/^Good/)).getByText(/recalled correctly/i)).toBeInTheDocument();
+    expect(screen.queryByText('1 day')).not.toBeInTheDocument();
+    expect(screen.queryByText('3 days')).not.toBeInTheDocument();
   });
 
   it('records the rating and moves to the next passage', async () => {
@@ -225,12 +226,12 @@ describe('SessionRunner', () => {
     expect(await screen.findByText(/session complete/i)).toBeInTheDocument();
   });
 
-  it('toggles the difficult flag during a review', async () => {
+  it('toggles Needs Review during a review', async () => {
     const session = await startFlashcardSession();
     const { user } = await renderSession(session);
 
     await user.click(
-      await screen.findByRole('button', { name: /toggle difficult/i }),
+      await screen.findByRole('button', { name: /toggle needs review/i }),
     );
 
     await waitFor(async () => {
@@ -256,7 +257,7 @@ describe('SessionRunner', () => {
     expect(screen.getByText(/0 of 2 passages completed/i)).toBeInTheDocument();
   });
 
-  it('picks first-letter typing automatically for a difficult passage', async () => {
+  it('picks first-letter typing automatically for a Needs Review passage', async () => {
     await setDifficult(first.id, true);
     await getDataStore().progress.put({
       ...(await getProgress(first.id)),
@@ -272,7 +273,7 @@ describe('SessionRunner', () => {
         modeStrategy: 'automatic',
         fixedMode: null,
       },
-      'Difficult passages',
+      'Needs Review',
     );
     await renderSession(session!);
 

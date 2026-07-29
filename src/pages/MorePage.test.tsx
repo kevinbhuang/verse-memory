@@ -18,7 +18,7 @@ describe('MorePage', () => {
 
     expect(screen.getByText('Memorized')).toBeInTheDocument();
     expect(screen.getByText('Learning')).toBeInTheDocument();
-    expect(screen.getByText('Difficult')).toBeInTheDocument();
+    expect(screen.getByText('Needs Review')).toBeInTheDocument();
     expect(screen.getByText('Streak')).toBeInTheDocument();
     expect(screen.getByLabelText(/theme/i)).toBeInTheDocument();
   });
@@ -29,7 +29,7 @@ describe('MorePage', () => {
 
     expect(screen.getByText('Memorized').closest('a')).toHaveAttribute(
       'href',
-      '/verses?status=memorized',
+      '/verses?review=memorized',
     );
   });
 

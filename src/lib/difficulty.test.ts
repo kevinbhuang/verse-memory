@@ -152,7 +152,7 @@ describe('assessDifficulty', () => {
     expect(assessment.factors.map((factor) => factor.key)).toContain(
       'manual-flag',
     );
-    expect(assessment.reasons).toContain('Marked difficult');
+    expect(assessment.reasons).toContain('Marked Needs Review');
   });
 
   it('names the specific words that keep going wrong', () => {

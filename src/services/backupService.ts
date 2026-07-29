@@ -327,10 +327,7 @@ export async function buildProgressSummary(
     `Memorized: ${stats.memorized} of ${stats.total} (${stats.percentMemorized.toFixed(1)}%)`,
     `Learning: ${stats.learning}`,
     `Not started: ${stats.newCount}`,
-    `Due today: ${stats.dueToday}`,
-    `Overdue: ${stats.overdue}`,
-    `Difficult: ${stats.difficult}`,
-    `Needs attention: ${stats.needsAttention}`,
+    `Needs Review: ${stats.difficult}`,
     '',
     'By section:',
     ...sections.map(

@@ -247,7 +247,7 @@ describe('recommendationReason', () => {
       NOW,
     );
     expect(reason).toContain('2 days overdue');
-    expect(reason).toContain('flagged difficult');
+    expect(reason).toContain('marked Needs Review');
     expect(reason).toContain('failed at the last review');
   });
 

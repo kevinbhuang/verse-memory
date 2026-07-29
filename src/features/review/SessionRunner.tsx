@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Flag,
@@ -25,7 +26,7 @@ import {
   setSessionIndex,
   skipCard,
 } from '@/services/sessionService';
-import { setDifficult } from '@/services/progressService';
+import { setDifficult, setMemorized } from '@/services/progressService';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ModeResult, Rating, ReviewMode } from '@/types';
 import { RatingPanel } from './RatingPanel';
@@ -143,8 +144,19 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         void setDifficult(verse.id, !progress.isDifficult).then(() =>
           notify(
             progress.isDifficult
-              ? 'Difficult flag removed.'
-              : 'Marked difficult.',
+              ? 'Cleared Needs Review.'
+              : 'Marked Needs Review.',
+            'success',
+          ),
+        );
+      },
+      m: () => {
+        if (!verse || !progress) return;
+        void setMemorized(verse.id, !progress.isMemorized).then(() =>
+          notify(
+            progress.isMemorized
+              ? 'Cleared memorized mark.'
+              : 'Marked memorized.',
             'success',
           ),
         );
@@ -219,16 +231,48 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void setDifficult(verse.id, !progress.isDifficult)}
+            onClick={() =>
+              void setMemorized(verse.id, !progress.isMemorized).then(() =>
+                notify(
+                  progress.isMemorized
+                    ? 'Cleared memorized mark.'
+                    : 'Marked memorized.',
+                  'success',
+                ),
+              )
+            }
+            aria-pressed={progress.isMemorized}
+            title="Toggle memorized (M)"
+          >
+            <Check
+              className="size-4"
+              aria-hidden="true"
+              strokeWidth={progress.isMemorized ? 3 : 2}
+            />
+            <span className="sr-only">Toggle memorized</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              void setDifficult(verse.id, !progress.isDifficult).then(() =>
+                notify(
+                  progress.isDifficult
+                    ? 'Cleared Needs Review.'
+                    : 'Marked Needs Review.',
+                  'success',
+                ),
+              )
+            }
             aria-pressed={progress.isDifficult}
-            title="Toggle difficult (D)"
+            title="Toggle Needs Review (D)"
           >
             <Flag
               className="size-4"
               aria-hidden="true"
               fill={progress.isDifficult ? 'currentColor' : 'none'}
             />
-            <span className="sr-only">Toggle difficult</span>
+            <span className="sr-only">Toggle Needs Review</span>
           </Button>
           <Button
             variant="ghost"

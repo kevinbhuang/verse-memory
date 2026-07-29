@@ -271,8 +271,8 @@ export function recommendationReason(
     reasons.push('never reviewed');
   }
 
-  if (progress.isDifficult) reasons.push('flagged difficult');
-  if (progress.status === 'needs-attention') reasons.push('needs attention');
+  if (progress.isDifficult) reasons.push('marked Needs Review');
+  if (progress.status === 'needs-attention') reasons.push('needs review');
   if (progress.lastRating === 'again') reasons.push('failed at the last review');
   if (progress.pinnedFrequencyDays !== null) {
     reasons.push(`pinned to every ${progress.pinnedFrequencyDays} days`);
