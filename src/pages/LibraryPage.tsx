@@ -9,7 +9,6 @@ import { useToast } from '@/components/ui/Toast';
 import { useAllProgress } from '@/hooks/useProgressData';
 import { useSettings } from '@/hooks/useSettings';
 import { getVerse, verses } from '@/data/verses';
-import { appConfig } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { SECTIONS, VERSE_STATUSES, type Section } from '@/types';
 import {
@@ -109,7 +108,7 @@ export function LibraryPage() {
   return (
     <>
       <PageHeader
-        title={appConfig.collectionTitle}
+        title="Library"
         actions={<PrintVersesPanel />}
       />
 

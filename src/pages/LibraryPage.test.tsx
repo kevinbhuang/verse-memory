@@ -41,6 +41,9 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
       }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole('heading', { name: /^library$/i }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole('status', { name: /0 of 171 memorized/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: /percent memorized/i })).toHaveAttribute(
