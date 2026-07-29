@@ -9,8 +9,8 @@ import { setDifficult, setMemorized } from '@/services/progressService';
 import { computeCollectionStats } from '@/services/statsService';
 
 /**
- * Standalone progress chart: every passage in one table, with Memorized /
- * Needs Review toggles.
+ * Standalone progress chart: every passage in a four-column table, with
+ * Memorized / Needs Review toggles.
  */
 export function ProgressChartPage() {
   const { notify } = useToast();
@@ -32,12 +32,16 @@ export function ProgressChartPage() {
 
   return (
     <>
-      <PageHeader title="Progress Chart" />
+      <PageHeader
+        title="Progress Chart"
+        className="mb-2 flex flex-wrap items-end justify-between gap-3"
+      />
 
       <LibraryProgressStrip
         memorized={collectionStats.memorized}
         total={collectionStats.total}
         percentMemorized={collectionStats.percentMemorized}
+        className="mb-2"
       />
 
       <ProgressChart

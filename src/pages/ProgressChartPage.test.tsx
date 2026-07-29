@@ -4,7 +4,7 @@ import { renderWithProviders } from '@/test/render';
 import { ProgressChartPage } from './ProgressChartPage';
 
 describe('ProgressChartPage', () => {
-  it('shows all 171 passages in a single table', async () => {
+  it('shows all 171 passages in a four-column table', async () => {
     renderWithProviders(<ProgressChartPage />, { route: '/progress-chart' });
 
     expect(
@@ -13,21 +13,18 @@ describe('ProgressChartPage', () => {
     expect(
       screen.getByRole('region', { name: /^progress chart$/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /^memorized$/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('columnheader', { name: /^m$/i })).toHaveLength(
+      4,
+    );
     expect(
-      screen.getByRole('columnheader', { name: /^needs review$/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('columnheader', { name: /^passage$/i }),
-    ).toBeInTheDocument();
+      screen.getAllByRole('columnheader', { name: /^passage$/i }),
+    ).toHaveLength(4);
     expect(
       screen.getAllByRole('checkbox', { name: /as memorized$/i }),
     ).toHaveLength(171);
     expect(
       screen.getAllByRole('checkbox', { name: /as needs review$/i }),
     ).toHaveLength(171);
-    expect(
-      screen.getByRole('link', { name: /exodus 19:4-6/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ex 19:4-6/i })).toBeInTheDocument();
   });
 });
