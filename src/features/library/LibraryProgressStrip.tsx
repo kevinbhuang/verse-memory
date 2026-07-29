@@ -7,17 +7,19 @@ export function LibraryProgressStrip({
   memorized,
   total,
   percentMemorized,
+  className,
 }: {
   memorized: number;
   total: number;
   percentMemorized: number;
+  className?: string;
 }) {
   const clamped = Math.min(100, Math.max(0, percentMemorized));
   const label = `${memorized} of ${total} memorized · ${formatPercent(clamped, 1)}`;
 
   return (
     <div
-      className="mb-5"
+      className={className ?? 'mb-5'}
       role="status"
       aria-label={label}
     >

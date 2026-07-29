@@ -246,33 +246,12 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     expect(screen.getByLabelText(/search passages/i)).toBeInTheDocument();
   });
 
-  it('shows a progress chart of all 171 passages by deck', async () => {
-    const { user } = await renderLibrary();
-
-    await user.click(screen.getByRole('button', { name: /^progress chart$/i }));
-
-    expect(
-      screen.getByRole('region', { name: /progress chart by deck/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByRole('checkbox', { name: /as memorized$/i }),
-    ).toHaveLength(171);
-    expect(
-      screen.getAllByRole('checkbox', { name: /as needs review$/i }),
-    ).toHaveLength(171);
-    expect(screen.getByRole('heading', { name: /deck 1/i })).toBeInTheDocument();
-    expect(
-      screen.getAllByRole('heading', { name: /deck 6/i }).length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Ex 19:4-6')).toBeInTheDocument();
-  });
-
-  it('opens the progress chart from the view query', async () => {
+  it('redirects the old chart view query to the Progress Chart tab', async () => {
     renderWithProviders(<LibraryPage />, { route: '/verses?view=chart' });
 
-    expect(
-      await screen.findByRole('region', { name: /progress chart by deck/i }),
-    ).toBeInTheDocument();
-    expect(sectionHeading('Law and History')).not.toBeInTheDocument();
+    // Library unmounts in favor of the navigate target; assert no list chrome.
+    await waitFor(() => {
+      expect(sectionHeading('Law and History')).not.toBeInTheDocument();
+    });
   });
 });

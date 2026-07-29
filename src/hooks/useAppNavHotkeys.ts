@@ -5,19 +5,21 @@ import { useHotkeys } from '@/hooks/useHotkeys';
 const NAV_SHORTCUTS: Record<string, string> = {
   '1': '/flashcards',
   '2': '/verses',
-  '3': '/practice',
-  '4': '/quiz',
-  '5': '/print',
-  '6': '/more',
+  '3': '/progress-chart',
+  '4': '/practice',
+  '5': '/quiz',
+  '6': '/print',
+  '7': '/more',
   // F / M / N are reserved on Flash Cards; use digits for those tabs.
   l: '/verses',
+  c: '/progress-chart',
   p: '/practice',
   q: '/quiz',
 };
 
 /**
  * Global tab shortcuts when not inside a focus-mode session.
- * Digits 1–6 and letters L / P / Q jump between primary tabs.
+ * Digits 1–7 and letters L / C / P / Q jump between primary tabs.
  * (F / M / N are reserved for Flash Cards actions.)
  */
 export function useAppNavHotkeys() {

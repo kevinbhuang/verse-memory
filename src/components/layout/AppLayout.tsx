@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   BookOpen,
+  ChartColumn,
   ClipboardList,
   Ellipsis,
   Layers,
@@ -21,6 +22,12 @@ const NAV_ITEMS = [
     icon: Layers,
   },
   { to: '/verses', label: 'Library', shortLabel: 'Library', icon: BookOpen },
+  {
+    to: '/progress-chart',
+    label: 'Progress Chart',
+    shortLabel: 'Chart',
+    icon: ChartColumn,
+  },
   { to: '/practice', label: 'Practice', shortLabel: 'Practice', icon: Repeat2 },
   { to: '/quiz', label: 'Quiz', shortLabel: 'Quiz', icon: ClipboardList },
   { to: '/print', label: 'Print', shortLabel: 'Print', icon: Printer },
@@ -34,6 +41,7 @@ export function AppLayout() {
   const focusMode =
     location.pathname.startsWith('/review/session') ||
     location.pathname.startsWith('/quiz/session');
+  const compactChrome = location.pathname === '/progress-chart';
 
   if (focusMode) {
     return (
@@ -98,11 +106,18 @@ export function AppLayout() {
             </p>
           </header>
 
-          <main id="main" className="flex-1 px-4 pt-5 pb-24 sm:px-6 lg:px-8 lg:pb-10">
+          <main
+            id="main"
+            className={
+              compactChrome
+                ? 'flex-1 px-3 pt-3 pb-20 sm:px-4 lg:px-5 lg:pb-4'
+                : 'flex-1 px-4 pt-5 pb-24 sm:px-6 lg:px-8 lg:pb-10'
+            }
+          >
             <Outlet />
           </main>
 
-          <Footer />
+          {compactChrome ? null : <Footer />}
         </div>
       </div>
 

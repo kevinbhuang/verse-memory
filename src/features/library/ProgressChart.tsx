@@ -16,14 +16,13 @@ const DECK_SHORT: Record<string, string> = {
   'General Epistles and Revelation': 'Gen. Ep. & Rev',
 };
 
-/** Approximate rendered height of one dense chart row (px). */
-const ROW_HEIGHT_PX = 14;
-/** Approximate height of a column header (px). */
-const HEADER_HEIGHT_PX = 34;
-/** Fallback when height cannot be measured yet. */
-const DEFAULT_MAX_ROWS = 28;
-/** Keep at least this many rows per column so tiny viewports still spill. */
-const MIN_MAX_ROWS = 18;
+/** Row height with text-xs + tight leading (px). */
+const ROW_HEIGHT_PX = 17;
+const HEADER_HEIGHT_PX = 28;
+/** Space reserved above the chart (title, strip, legend). */
+const PAGE_CHROME_PX = 168;
+const DEFAULT_MAX_ROWS = 24;
+const MIN_MAX_ROWS = 14;
 
 type ChartColumn = {
   key: string;
@@ -45,7 +44,7 @@ function chunkVerses(verses: readonly Verse[], maxRows: number): Verse[][] {
   return parts;
 }
 
-function buildColumns(
+export function buildProgressChartColumns(
   progressById: Map<string, VerseProgress>,
   maxRows: number,
 ): ChartColumn[] {
@@ -75,10 +74,17 @@ function buildColumns(
   return columns;
 }
 
+function maxRowsForViewport(): number {
+  if (typeof window === 'undefined') return DEFAULT_MAX_ROWS;
+  const available = Math.max(240, window.innerHeight - PAGE_CHROME_PX);
+  const rows = Math.floor((available - HEADER_HEIGHT_PX) / ROW_HEIGHT_PX);
+  return Math.max(MIN_MAX_ROWS, rows || DEFAULT_MAX_ROWS);
+}
+
 /**
  * Dense all-collection progress grid: deck columns of abbreviated refs with
  * Memorized / Needs Review toggles. Tall decks spill into extra columns so
- * the chart stays within the viewport instead of scrolling.
+ * everything fits on one screen.
  */
 export function ProgressChart({
   progressById,
@@ -92,34 +98,28 @@ export function ProgressChart({
   const [maxRows, setMaxRows] = useState(DEFAULT_MAX_ROWS);
 
   useEffect(() => {
-    const updateFromViewport = () => {
-      // Leave room for page chrome (header, tabs, strip, legend, footer/nav).
-      const available = Math.max(280, window.innerHeight - 260);
-      const rows = Math.floor((available - HEADER_HEIGHT_PX) / ROW_HEIGHT_PX);
-      setMaxRows(Math.max(MIN_MAX_ROWS, rows || DEFAULT_MAX_ROWS));
-    };
-
-    updateFromViewport();
-    window.addEventListener('resize', updateFromViewport);
-    return () => window.removeEventListener('resize', updateFromViewport);
+    const update = () => setMaxRows(maxRowsForViewport());
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   const columns = useMemo(
-    () => buildColumns(progressById, maxRows),
+    () => buildProgressChartColumns(progressById, maxRows),
     [maxRows, progressById],
   );
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-ink-muted">
-        <span className="inline-flex items-center gap-1">
+    <div className="space-y-1.5">
+      <p className="text-xs text-ink-muted">
+        <span className="mr-3 inline-flex items-center gap-1">
           <span
             className="inline-block size-2.5 rounded-sm bg-success-soft ring-1 ring-success/30"
             aria-hidden="true"
           />
           Memorized
         </span>
-        <span className="inline-flex items-center gap-1">
+        <span className="mr-3 inline-flex items-center gap-1">
           <span
             className="inline-block size-2.5 rounded-sm bg-warning-soft ring-1 ring-warning/30"
             aria-hidden="true"
@@ -127,54 +127,55 @@ export function ProgressChart({
           Needs Review
         </span>
         <span className="text-ink-subtle">M · NR · reference</span>
-      </div>
+      </p>
 
       <div
-        className="flex flex-wrap content-start gap-x-1.5 gap-y-3"
+        className="grid gap-x-1"
+        style={{
+          gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+        }}
         role="region"
         aria-label="Progress chart by deck"
       >
         {columns.map((column) => (
           <section
             key={column.key}
-            className="w-[9.75rem] shrink-0"
+            className="min-w-0"
             aria-label={
               column.partCount > 1
                 ? `${column.deck.label} · ${DECK_SHORT[column.deck.section] ?? column.deck.section} · part ${column.part} of ${column.partCount}`
                 : `${column.deck.label} · ${DECK_SHORT[column.deck.section] ?? column.deck.section}`
             }
           >
-            <header className="mb-0.5 border-b border-line pb-1">
+            <header className="border-b border-line pb-0.5">
               <h2
-                className="text-[11px] font-semibold leading-tight text-ink"
+                className="truncate text-xs font-semibold leading-tight text-ink"
                 title={column.deck.section}
               >
                 {column.continuation ? (
                   <>
-                    <span className="text-ink-muted">{column.deck.label}</span>
+                    <span className="text-ink-muted">{`D${column.deck.number}`}</span>
                     <span className="font-normal text-ink-subtle">
-                      {` · cont. ${column.part}/${column.partCount}`}
+                      {` · ${column.part}/${column.partCount}`}
                     </span>
                   </>
                 ) : (
                   <>
-                    {column.deck.label}
+                    {`D${column.deck.number}`}
                     <span className="font-normal text-ink-muted">
                       {` · ${DECK_SHORT[column.deck.section] ?? column.deck.section}`}
                     </span>
                   </>
                 )}
               </h2>
-              {!column.continuation ? (
-                <p className="text-[10px] tabular-nums text-ink-subtle">
-                  {`${column.memorizedCount}/${column.deck.passageCount}`}
-                </p>
-              ) : (
-                <p className="text-[10px] text-ink-subtle">&nbsp;</p>
-              )}
+              <p className="text-[11px] leading-tight tabular-nums text-ink-subtle">
+                {column.continuation
+                  ? '\u00a0'
+                  : `${column.memorizedCount}/${column.deck.passageCount}`}
+              </p>
             </header>
 
-            <ul className="space-y-px">
+            <ul>
               {column.verses.map((verse) => {
                 const progress = progressById.get(verse.id);
                 const memorized = progress?.isMemorized ?? false;
@@ -185,14 +186,14 @@ export function ProgressChart({
                   <li
                     key={verse.id}
                     className={clsx(
-                      'flex items-center gap-0.5 rounded-sm px-0.5 py-px',
+                      'flex items-center gap-0.5 leading-none',
                       memorized && 'bg-success-soft',
                       !memorized && needsReview && 'bg-warning-soft',
                     )}
                   >
                     <input
                       type="checkbox"
-                      className="size-2.5 shrink-0 accent-[var(--success)]"
+                      className="size-3 shrink-0 accent-[var(--success)]"
                       checked={memorized}
                       onChange={(event) =>
                         onToggleMemorized(verse.id, event.target.checked)
@@ -202,7 +203,7 @@ export function ProgressChart({
                     />
                     <input
                       type="checkbox"
-                      className="size-2.5 shrink-0 accent-[var(--warning)]"
+                      className="size-3 shrink-0 accent-[var(--warning)]"
                       checked={needsReview}
                       onChange={(event) =>
                         onToggleNeedsReview(verse.id, event.target.checked)
@@ -212,7 +213,7 @@ export function ProgressChart({
                     />
                     <Link
                       to={`/verses/${verse.id}`}
-                      className="min-w-0 truncate font-mono text-[10px] leading-tight text-ink hover:text-accent hover:underline"
+                      className="min-w-0 truncate font-mono text-xs leading-none text-ink hover:text-accent hover:underline"
                       title={verse.reference}
                     >
                       {abbrev}

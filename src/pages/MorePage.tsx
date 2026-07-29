@@ -109,12 +109,13 @@ export function MorePage() {
             <p>
               Shortcuts: <span className="text-ink">1</span> Flash Cards ·{' '}
               <span className="text-ink">2</span> Library ·{' '}
-              <span className="text-ink">3</span> Practice ·{' '}
-              <span className="text-ink">4</span> Quiz ·{' '}
-              <span className="text-ink">5</span> Print ·{' '}
-              <span className="text-ink">6</span> More (also L / P / Q). On Flash
-              Cards, F / M / N / Space handle first letters, Memorized, Needs
-              Review, and show/hide.
+              <span className="text-ink">3</span> Progress Chart ·{' '}
+              <span className="text-ink">4</span> Practice ·{' '}
+              <span className="text-ink">5</span> Quiz ·{' '}
+              <span className="text-ink">6</span> Print ·{' '}
+              <span className="text-ink">7</span> More (also L / C / P / Q). On
+              Flash Cards, F / M / N / Space handle first letters, Memorized,
+              Needs Review, and show/hide.
             </p>
             <p>
               Questions or feedback?{' '}
