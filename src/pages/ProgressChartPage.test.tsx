@@ -4,7 +4,7 @@ import { renderWithProviders } from '@/test/render';
 import { ProgressChartPage } from './ProgressChartPage';
 
 describe('ProgressChartPage', () => {
-  it('shows all 171 passages in a four-column table', async () => {
+  it('shows all 171 passages in a five-column table', async () => {
     renderWithProviders(<ProgressChartPage />, { route: '/progress-chart' });
 
     expect(
@@ -14,11 +14,11 @@ describe('ProgressChartPage', () => {
       screen.getByRole('region', { name: /^progress chart$/i }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('columnheader', { name: /^m$/i })).toHaveLength(
-      4,
+      5,
     );
     expect(
       screen.getAllByRole('columnheader', { name: /^passage$/i }),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
     expect(
       screen.getAllByRole('checkbox', { name: /as memorized$/i }),
     ).toHaveLength(171);

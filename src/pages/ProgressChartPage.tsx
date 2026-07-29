@@ -9,7 +9,7 @@ import { setDifficult, setMemorized } from '@/services/progressService';
 import { computeCollectionStats } from '@/services/statsService';
 
 /**
- * Standalone progress chart: every passage in a four-column table, with
+ * Standalone progress chart: every passage in a five-column table, with
  * Memorized / Needs Review toggles.
  */
 export function ProgressChartPage() {

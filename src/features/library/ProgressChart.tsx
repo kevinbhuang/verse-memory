@@ -5,7 +5,7 @@ import { verses } from '@/data/verses';
 import { abbreviateReference } from '@/lib/text/reference';
 import type { Verse, VerseProgress } from '@/types';
 
-const COLUMN_COUNT = 4;
+const COLUMN_COUNT = 5;
 
 function splitIntoColumns(list: readonly Verse[], columns: number): Verse[][] {
   const size = Math.ceil(list.length / columns);
@@ -51,7 +51,7 @@ export function ProgressChart({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {columns.map((column, columnIndex) => (
           <table
             key={columnIndex}
