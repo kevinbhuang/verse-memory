@@ -103,11 +103,14 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
   it('offers a flash cards button on each row', async () => {
     await renderLibrary();
 
-    expect(
-      screen.getByRole('button', {
-        name: `Flash cards from ${passage.reference}`,
-      }),
-    ).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button', {
+      name: 'Review flash cards from this point',
+    });
+    expect(buttons.length).toBeGreaterThan(0);
+    expect(buttons[0]).toHaveAttribute(
+      'title',
+      'Review flash cards from this point',
+    );
   });
 
   it('marks a passage memorized and keeps it checked', async () => {

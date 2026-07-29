@@ -58,8 +58,9 @@ export async function updateProgress(
 }
 
 /**
- * Marking a passage memorized schedules its first retention review; unmarking
- * it is reversible and deliberately keeps the review history intact.
+ * Marking a passage memorized schedules its first retention review and clears
+ * Needs Review. Unmarking is reversible and deliberately keeps the review
+ * history intact.
  */
 export async function setMemorized(
   verseId: string,
@@ -74,8 +75,9 @@ export async function setMemorized(
       verseId,
       {
         isMemorized: true,
+        isDifficult: false,
         memorizedAt: current.memorizedAt ?? now.toISOString(),
-        status: current.isDifficult ? 'needs-attention' : 'memorized',
+        status: 'memorized',
         // Only schedule an initial review if nothing is scheduled yet, so
         // re-checking the box does not disturb an established interval.
         nextDueAt: current.nextDueAt ?? firstReview.toISOString(),

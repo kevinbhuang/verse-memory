@@ -90,7 +90,8 @@ export function VerseRow({
             variant="ghost"
             className="h-7 px-1.5"
             onClick={() => onOpenFlashcards(verse.id)}
-            aria-label={`Flash cards from ${verse.reference}`}
+            aria-label="Review flash cards from this point"
+            title="Review flash cards from this point"
           >
             <Layers className="size-3.5" aria-hidden="true" />
           </Button>

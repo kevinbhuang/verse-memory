@@ -89,6 +89,16 @@ describe('setMemorized', () => {
     expect(await getDataStore().reviewLogs.forVerse('verse-001')).toHaveLength(1);
   });
 
+  it('clears Needs Review when a passage is marked memorized', async () => {
+    await setDifficult('verse-004', true, NOW);
+    expect((await getProgress('verse-004')).isDifficult).toBe(true);
+
+    const progress = await setMemorized('verse-004', true, NOW);
+    expect(progress.isMemorized).toBe(true);
+    expect(progress.isDifficult).toBe(false);
+    expect(progress.status).toBe('memorized');
+  });
+
   it('does not disturb an established interval when re-checked', async () => {
     await recordReview({
       verseId: 'verse-002',
