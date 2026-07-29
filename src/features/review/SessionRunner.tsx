@@ -307,6 +307,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
       <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line pb-2">
         <VerseAudioControls
           text={verse.text}
+          reference={verse.reference}
           passageKey={cardKey}
           className="mt-0"
         />

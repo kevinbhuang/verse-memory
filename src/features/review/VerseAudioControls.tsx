@@ -8,6 +8,8 @@ import {
 
 type VerseAudioControlsProps = {
   text: string;
+  /** Canonical reference for Crossway ESV audio (e.g. "John 3:16"). */
+  reference?: string;
   /** Change when the active passage changes so playback stops. */
   passageKey: string;
   className?: string;
@@ -15,13 +17,15 @@ type VerseAudioControlsProps = {
 
 /**
  * Compact listen-along controls: play / ×5 and speed, in one quiet row.
+ * Prefers official ESV narration when `reference` is set; falls back to TTS.
  */
 export function VerseAudioControls({
   text,
+  reference,
   passageKey,
   className,
 }: VerseAudioControlsProps) {
-  const speech = useVerseSpeech(text, passageKey);
+  const speech = useVerseSpeech(text, passageKey, reference);
 
   if (!speech.supported) {
     return (

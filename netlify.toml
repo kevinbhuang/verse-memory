@@ -1,9 +1,18 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "22"
+
+# Proxy Crossway ESV audio without exposing the API token to the browser.
+# Must appear before the SPA fallback.
+[[redirects]]
+  from = "/api/esv-audio"
+  to = "/.netlify/functions/esv-audio"
+  status = 200
+  force = true
 
 # Single-page application fallback. The service worker handles offline
 # navigation once the app has been loaded at least once.

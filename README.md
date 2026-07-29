@@ -112,10 +112,12 @@ Copy `.env.example` to `.env`. Nothing here is required to run or review.
 | `VITE_COLLECTION_TITLE` | yes | Collection title, e.g. *100 Verses Every Christian Should Know* |
 | `VITE_COLLECTION_SUBTITLE` | yes | Subtitle, e.g. *171-Passage Collection* |
 | `VITE_TRANSLATION_ATTRIBUTION` | yes | Footer and About attribution text |
-| `ESV_API_TOKEN` | **no** | Read only by `npm run verify:esv`, which runs in Node |
+| `ESV_API_TOKEN` | **no** | Local `verify:esv`, Vite audio proxy, and Netlify `esv-audio` function |
 
 `ESV_API_TOKEN` is deliberately **not** prefixed with `VITE_`, so Vite cannot
 inline it into a client bundle. `.env` is git-ignored; never commit a real token.
+For production Listen audio, set `ESV_API_TOKEN` in the Netlify site environment
+variables (same name as local `.env`).
 
 The collection title is read once in `src/config/app.ts` and used from there, so
 renaming the collection is a one-line change rather than a search-and-replace.

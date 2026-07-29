@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { playPassageEsvAudio } from '@/lib/speech/esvAudio';
 import {
   playPassageSpeech,
   speechSupported,
@@ -18,11 +19,15 @@ export type VerseSpeechState = {
 };
 
 /**
- * Play a passage aloud with optional 5× / 10× repeats for listening practice.
- * Stops automatically when `key` changes (next card) or the component unmounts.
+ * Play a passage aloud: prefer Crossway ESV audio when a reference is given,
+ * otherwise (or on failure) fall back to browser text-to-speech.
  */
-export function useVerseSpeech(text: string, key: string): VerseSpeechState {
-  const [supported] = useState(() => speechSupported());
+export function useVerseSpeech(
+  text: string,
+  key: string,
+  reference?: string,
+): VerseSpeechState {
+  const [supported] = useState(() => true);
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
   const [playTotal, setPlayTotal] = useState(0);
@@ -47,32 +52,58 @@ export function useVerseSpeech(text: string, key: string): VerseSpeechState {
 
   const play = useCallback(
     (times: SpeakRepeatCount = 1) => {
-      if (!speechSupported()) return;
-
       stopRef.current?.();
       setPlaying(true);
       setPlayTotal(times);
       setPlayIndex(1);
 
-      const controller = playPassageSpeech(text, times, {
-        rate: rateRef.current,
-        onProgress: (progress) => {
-          setPlayIndex(progress.play);
-          setPlayTotal(progress.plays);
-        },
-      });
-      stopRef.current = controller.stop;
+      const onProgress = (progress: { play: number; plays: number }) => {
+        setPlayIndex(progress.play);
+        setPlayTotal(progress.plays);
+      };
 
-      void controller.done.finally(() => {
-        if (stopRef.current === controller.stop) {
+      const finishIfCurrent = (controllerStop: () => void) => {
+        if (stopRef.current === controllerStop) {
           stopRef.current = null;
           setPlaying(false);
           setPlayIndex(0);
           setPlayTotal(0);
         }
-      });
+      };
+
+      const startTts = () => {
+        if (!speechSupported()) {
+          setPlaying(false);
+          setPlayIndex(0);
+          setPlayTotal(0);
+          return;
+        }
+        const controller = playPassageSpeech(text, times, {
+          rate: rateRef.current,
+          onProgress,
+        });
+        stopRef.current = controller.stop;
+        void controller.done.finally(() => finishIfCurrent(controller.stop));
+      };
+
+      if (reference) {
+        const controller = playPassageEsvAudio(reference, times, {
+          rate: rateRef.current,
+          onProgress,
+        });
+        stopRef.current = controller.stop;
+        void controller.done
+          .then(() => finishIfCurrent(controller.stop))
+          .catch(() => {
+            if (stopRef.current !== controller.stop) return;
+            startTts();
+          });
+        return;
+      }
+
+      startTts();
     },
-    [text],
+    [reference, text],
   );
 
   return {

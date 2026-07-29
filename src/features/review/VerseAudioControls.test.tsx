@@ -105,6 +105,39 @@ describe('VerseAudioControls', () => {
     });
   });
 
+  it('falls back to speech when ESV audio cannot load', async () => {
+    const { spoken } = installSpeechMock();
+    class FailingAudio {
+      playbackRate = 1;
+      preload = 'auto';
+      onended: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      play() {
+        queueMicrotask(() => this.onerror?.());
+        return Promise.resolve();
+      }
+      pause() {}
+      load() {}
+      removeAttribute() {}
+    }
+    vi.stubGlobal('Audio', FailingAudio);
+
+    const { user } = renderWithProviders(
+      <VerseAudioControls
+        text="Jesus wept."
+        reference="John 11:35"
+        passageKey="v1"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /play passage once/i }));
+
+    await waitFor(() => {
+      expect(spoken).toEqual(['Jesus wept.']);
+    });
+    vi.unstubAllGlobals();
+  });
+
   it('offers playback speed options', async () => {
     installSpeechMock();
     renderWithProviders(
