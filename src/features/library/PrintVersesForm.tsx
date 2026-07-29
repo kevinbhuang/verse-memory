@@ -18,7 +18,7 @@ import {
 } from './printVersesPdf';
 
 type PrintMode = 'all' | 'deck' | 'books';
-type PrintStatusFilter = 'all' | 'memorized' | 'needs-review';
+type PrintStatusFilter = 'all' | 'memorized' | 'non-memorized' | 'needs-review';
 
 function versesForBooks(names: readonly string[]) {
   const selected = new Set(names);
@@ -38,6 +38,7 @@ function filterByStatus(
   if (status === 'all') return [...list];
   return list.filter((verse) => {
     const progress = progressById.get(verse.id);
+    if (status === 'non-memorized') return !progress?.isMemorized;
     if (!progress) return false;
     if (status === 'memorized') return progress.isMemorized;
     return progress.isDifficult;
@@ -46,6 +47,7 @@ function filterByStatus(
 
 function statusLabel(status: PrintStatusFilter): string | null {
   if (status === 'memorized') return 'Memorized';
+  if (status === 'non-memorized') return 'Non-Memorized';
   if (status === 'needs-review') return 'Needs Review';
   return null;
 }
@@ -219,6 +221,7 @@ export function PrintVersesForm({
           options={[
             { value: 'all', label: 'All' },
             { value: 'memorized', label: 'Memorized' },
+            { value: 'non-memorized', label: 'Non-Memorized' },
             { value: 'needs-review', label: 'Needs Review' },
           ]}
         />

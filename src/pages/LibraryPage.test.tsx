@@ -98,6 +98,9 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
       within(dialog).getByRole('button', { name: /^memorized$/i }),
     ).toBeInTheDocument();
     expect(
+      within(dialog).getByRole('button', { name: /^non-memorized$/i }),
+    ).toBeInTheDocument();
+    expect(
       within(dialog).getByRole('button', { name: /^needs review$/i }),
     ).toBeInTheDocument();
     expect(
