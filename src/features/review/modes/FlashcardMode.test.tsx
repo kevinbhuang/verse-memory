@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { requireVerse } from '@/data/verses';
+import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import {
   normalizeSpace,
   renderWithProviders,
@@ -12,6 +13,7 @@ import { FlashcardMode } from './FlashcardMode';
 
 const verse = requireVerse('verse-045');
 const passage = normalizeSpace(verse.text);
+const skeleton = firstLetterSkeleton(verse.text);
 
 function setup(settingsOverrides = {}) {
   const onComplete = vi.fn();
@@ -29,11 +31,14 @@ function setup(settingsOverrides = {}) {
 }
 
 describe('FlashcardMode', () => {
-  it('shows the reference but keeps the passage hidden', () => {
+  it('shows the reference and first-letter skeleton while the passage stays hidden', () => {
     setup();
 
     expect(screen.getByText(verse.reference)).toBeInTheDocument();
     expect(screen.getByText(verse.section)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/first letters of the passage/i),
+    ).toHaveTextContent(skeleton);
     expect(visibleText()).not.toContain(passage);
   });
 

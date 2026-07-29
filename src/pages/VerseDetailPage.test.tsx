@@ -94,7 +94,7 @@ describe('VerseDetailPage', () => {
     await renderDetail();
 
     expect(await screen.findByText(/1 recorded review\./)).toBeInTheDocument();
-    expect(screen.getByText(/First letter · hard · 85%/)).toBeInTheDocument();
+    expect(screen.getByText(/Letter typing · hard · 85%/)).toBeInTheDocument();
     expect(screen.getAllByText('Tomorrow').length).toBeGreaterThan(0);
   });
 

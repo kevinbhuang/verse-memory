@@ -48,6 +48,24 @@ describe('PracticePage', () => {
     ).toBeDisabled();
   });
 
+  it('can start a first-letter reveal session', async () => {
+    const { user } = renderWithProviders(<PracticePage />, { route: '/practice' });
+    await screen.findByRole('heading', { name: /^practice$/i });
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /see first letters, then reveal the full passage/i,
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: /^start$/i }));
+
+    await waitFor(async () => {
+      const [session] = await getDataStore().sessions.all();
+      expect(session.fixedMode).toBe('flashcard');
+      expect(session.label).toMatch(/^First letter/i);
+    });
+  });
+
   it('starts a due-today session in one tap', async () => {
     const now = new Date();
     await markDue(actsOne.id, now);

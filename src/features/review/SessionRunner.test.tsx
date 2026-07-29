@@ -279,7 +279,7 @@ describe('SessionRunner', () => {
     expect(
       await screen.findByLabelText(/type the first letter of each word/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/First letter/)).toBeInTheDocument();
+    expect(screen.getByText(/Letter typing/)).toBeInTheDocument();
   });
 
   it('explains when the session no longer exists', async () => {

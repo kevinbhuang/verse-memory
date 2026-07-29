@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  ALargeSmall,
   GraduationCap,
   Keyboard,
   Play,
@@ -28,7 +29,7 @@ import {
 import { formatRelativeDay } from '@/utils/format';
 
 type Scope = 'deck' | 'book';
-type PracticeKind = 'learn' | 'first-letter';
+type PracticeKind = 'learn' | 'flashcard' | 'first-letter';
 type PassageFilter = 'all' | 'difficult' | 'memorized';
 type SizeChoice = 10 | 'all';
 
@@ -58,7 +59,7 @@ function decksLabel(sections: readonly Section[]): string {
 }
 
 /**
- * Single entry point for sessions: pick deck(s)/book(s), Learn or Practice,
+ * Single entry point for sessions: pick deck(s)/book(s), how to review,
  * size and difficulty, then start.
  */
 export function PracticePage() {
@@ -78,9 +79,12 @@ export function PracticePage() {
   );
   const [books, setBooks] = useState(() => initialBooks(bookParam));
   const [sizeChoice, setSizeChoice] = useState<SizeChoice>(10);
-  const [kind, setKind] = useState<PracticeKind>(
-    kindParam === 'first-letter' ? 'first-letter' : 'learn',
-  );
+  const [kind, setKind] = useState<PracticeKind>(() => {
+    if (kindParam === 'first-letter' || kindParam === 'flashcard') {
+      return kindParam;
+    }
+    return 'learn';
+  });
   const [filter, setFilter] = useState<PassageFilter>(
     filterParam === 'difficult' || filterParam === 'memorized'
       ? filterParam
@@ -101,8 +105,12 @@ export function PracticePage() {
   const size: number | 'all' =
     sizeChoice === 'all' ? 'all' : Math.min(10, matchingTotal || 10);
 
-  const fixedMode: Extract<ReviewMode, 'learn' | 'first-letter'> =
-    kind === 'learn' ? 'learn' : 'first-letter';
+  const fixedMode: Extract<ReviewMode, 'learn' | 'flashcard' | 'first-letter'> =
+    kind === 'learn'
+      ? 'learn'
+      : kind === 'flashcard'
+        ? 'flashcard'
+        : 'first-letter';
 
   const criteria: SessionCriteria = useMemo(() => {
     const source =
@@ -171,7 +179,12 @@ export function PracticePage() {
     try {
       const scopeLabel =
         scope === 'deck' ? decksLabel(sections) : booksLabel(books);
-      const kindLabel = kind === 'learn' ? 'Learn' : 'Practice';
+      const kindLabel =
+        kind === 'learn'
+          ? 'Learn'
+          : kind === 'flashcard'
+            ? 'First letter'
+            : 'Practice';
       const filterLabel =
         filter === 'difficult'
           ? ' · Difficult'
@@ -417,6 +430,29 @@ export function PracticePage() {
                     <span className="block text-sm font-semibold">Learn</span>
                     <span className="mt-0.5 block text-xs opacity-80">
                       See the reference and passage, then review.
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKind('flashcard')}
+                  aria-pressed={kind === 'flashcard'}
+                  className={`flex w-full items-start gap-3 px-1 py-3 text-left transition-colors ${
+                    kind === 'flashcard'
+                      ? 'bg-accent-soft/50 text-accent'
+                      : 'text-ink hover:bg-surface-muted'
+                  }`}
+                >
+                  <ALargeSmall
+                    className="mt-0.5 size-5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold">
+                      First letter
+                    </span>
+                    <span className="mt-0.5 block text-xs opacity-80">
+                      See first letters, then reveal the full passage.
                     </span>
                   </span>
                 </button>

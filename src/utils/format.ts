@@ -81,9 +81,9 @@ export function formatAccuracy(accuracy: number | null): string {
 }
 
 export const MODE_LABELS: Record<ReviewMode, string> = {
-  flashcard: 'Flashcard',
+  flashcard: 'First letter',
   learn: 'Learn card',
-  'first-letter': 'First letter',
+  'first-letter': 'Letter typing',
   'progressive-hide': 'Progressive hiding',
   'full-typing': 'Full typing',
   reference: 'Reference practice',
@@ -91,7 +91,8 @@ export const MODE_LABELS: Record<ReviewMode, string> = {
 };
 
 export const MODE_DESCRIPTIONS: Record<ReviewMode, string> = {
-  flashcard: 'See the reference, recall the passage, then rate yourself.',
+  flashcard:
+    'See the reference and first letters, then reveal the passage to check.',
   learn: 'See the reference and passage, then review with first letters or audio.',
   'first-letter': 'Type the first letter of each word to reveal it.',
   'progressive-hide': 'Read the passage with a share of the words removed.',
