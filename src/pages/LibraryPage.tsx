@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, ListFilter } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
@@ -13,12 +13,10 @@ import { appConfig } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { SECTIONS, VERSE_STATUSES, type Section } from '@/types';
 import {
-  applyBulkAction,
   resetVerse,
   setDifficult,
   setMemorized,
 } from '@/services/progressService';
-import { createSession } from '@/services/sessionService';
 import {
   DEFAULT_FILTERS,
   filterLibrary,
@@ -26,12 +24,12 @@ import {
   type LibraryFilterState,
 } from '@/features/library/filters';
 import { LibraryFilters } from '@/features/library/LibraryFilters';
-import { BulkActionBar } from '@/features/library/BulkActionBar';
 import { LibraryProgressStrip } from '@/features/library/LibraryProgressStrip';
 import { PrintVersesPanel } from '@/features/library/PrintVersesPanel';
 import { LibraryCheckboxHeader } from '@/features/library/LibraryCheckboxHeader';
 import { VerseRow } from '@/features/library/VerseRow';
 import { computeCollectionStats } from '@/services/statsService';
+
 function filtersFromParams(params: URLSearchParams): LibraryFilterState {
   const section = params.get('section');
   const book = params.get('book');
@@ -83,7 +81,6 @@ export function LibraryPage() {
   const [filters, setFilters] = useState<LibraryFilterState>(() =>
     filtersFromParams(searchParams),
   );
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [resetVerseId, setResetVerseId] = useState<string | null>(null);
 
   const progressById = useMemo(
@@ -107,66 +104,13 @@ export function LibraryPage() {
     return <LoadingState label={'Loading the collection\u2026'} />;
   }
 
-  const toggleSelected = (verseId: string, isSelected: boolean) => {
-    setSelected((current) => {
-      const next = new Set(current);
-      if (isSelected) next.add(verseId);
-      else next.delete(verseId);
-      return next;
-    });
-  };
-
-  const runBulk = async (action: Parameters<typeof applyBulkAction>[1]) => {
-    const ids = [...selected];
-    await applyBulkAction(ids, action);
-    setSelected(new Set());
-    notify(
-      `${ids.length} passage${ids.length === 1 ? '' : 's'} updated.`,
-      'success',
-    );
-  };
-
-  const startSessionWith = async (verseIds: string[], label: string) => {
-    const session = await createSession(
-      {
-        source: 'custom',
-        verseIds,
-        size: 'all',
-        modeStrategy: 'fixed',
-        fixedMode: 'first-letter',
-      },
-      label,
-    );
-    if (!session) {
-      notify('Could not start a session with those passages.', 'error');
-      return;
-    }
-    navigate(`/review/session?id=${session.id}`);
-  };
-
   const resetTarget = resetVerseId ? getVerse(resetVerseId) : null;
 
   return (
     <>
       <PageHeader
         title={appConfig.collectionTitle}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <PrintVersesPanel />
-            <Button
-              variant="secondary"
-              onClick={() =>
-                setFilters((current) => ({
-                  ...DEFAULT_FILTERS,
-                  sort: current.sort,
-                }))
-              }
-            >
-              <ListFilter className="size-4" aria-hidden="true" />
-              Reset filters
-            </Button>
-          </div>
-        }
+        actions={<PrintVersesPanel />}
       />
 
       <LibraryProgressStrip
@@ -180,17 +124,6 @@ export function LibraryPage() {
         onChange={setFilters}
         resultCount={entries.length}
         totalCount={verses.length}
-      />
-
-      <BulkActionBar
-        selectedCount={selected.size}
-        onAction={(action) => {
-          void runBulk(action);
-        }}
-        onStartSession={() =>
-          void startSessionWith([...selected], 'Selected passages')
-        }
-        onClear={() => setSelected(new Set())}
       />
 
       {entries.length === 0 ? (
@@ -233,11 +166,9 @@ export function LibraryPage() {
                     key={verse.id}
                     verse={verse}
                     progress={progress}
-                    selected={selected.has(verse.id)}
                     showSectionLabel={
                       settings.showSectionLabels && filters.sort !== 'canonical'
                     }
-                    onToggleSelected={toggleSelected}
                     onToggleMemorized={(verseId, memorized) => {
                       void setMemorized(verseId, memorized).then(() =>
                         notify(

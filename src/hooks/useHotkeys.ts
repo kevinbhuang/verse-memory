@@ -5,10 +5,18 @@ export type HotkeyMap = Record<string, (event: KeyboardEvent) => void>;
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
-  if (tag === 'input' || tag === 'textarea') {
-    const field = target as HTMLInputElement | HTMLTextAreaElement;
-    // Disabled/read-only fields are no longer "typing" — shortcuts may run.
+  if (tag === 'textarea') {
+    const field = target as HTMLTextAreaElement;
     return !field.disabled && !field.readOnly;
+  }
+  if (tag === 'input') {
+    const field = target as HTMLInputElement;
+    if (field.disabled || field.readOnly) return false;
+    // Checkboxes/radios/buttons are not typing surfaces — shortcuts may run.
+    const type = (field.type || 'text').toLowerCase();
+    return !['checkbox', 'radio', 'button', 'submit', 'reset', 'file'].includes(
+      type,
+    );
   }
   return tag === 'select' || target.isContentEditable;
 }

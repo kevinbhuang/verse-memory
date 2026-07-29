@@ -10,7 +10,6 @@ import {
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ScriptureText } from '@/components/ScriptureText';
 import { Button } from '@/components/ui/Button';
-import { Toggle } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
 import { useHotkeys } from '@/hooks/useHotkeys';
 import { useSettings } from '@/hooks/useSettings';
@@ -24,10 +23,10 @@ const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
 function readFirstLetterPref(): boolean {
   try {
     const stored = localStorage.getItem(FIRST_LETTER_KEY);
-    if (stored === null) return true;
+    if (stored === null) return false;
     return stored === 'true';
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -38,8 +37,8 @@ function indexForVerseId(verseId: string | null): number {
 }
 
 /**
- * Browse the collection as flash cards: optional first-letter cue, reveal,
- * and previous/next navigation through every passage.
+ * Browse the collection as flash cards: show/hide the passage, optional
+ * first-letter cue, and previous/next navigation.
  */
 export function FlashCardsPage() {
   const navigate = useNavigate();
@@ -50,7 +49,7 @@ export function FlashCardsPage() {
   const startId = searchParams.get('verse');
   const [index, setIndex] = useState(() => indexForVerseId(startId));
   const [firstLetterMode, setFirstLetterMode] = useState(readFirstLetterPref);
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(true);
 
   const verse = verses[index] ?? verses[0]!;
   const progress = useVerseProgress(verse.id);
@@ -60,12 +59,7 @@ export function FlashCardsPage() {
   useEffect(() => {
     const next = indexForVerseId(startId);
     setIndex(next);
-    setRevealed(false);
   }, [startId]);
-
-  useEffect(() => {
-    setRevealed(false);
-  }, [index, firstLetterMode]);
 
   useEffect(() => {
     try {
@@ -78,14 +72,15 @@ export function FlashCardsPage() {
   const goTo = (nextIndex: number) => {
     const clamped = Math.min(Math.max(nextIndex, 0), verses.length - 1);
     setIndex(clamped);
+    setRevealed(true);
     const target = verses[clamped];
     if (target) {
       navigate(`/flashcards?verse=${target.id}`, { replace: true });
     }
   };
 
-  const reveal = () => setRevealed(true);
-  const hide = () => setRevealed(false);
+  const toggleRevealed = () => setRevealed((open) => !open);
+  const toggleFirstLetterMode = () => setFirstLetterMode((on) => !on);
 
   useHotkeys({
     arrowleft: () => {
@@ -94,12 +89,10 @@ export function FlashCardsPage() {
     arrowright: () => {
       if (canGoNext) goTo(index + 1);
     },
-    space: () => {
-      if (!revealed) reveal();
-    },
-    enter: () => {
-      if (!revealed) reveal();
-    },
+    space: () => toggleRevealed(),
+    enter: () => toggleRevealed(),
+    h: () => toggleRevealed(),
+    f: () => toggleFirstLetterMode(),
   });
 
   const positionLabel = useMemo(
@@ -111,16 +104,10 @@ export function FlashCardsPage() {
     <>
       <PageHeader
         title="Flash Cards"
-        description="Flip through the collection. Turn on first letters for a lighter cue before you reveal."
+        description="Flip through the collection. Hide a passage to test yourself, or turn on first letters for a lighter cue."
       />
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-        <Toggle
-          label="First letter mode"
-          description="Show each word’s first letter before revealing the passage."
-          checked={firstLetterMode}
-          onChange={setFirstLetterMode}
-        />
+      <div className="mb-5 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">
         <p className="text-sm text-ink-muted tabular-nums">{positionLabel}</p>
       </div>
 
@@ -198,55 +185,59 @@ export function FlashCardsPage() {
         ) : null}
 
         {revealed ? (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-line bg-surface px-5 py-6">
-              <ScriptureText text={verse.text} />
-            </div>
-            <Button variant="ghost" size="sm" onClick={hide}>
-              <EyeOff className="size-4" aria-hidden="true" />
-              Hide passage
-            </Button>
+          <div className="rounded-xl border border-line bg-surface px-5 py-6">
+            <ScriptureText text={verse.text} />
           </div>
         ) : firstLetterMode ? (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-line bg-surface px-5 py-6">
-              <p
-                className="font-serif text-lg leading-relaxed text-ink sm:text-xl sm:leading-relaxed"
-                aria-label="First letters of the passage"
-              >
-                {firstLetterSkeleton(verse.text)}
-              </p>
-            </div>
-            <Button variant="primary" size="lg" onClick={reveal} autoFocus>
-              <Eye className="size-4" aria-hidden="true" />
-              Reveal passage
-            </Button>
-            <p className="text-xs text-ink-subtle">
-              Press Space or Enter to reveal · ← → to move
+          <div className="rounded-xl border border-line bg-surface px-5 py-6">
+            <p
+              className="font-serif text-lg leading-relaxed text-ink sm:text-xl sm:leading-relaxed"
+              aria-label="First letters of the passage"
+            >
+              {firstLetterSkeleton(verse.text)}
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-dashed border-line-strong bg-surface-muted px-5 py-10 text-center">
-              <p className="text-sm text-ink-muted">
-                Recall the passage, then reveal it to check yourself.
-              </p>
-              <Button
-                variant="primary"
-                size="lg"
-                className="mt-6"
-                onClick={reveal}
-                autoFocus
-              >
-                <Eye className="size-4" aria-hidden="true" />
-                Reveal passage
-              </Button>
-              <p className="mt-2 text-xs text-ink-subtle">
-                Press Space or Enter to reveal · ← → to move
-              </p>
-            </div>
+          <div className="rounded-xl border border-dashed border-line-strong bg-surface-muted px-5 py-10 text-center">
+            <p className="text-sm text-ink-muted">
+              Passage hidden. Press Space to show it again.
+            </p>
           </div>
         )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button variant="ghost" size="sm" onClick={toggleRevealed}>
+            {revealed ? (
+              <>
+                <EyeOff className="size-4" aria-hidden="true" />
+                Hide passage
+              </>
+            ) : (
+              <>
+                <Eye className="size-4" aria-hidden="true" />
+                Show passage
+              </>
+            )}
+          </Button>
+
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-ink-subtle">
+            <input
+              type="checkbox"
+              className="size-3.5 accent-[var(--accent)]"
+              checked={firstLetterMode}
+              onChange={(event) => setFirstLetterMode(event.target.checked)}
+              aria-label="First letter mode"
+            />
+            <span>
+              First letters
+              <span className="ml-1.5 font-mono opacity-70">F</span>
+            </span>
+          </label>
+        </div>
+
+        <p className="text-xs text-ink-subtle">
+          Space or H show/hide · F first letters · ← → move
+        </p>
       </div>
     </>
   );

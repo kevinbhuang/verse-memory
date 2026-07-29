@@ -5,22 +5,18 @@ import {
   Layers,
   RotateCcw,
 } from 'lucide-react';
-import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { NeedsReviewBadge } from '@/components/VerseBadges';
 import type { Verse, VerseProgress } from '@/types';
 import {
   LIBRARY_MEMORIZED_COL,
   LIBRARY_REVIEW_COL,
-  LIBRARY_SELECT_COL,
 } from './LibraryCheckboxHeader';
 
 export function VerseRow({
   verse,
   progress,
-  selected,
   showSectionLabel,
-  onToggleSelected,
   onToggleMemorized,
   onToggleNeedsReview,
   onOpenFlashcards,
@@ -28,9 +24,7 @@ export function VerseRow({
 }: {
   verse: Verse;
   progress: VerseProgress;
-  selected: boolean;
   showSectionLabel: boolean;
-  onToggleSelected: (verseId: string, selected: boolean) => void;
   onToggleMemorized: (verseId: string, memorized: boolean) => void;
   onToggleNeedsReview: (verseId: string, needsReview: boolean) => void;
   onOpenFlashcards: (verseId: string) => void;
@@ -39,25 +33,9 @@ export function VerseRow({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <li
-      className={clsx(
-        'relative border-b border-line last:border-b-0',
-        selected && 'bg-accent-soft/40',
-      )}
-    >
+    <li className="relative border-b border-line last:border-b-0">
       <div className="flex items-start gap-2.5 px-2 py-2 sm:px-3">
         <div className="flex shrink-0 gap-2 pt-0.5">
-          <span className={`${LIBRARY_SELECT_COL} flex justify-center`}>
-            <input
-              type="checkbox"
-              className="size-3.5 accent-[var(--accent)]"
-              checked={selected}
-              onChange={(event) =>
-                onToggleSelected(verse.id, event.target.checked)
-              }
-              aria-label={`Select ${verse.reference} for bulk actions`}
-            />
-          </span>
           <span className={`${LIBRARY_MEMORIZED_COL} flex justify-center`}>
             <input
               type="checkbox"

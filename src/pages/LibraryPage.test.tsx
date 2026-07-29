@@ -18,6 +18,14 @@ async function renderLibrary(route = '/verses') {
   return view;
 }
 
+async function openSearch(user: Awaited<ReturnType<typeof renderLibrary>>['user']) {
+  const button = screen.getByRole('button', { name: /^search$/i });
+  if (button.getAttribute('aria-expanded') !== 'true') {
+    await user.click(button);
+  }
+  await screen.findByLabelText(/search passages/i);
+}
+
 const rowFor = (reference: string) => {
   const checkbox = screen.getByLabelText(`Mark ${reference} as memorized`);
   return checkbox.closest('li') as HTMLElement;
@@ -40,14 +48,16 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
       '0',
     );
     expect(
-      screen.getByRole('columnheader', { name: /^selected$/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('columnheader', { name: /^selected$/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('columnheader', { name: /^memorized$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('columnheader', { name: /^needs review$/i }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^search$/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/search passages/i)).not.toBeInTheDocument();
     for (const section of [
       'Law and History',
       'Wisdom and Poetry',
@@ -150,6 +160,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
 
   it('filters the library to a single book', async () => {
     const { user } = await renderLibrary();
+    await openSearch(user);
 
     await user.selectOptions(screen.getByLabelText(/^book$/i), 'John');
 
@@ -162,8 +173,9 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
 
   it('filters by a search term', async () => {
     const { user } = await renderLibrary();
+    await openSearch(user);
 
-    await user.type(screen.getByLabelText(/search/i), 'Romans 8:28');
+    await user.type(screen.getByLabelText(/search passages/i), 'Romans 8:28');
 
     await waitFor(() => {
       expect(sectionHeading('Law and History')).not.toBeInTheDocument();
@@ -173,6 +185,7 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
 
   it('filters by section', async () => {
     const { user } = await renderLibrary();
+    await openSearch(user);
 
     await user.selectOptions(screen.getByLabelText(/section/i), 'Acts');
 
@@ -185,18 +198,16 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
 
   it('explains when nothing matches and offers a way back', async () => {
     const { user } = await renderLibrary();
+    await openSearch(user);
 
-    await user.type(screen.getByLabelText(/search/i), 'zzzzzz');
+    await user.type(screen.getByLabelText(/search passages/i), 'zzzzzz');
 
     expect(
       await screen.findByText(/no passages match these filters/i),
     ).toBeInTheDocument();
 
     // The filter bar and the empty state both offer a way out.
-    const [clearFilters] = screen.getAllByRole('button', {
-      name: /clear filters/i,
-    });
-    await user.click(clearFilters);
+    await user.click(screen.getByRole('button', { name: /reset filters/i }));
 
     expect(
       await screen.findByRole('heading', { name: 'Law and History' }),
@@ -210,33 +221,6 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
       await screen.findByRole('heading', { name: 'Acts' }),
     ).toBeInTheDocument();
     expect(sectionHeading('Gospels')).not.toBeInTheDocument();
-  });
-
-  it('offers bulk actions once passages are selected', async () => {
-    const { user } = await renderLibrary();
-
-    await user.click(
-      screen.getByLabelText(`Select ${passage.reference} for bulk actions`),
-    );
-    expect(await screen.findByText(/1 selected/i)).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /mark memorized/i }));
-
-    await waitFor(async () => {
-      expect((await getProgress(passage.id)).isMemorized).toBe(true);
-    });
-  });
-
-  it('offers Needs Review in bulk actions', async () => {
-    const { user } = await renderLibrary();
-
-    await user.click(
-      screen.getByLabelText(`Select ${passage.reference} for bulk actions`),
-    );
-    await user.click(screen.getByRole('button', { name: /mark needs review/i }));
-
-    await waitFor(async () => {
-      expect((await getProgress(passage.id)).isDifficult).toBe(true);
-    });
+    expect(screen.getByLabelText(/search passages/i)).toBeInTheDocument();
   });
 });
