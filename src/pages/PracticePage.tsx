@@ -188,14 +188,11 @@ export function PracticePage() {
 
   return (
     <>
-      <PageHeader
-        title="Practice"
-        description="Build a Learn or Practice session by deck or book."
-      />
+      <PageHeader title="Practice" />
 
       {openSession ? (
-        <Card className="mb-5 border-accent/40 bg-accent-soft">
-          <CardBody className="flex flex-wrap items-center justify-between gap-3">
+        <Card className="mb-4 border-accent/40 bg-accent-soft">
+          <CardBody className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <div>
               <p className="text-sm font-medium text-ink">
                 You have an unfinished session
@@ -215,12 +212,13 @@ export function PracticePage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_17rem] lg:items-start">
-        <Card>
-          <CardHeader title="What to practice" className="px-4 py-3" />
-          <CardBody className="space-y-3 px-4 py-3">
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_16rem] lg:items-stretch">
+        <Card className="flex flex-col">
+          <CardHeader title="What to practice" className="px-4 py-2.5" />
+          <CardBody className="flex flex-1 flex-col space-y-3 px-4 py-3">
             <SegmentedControl
               aria-label="Practice scope"
+              size="sm"
               value={scope}
               onChange={setScope}
               options={[
@@ -230,7 +228,7 @@ export function PracticePage() {
             />
 
             {scope === 'deck' ? (
-              <div className="space-y-2">
+              <div className="min-h-0 flex-1 space-y-2">
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -253,7 +251,7 @@ export function PracticePage() {
                   </button>
                 </div>
                 <div
-                  className="max-h-56 divide-y divide-line overflow-y-auto border-y border-line"
+                  className="divide-y divide-line border-y border-line"
                   role="group"
                   aria-label="Decks"
                 >
@@ -265,19 +263,17 @@ export function PracticePage() {
                         type="button"
                         onClick={() => toggleSection(deck.section)}
                         aria-pressed={selected}
-                        className={`flex w-full items-baseline justify-between gap-3 px-1 py-2 text-left transition-colors ${
+                        className={`flex w-full items-center justify-between gap-3 px-1 py-1.5 text-left transition-colors ${
                           selected
                             ? 'bg-accent-soft/50 text-accent'
                             : 'text-ink hover:bg-surface-muted'
                         }`}
                       >
-                        <span className="min-w-0">
-                          <span className="block text-xs text-ink-subtle">
+                        <span className="min-w-0 truncate text-sm font-medium">
+                          <span className="text-ink-subtle font-normal">
                             {deck.label}
                           </span>
-                          <span className="block text-sm font-medium">
-                            {deck.section}
-                          </span>
+                          {` · ${deck.section}`}
                         </span>
                         <span className="shrink-0 text-xs text-ink-muted tabular-nums">
                           {deck.passageCount}
@@ -291,7 +287,7 @@ export function PracticePage() {
                 ) : null}
               </div>
             ) : (
-              <div className="max-h-56 overflow-y-auto">
+              <div className="min-h-0 flex-1">
                 <BookCheckboxList
                   idPrefix="practice-book"
                   selected={books}
@@ -330,9 +326,9 @@ export function PracticePage() {
           </CardBody>
         </Card>
 
-        <Card>
-          <CardHeader title="How" className="px-4 py-3" />
-          <CardBody className="space-y-3 px-4 py-3">
+        <Card className="flex flex-col">
+          <CardHeader title="How" className="px-4 py-2.5" />
+          <CardBody className="flex flex-1 flex-col space-y-3 px-4 py-3">
             <div
               className="divide-y divide-line border-y border-line"
               role="group"
@@ -342,7 +338,7 @@ export function PracticePage() {
                 type="button"
                 onClick={() => setKind('learn')}
                 aria-pressed={kind === 'learn'}
-                className={`flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors ${
+                className={`flex w-full items-start gap-3 px-1 py-2 text-left transition-colors ${
                   kind === 'learn'
                     ? 'bg-accent-soft/50 text-accent'
                     : 'text-ink hover:bg-surface-muted'
@@ -363,7 +359,7 @@ export function PracticePage() {
                 type="button"
                 onClick={() => setKind('flashcard')}
                 aria-pressed={kind === 'flashcard'}
-                className={`flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors ${
+                className={`flex w-full items-start gap-3 px-1 py-2 text-left transition-colors ${
                   kind === 'flashcard'
                     ? 'bg-accent-soft/50 text-accent'
                     : 'text-ink hover:bg-surface-muted'
@@ -386,7 +382,7 @@ export function PracticePage() {
                 type="button"
                 onClick={() => setKind('first-letter')}
                 aria-pressed={kind === 'first-letter'}
-                className={`flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors ${
+                className={`flex w-full items-start gap-3 px-1 py-2 text-left transition-colors ${
                   kind === 'first-letter'
                     ? 'bg-accent-soft/50 text-accent'
                     : 'text-ink hover:bg-surface-muted'
@@ -421,7 +417,7 @@ export function PracticePage() {
 
         <aside className="lg:col-span-2 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">
           <Card>
-            <CardHeader title="Session" className="px-4 py-3" />
+            <CardHeader title="Session" className="px-4 py-2.5" />
             <CardBody className="px-4 py-3">
               {preview.length === 0 ? (
                 <EmptyState
@@ -435,8 +431,8 @@ export function PracticePage() {
                       ? `All ${preview.length} passages`
                       : `${preview.length} of ${matchingTotal} passages`}
                   </p>
-                  <ol className="mt-2 max-h-40 space-y-1 overflow-y-auto text-sm">
-                    {preview.slice(0, 20).map((verseId) => {
+                  <ol className="mt-2 max-h-36 space-y-1 overflow-y-auto text-sm">
+                    {preview.slice(0, 12).map((verseId) => {
                       const verse = getVerse(verseId);
                       return (
                         <li key={verseId} className="flex gap-2 text-ink">
@@ -447,9 +443,9 @@ export function PracticePage() {
                         </li>
                       );
                     })}
-                    {preview.length > 20 ? (
+                    {preview.length > 12 ? (
                       <li className="text-xs text-ink-subtle">
-                        {`and ${preview.length - 20} more`}
+                        {`and ${preview.length - 12} more`}
                       </li>
                     ) : null}
                   </ol>

@@ -129,17 +129,15 @@ export function QuizPage() {
 
   return (
     <>
-      <PageHeader
-        title="Quiz"
-        description="Test yourself on the collection, decks, or books with a scored quiz."
-      />
+      <PageHeader title="Quiz" />
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_16rem] lg:items-start">
-        <Card>
-          <CardHeader title="What to quiz" className="px-4 py-3" />
-          <CardBody className="space-y-3 px-4 py-3">
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_15rem] lg:items-stretch">
+        <Card className="flex flex-col">
+          <CardHeader title="What to quiz" className="px-4 py-2.5" />
+          <CardBody className="flex flex-1 flex-col space-y-3 px-4 py-3">
             <SegmentedControl
               aria-label="Quiz scope"
+              size="sm"
               value={scope}
               onChange={setScope}
               options={[
@@ -157,7 +155,7 @@ export function QuizPage() {
 
             {scope === 'deck' ? (
               <div
-                className="max-h-56 divide-y divide-line overflow-y-auto border-y border-line"
+                className="divide-y divide-line border-y border-line"
                 role="group"
                 aria-label="Decks"
               >
@@ -169,19 +167,17 @@ export function QuizPage() {
                       type="button"
                       onClick={() => toggleSection(deck.section)}
                       aria-pressed={selected}
-                      className={`flex w-full items-baseline justify-between gap-3 px-1 py-2 text-left transition-colors ${
+                      className={`flex w-full items-center justify-between gap-3 px-1 py-1.5 text-left transition-colors ${
                         selected
                           ? 'bg-accent-soft/50 text-accent'
                           : 'text-ink hover:bg-surface-muted'
                       }`}
                     >
-                      <span className="min-w-0">
-                        <span className="block text-xs text-ink-subtle">
+                      <span className="min-w-0 truncate text-sm font-medium">
+                        <span className="text-ink-subtle font-normal">
                           {deck.label}
                         </span>
-                        <span className="block text-sm font-medium">
-                          {deck.section}
-                        </span>
+                        {` · ${deck.section}`}
                       </span>
                       <span className="shrink-0 text-xs text-ink-muted tabular-nums">
                         {deck.passageCount}
@@ -193,14 +189,12 @@ export function QuizPage() {
             ) : null}
 
             {scope === 'book' ? (
-              <div className="max-h-56 overflow-y-auto">
-                <BookCheckboxList
-                  idPrefix="quiz-book"
-                  selected={books}
-                  onChange={setBooks}
-                  requireOne
-                />
-              </div>
+              <BookCheckboxList
+                idPrefix="quiz-book"
+                selected={books}
+                onChange={setBooks}
+                requireOne
+              />
             ) : null}
 
             <div>
@@ -232,9 +226,9 @@ export function QuizPage() {
           </CardBody>
         </Card>
 
-        <Card>
-          <CardHeader title="Quiz type" className="px-4 py-3" />
-          <CardBody className="!p-0">
+        <Card className="flex flex-col">
+          <CardHeader title="Quiz type" className="px-4 py-2.5" />
+          <CardBody className="!flex-1 !p-0">
             <div className="divide-y divide-line">
               {QUIZ_MODES.map((option) => {
                 const Icon = MODE_ICONS[option];
@@ -245,7 +239,7 @@ export function QuizPage() {
                     type="button"
                     onClick={() => setMode(option)}
                     aria-pressed={selected}
-                    className={`flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors ${
+                    className={`flex w-full items-start gap-3 px-4 py-2 text-left transition-colors ${
                       selected
                         ? 'bg-accent-soft/50 text-accent'
                         : 'text-ink hover:bg-surface-muted'
@@ -272,7 +266,7 @@ export function QuizPage() {
 
         <aside className="space-y-3 lg:col-span-2 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">
           <Card>
-            <CardHeader title="Ready" className="px-4 py-3" />
+            <CardHeader title="Ready" className="px-4 py-2.5" />
             <CardBody className="space-y-3 px-4 py-3">
               {previewCount === 0 ? (
                 <EmptyState

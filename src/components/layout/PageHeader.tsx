@@ -16,16 +16,16 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {appConfig.collectionTitle}
         </h1>
-        <h2 className="mt-1 font-serif text-lg font-medium tracking-tight text-ink-muted sm:text-xl">
+        <h2 className="mt-0.5 font-serif text-lg font-medium tracking-tight text-ink-muted sm:text-xl">
           {title}
         </h2>
         {description ? (
-          <p className="mt-1.5 max-w-2xl text-sm text-ink-subtle">{description}</p>
+          <p className="mt-1 max-w-2xl text-sm text-ink-subtle">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
