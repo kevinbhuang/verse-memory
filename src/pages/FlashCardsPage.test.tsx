@@ -11,6 +11,7 @@ const second = requireVerse('verse-002');
 describe('FlashCardsPage', () => {
   beforeEach(() => {
     localStorage.removeItem('verse-memory:flashcards-first-letter');
+    localStorage.removeItem('verse-memory:flashcards-revealed');
   });
 
   it('starts on the first passage with the verse shown', async () => {
@@ -27,7 +28,7 @@ describe('FlashCardsPage', () => {
     expect(
       screen.getByRole('button', { name: /previous passage/i }),
     ).toBeDisabled();
-    expect(screen.getByLabelText(/first letter mode/i)).not.toBeChecked();
+    expect(screen.queryByLabelText(/first letter mode/i)).not.toBeInTheDocument();
   });
 
   it('opens on a deep-linked verse and can move next', async () => {
@@ -56,24 +57,41 @@ describe('FlashCardsPage', () => {
     expect(visibleText()).toContain(first.text.slice(0, 24));
   });
 
-  it('can toggle first-letter mode with the checkbox or F', async () => {
+  it('pressing F shows first letters even when the verse was fully visible', async () => {
     const { user } = renderWithProviders(<FlashCardsPage />, {
       route: `/flashcards?verse=${first.id}`,
     });
 
     await screen.findByText(first.reference);
-    await user.click(screen.getByRole('button', { name: /hide passage/i }));
-    await user.click(screen.getByLabelText(/first letter mode/i));
+    expect(visibleText()).toContain(first.text.slice(0, 24));
 
-    expect(screen.getByLabelText(/first letter mode/i)).toBeChecked();
+    await user.keyboard('f');
+
     expect(
       screen.getByLabelText(/first letters of the passage/i),
     ).toHaveTextContent(firstLetterSkeleton(first.text).replace(/\u00A0/g, ' '));
+    expect(visibleText()).not.toContain(first.text.slice(0, 24));
+  });
 
+  it('keeps first-letter and hide preferences when moving to the next verse', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
     await user.keyboard('f');
-    expect(screen.getByLabelText(/first letter mode/i)).not.toBeChecked();
     expect(
-      screen.queryByLabelText(/first letters of the passage/i),
-    ).not.toBeInTheDocument();
+      screen.getByLabelText(/first letters of the passage/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /next passage/i }));
+
+    expect(await screen.findByText(second.reference)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/first letters of the passage/i),
+    ).toHaveTextContent(
+      firstLetterSkeleton(second.text).replace(/\u00A0/g, ' '),
+    );
+    expect(visibleText()).not.toMatch(/Hear, O Israel/);
   });
 });

@@ -19,14 +19,23 @@ import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { setDifficult, setMemorized } from '@/services/progressService';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
+const REVEALED_KEY = 'verse-memory:flashcards-revealed';
 
-function readFirstLetterPref(): boolean {
+function readBoolPref(key: string, fallback: boolean): boolean {
   try {
-    const stored = localStorage.getItem(FIRST_LETTER_KEY);
-    if (stored === null) return false;
+    const stored = localStorage.getItem(key);
+    if (stored === null) return fallback;
     return stored === 'true';
   } catch {
-    return false;
+    return fallback;
+  }
+}
+
+function writeBoolPref(key: string, value: boolean) {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Ignore quota / private-mode failures.
   }
 }
 
@@ -39,6 +48,9 @@ function indexForVerseId(verseId: string | null): number {
 /**
  * Browse the collection as flash cards: show/hide the passage, optional
  * first-letter cue, and previous/next navigation.
+ *
+ * Show/hide and first-letter preferences are global for the session (and
+ * persisted), not per verse.
  */
 export function FlashCardsPage() {
   const navigate = useNavigate();
@@ -48,8 +60,12 @@ export function FlashCardsPage() {
 
   const startId = searchParams.get('verse');
   const [index, setIndex] = useState(() => indexForVerseId(startId));
-  const [firstLetterMode, setFirstLetterMode] = useState(readFirstLetterPref);
-  const [revealed, setRevealed] = useState(true);
+  const [firstLetterMode, setFirstLetterMode] = useState(() =>
+    readBoolPref(FIRST_LETTER_KEY, false),
+  );
+  const [revealed, setRevealed] = useState(() =>
+    readBoolPref(REVEALED_KEY, true),
+  );
 
   const verse = verses[index] ?? verses[0]!;
   const progress = useVerseProgress(verse.id);
@@ -62,17 +78,16 @@ export function FlashCardsPage() {
   }, [startId]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(FIRST_LETTER_KEY, String(firstLetterMode));
-    } catch {
-      // Ignore quota / private-mode failures.
-    }
+    writeBoolPref(FIRST_LETTER_KEY, firstLetterMode);
   }, [firstLetterMode]);
+
+  useEffect(() => {
+    writeBoolPref(REVEALED_KEY, revealed);
+  }, [revealed]);
 
   const goTo = (nextIndex: number) => {
     const clamped = Math.min(Math.max(nextIndex, 0), verses.length - 1);
     setIndex(clamped);
-    setRevealed(true);
     const target = verses[clamped];
     if (target) {
       navigate(`/flashcards?verse=${target.id}`, { replace: true });
@@ -80,7 +95,16 @@ export function FlashCardsPage() {
   };
 
   const toggleRevealed = () => setRevealed((open) => !open);
-  const toggleFirstLetterMode = () => setFirstLetterMode((on) => !on);
+
+  /** F: turn first letters on (and hide the full verse so the cue is visible). */
+  const toggleFirstLetterMode = () => {
+    if (firstLetterMode) {
+      setFirstLetterMode(false);
+      return;
+    }
+    setFirstLetterMode(true);
+    setRevealed(false);
+  };
 
   useHotkeys({
     arrowleft: () => {
@@ -104,7 +128,7 @@ export function FlashCardsPage() {
     <>
       <PageHeader
         title="Flash Cards"
-        description="Flip through the collection. Hide a passage to test yourself, or turn on first letters for a lighter cue."
+        description="Flip through the collection. Hide a passage to test yourself, or press F for first-letter cues."
       />
 
       <div className="mb-5 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">
@@ -220,24 +244,12 @@ export function FlashCardsPage() {
             )}
           </Button>
 
-          <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-ink-subtle">
-            <input
-              type="checkbox"
-              className="size-3.5 accent-[var(--accent)]"
-              checked={firstLetterMode}
-              onChange={(event) => setFirstLetterMode(event.target.checked)}
-              aria-label="First letter mode"
-            />
-            <span>
-              First letters
-              <span className="ml-1.5 font-mono opacity-70">F</span>
-            </span>
-          </label>
+          <p className="text-xs text-ink-subtle" aria-live="polite">
+            {firstLetterMode ? 'First letters on · F to turn off' : 'F first letters'}
+            {' · '}
+            Space show/hide · ← → move
+          </p>
         </div>
-
-        <p className="text-xs text-ink-subtle">
-          Space or H show/hide · F first letters · ← → move
-        </p>
       </div>
     </>
   );
