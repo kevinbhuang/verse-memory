@@ -397,9 +397,8 @@ export async function requestJoinWithCode(
  * Resolve the official A2N group (no access code required for joiners).
  * Approvals go to the configured leader email’s account.
  *
- * Only an explicit env group id, or a group whose name is the preferred
- * A2N title (or clearly contains “A2N”), counts — never “any group the
- * leader happens to own.”
+ * Only an explicit env group id, or a group whose name exactly matches
+ * the preferred title, counts.
  */
 export async function resolveOfficialGroup(): Promise<MemoryGroup> {
   const { groupId, leaderEmail, preferredName } = appConfig.officialGroup;
@@ -423,20 +422,17 @@ export async function resolveOfficialGroup(): Promise<MemoryGroup> {
   const snap = await getDocs(
     query(collection(db, 'groups'), where('createdBy', '==', leader.uid)),
   );
-  const groups = snap.docs
+  const preferredLower = preferredName.trim().toLowerCase();
+  const exact = snap.docs
     .map((docSnap) =>
       parseGroup(docSnap.id, docSnap.data() as Record<string, unknown>),
     )
-    .filter((g): g is MemoryGroup => g !== null);
+    .find(
+      (g): g is MemoryGroup =>
+        g !== null && g.name.trim().toLowerCase() === preferredLower,
+    );
 
-  const preferredLower = preferredName.trim().toLowerCase();
-  const exact = groups.find(
-    (g) => g.name.trim().toLowerCase() === preferredLower,
-  );
   if (exact) return exact;
-
-  const a2n = groups.find((g) => /\ba2n\b/i.test(g.name));
-  if (a2n) return a2n;
 
   throw new Error(
     `No official group found. Ask the leader to create “${preferredName}”.`,
