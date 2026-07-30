@@ -265,34 +265,23 @@ export function GroupsCard() {
   const officialNeedsSetup =
     officialLookupDone && !officialGroupId && isOfficialLeaderAccount;
 
-  const officialJoinButton = (
-    <div className="flex flex-wrap items-center gap-2">
-      {officialNeedsSetup ? (
-        <p className="text-xs text-ink-muted">
-          To enable one-tap join, create a group named “
-          {appConfig.officialGroup.preferredName}” (you’ll approve joiners).
-        </p>
-      ) : officialJoined ? (
-        <p className="text-xs text-ink-muted">
-          {officialMembership?.status === 'pending'
-            ? 'A2N join request pending approval.'
-            : officialMembership?.role === 'leader'
-              ? `You’re the leader of ${appConfig.officialGroup.preferredName}.`
-              : `You’re in ${appConfig.officialGroup.preferredName}.`}
-        </p>
-      ) : (
-        <Button
-          variant="primary"
-          size="md"
-          disabled={busy || (!!user && loading) || (user && !officialLookupDone)}
-          onClick={() => void onJoinOfficial()}
-          className="shadow-sm"
-        >
-          {appConfig.officialGroup.buttonLabel}
-        </Button>
-      )}
-    </div>
-  );
+  const officialJoinButton =
+    officialNeedsSetup ? (
+      <p className="text-xs text-ink-muted">
+        To enable one-tap join, create a group named “
+        {appConfig.officialGroup.preferredName}” (you’ll approve joiners).
+      </p>
+    ) : officialJoined ? null : (
+      <Button
+        variant="primary"
+        size="md"
+        disabled={busy || (!!user && loading) || (user && !officialLookupDone)}
+        onClick={() => void onJoinOfficial()}
+        className="shadow-sm"
+      >
+        {appConfig.officialGroup.buttonLabel}
+      </Button>
+    );
 
   if (!user) {
     return (
@@ -437,6 +426,41 @@ export function GroupsCard() {
     </div>
   );
 
+  const groupTabs =
+    visibleMemberships.length > 1 ? (
+      <div
+        role="tablist"
+        aria-label="Your groups"
+        className="flex gap-1 overflow-x-auto border-b border-line bg-surface-muted/40 px-2"
+      >
+        {visibleMemberships.map((m) => {
+          const selected = m.groupId === selectedGroupId;
+          return (
+            <button
+              key={m.groupId}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              disabled={busy}
+              onClick={() => {
+                void reload(m.groupId);
+              }}
+              className={
+                selected
+                  ? '-mb-px shrink-0 border-b-[3px] border-brand px-4 py-3 text-sm font-semibold text-ink'
+                  : '-mb-px shrink-0 border-b-[3px] border-transparent px-4 py-3 text-sm font-medium text-ink-muted hover:text-ink'
+              }
+            >
+              {m.name}
+              {m.status === 'pending' ? (
+                <span className="font-normal text-ink-subtle"> · pending</span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+
   const yourGroupsCard = (
     <Card>
       <CardHeader
@@ -454,6 +478,7 @@ export function GroupsCard() {
             : 'After you’re approved, you’ll see a leaderboard with memorized counts and crowns.'
         }
       />
+      {groupTabs}
       <CardBody className="space-y-5">
         {loading ? (
           <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
@@ -466,43 +491,6 @@ export function GroupsCard() {
           </p>
         ) : (
           <>
-            {visibleMemberships.length > 1 ? (
-              <div
-                role="tablist"
-                aria-label="Your groups"
-                className="-mx-1 flex gap-0 overflow-x-auto border-b border-line px-1"
-              >
-                {visibleMemberships.map((m) => {
-                  const selected = m.groupId === selectedGroupId;
-                  return (
-                    <button
-                      key={m.groupId}
-                      type="button"
-                      role="tab"
-                      aria-selected={selected}
-                      disabled={busy}
-                      onClick={() => {
-                        void reload(m.groupId);
-                      }}
-                      className={
-                        selected
-                          ? '-mb-px shrink-0 border-b-2 border-brand px-3 py-2.5 text-sm font-medium text-ink'
-                          : '-mb-px shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-ink-muted hover:text-ink'
-                      }
-                    >
-                      {m.name}
-                      {m.status === 'pending' ? (
-                        <span className="font-normal text-ink-subtle">
-                          {' '}
-                          · pending
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-
             {selected ? (
               <div className="space-y-4">
                 <div className="space-y-1.5">
