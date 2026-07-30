@@ -23,6 +23,8 @@ export type MemoryGroup = {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  /** Combined memorized-passage goal for the whole group (sum of members). */
+  goalMemorizedTotal: number | null;
 };
 
 export type GroupMember = {
@@ -111,6 +113,10 @@ function parseGroup(
     createdBy: data.createdBy,
     createdAt: typeof data.createdAt === 'string' ? data.createdAt : '',
     updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : '',
+    goalMemorizedTotal:
+      typeof data.goalMemorizedTotal === 'number'
+        ? data.goalMemorizedTotal
+        : null,
   };
 }
 
@@ -264,6 +270,7 @@ export async function createGroup(
     createdBy: uid,
     createdAt: now,
     updatedAt: now,
+    goalMemorizedTotal: null,
   };
 
   await setDoc(groupRef(db, groupId), group);
@@ -285,6 +292,37 @@ export async function getGroup(groupId: string): Promise<MemoryGroup | null> {
   const snap = await getDoc(groupRef(db, groupId));
   if (!snap.exists()) return null;
   return parseGroup(snap.id, snap.data() as Record<string, unknown>);
+}
+
+/** Leader sets (or clears) the group’s combined memorized-passage goal. */
+export async function setGroupGoal(
+  groupId: string,
+  leaderUid: string,
+  goalMemorizedTotal: number | null,
+): Promise<MemoryGroup> {
+  const db = requireDb();
+  const group = await getGroup(groupId);
+  if (!group) throw new Error('Group not found.');
+  if (group.createdBy !== leaderUid) {
+    throw new Error('Only the group creator can set the group goal.');
+  }
+  if (goalMemorizedTotal !== null) {
+    if (!Number.isFinite(goalMemorizedTotal) || goalMemorizedTotal < 1) {
+      throw new Error('Enter a goal of at least 1 passage.');
+    }
+    if (goalMemorizedTotal > 50_000) {
+      throw new Error('That goal is too large.');
+    }
+  }
+  const now = new Date().toISOString();
+  const next: MemoryGroup = {
+    ...group,
+    goalMemorizedTotal:
+      goalMemorizedTotal === null ? null : Math.round(goalMemorizedTotal),
+    updatedAt: now,
+  };
+  await setDoc(groupRef(db, groupId), next, { merge: true });
+  return next;
 }
 
 export async function lookupGroupByAccessCode(
@@ -443,6 +481,7 @@ export async function listActiveGroupMembers(groupId: string): Promise<
     memorizedCount: number | null;
     needsReviewCount: number | null;
     total: number | null;
+    summary: Awaited<ReturnType<typeof readPublicProgressSummary>>;
   }>
 > {
   const db = requireDb();
@@ -457,6 +496,7 @@ export async function listActiveGroupMembers(groupId: string): Promise<
     memorizedCount: number | null;
     needsReviewCount: number | null;
     total: number | null;
+    summary: Awaited<ReturnType<typeof readPublicProgressSummary>>;
   }> = [];
 
   for (const docSnap of snap.docs) {
@@ -475,12 +515,14 @@ export async function listActiveGroupMembers(groupId: string): Promise<
       memorizedCount: summary?.memorizedCount ?? null,
       needsReviewCount: summary?.needsReviewCount ?? null,
       total: summary?.total ?? null,
+      summary,
     });
   }
 
   return results.sort((a, b) => {
-    if (a.member.role === 'leader' && b.member.role !== 'leader') return -1;
-    if (b.member.role === 'leader' && a.member.role !== 'leader') return 1;
+    const memA = a.memorizedCount ?? -1;
+    const memB = b.memorizedCount ?? -1;
+    if (memB !== memA) return memB - memA;
     const nameA = a.profile?.displayName ?? a.profile?.email ?? a.member.uid;
     const nameB = b.profile?.displayName ?? b.profile?.email ?? b.member.uid;
     return nameA.localeCompare(nameB);

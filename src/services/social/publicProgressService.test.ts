@@ -59,5 +59,23 @@ describe('buildPublicProgressSummary', () => {
     });
     expect(summary.verses[verses[2]!.id]).toBeUndefined();
     expect(summary.updatedAt).toBe('2024-01-01T00:00:00.000Z');
+    expect(summary.weeklyDelta).toBe(0);
+  });
+
+  it('counts weeklyDelta from memorizedAt within the last week', () => {
+    const a = verses[0]!.id;
+    const now = new Date('2024-06-15T12:00:00.000Z');
+    const summary = buildPublicProgressSummary(
+      [
+        stubProgress({
+          verseId: a,
+          isMemorized: true,
+          memorizedAt: '2024-06-14T10:00:00.000Z',
+        }),
+      ],
+      now.toISOString(),
+      now,
+    );
+    expect(summary.weeklyDelta).toBe(1);
   });
 });

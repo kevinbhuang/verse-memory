@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Copy, LoaderCircle, LogIn, Users } from 'lucide-react';
-import { Button, ButtonLink } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Field, TextInput } from '@/components/ui/Field';
@@ -11,6 +11,7 @@ import {
   approveJoinRequest,
   cancelJoinRequest,
   createGroup,
+  getGroup,
   leaveGroup,
   listActiveGroupMembers,
   listMyGroupMemberships,
@@ -18,9 +19,13 @@ import {
   rejectJoinRequest,
   repairGroupChartAccess,
   requestJoinWithCode,
+  setGroupGoal,
   type GroupMembershipIndex,
   type GroupMember,
+  type MemoryGroup,
 } from '@/services/social/groupService';
+import type { PublicProgressSummary } from '@/services/social/publicProgressService';
+import { GroupLeaderboard } from '@/features/friends/GroupLeaderboard';
 
 function displayLabel(profile: UserProfile | null): string {
   if (profile?.displayName) return profile.displayName;
@@ -34,6 +39,7 @@ type MemberRow = {
   memorizedCount: number | null;
   needsReviewCount: number | null;
   total: number | null;
+  summary: PublicProgressSummary | null;
 };
 
 /**
@@ -48,10 +54,12 @@ export function GroupsCard() {
   const [joinCode, setJoinCode] = useState('');
   const [memberships, setMemberships] = useState<GroupMembershipIndex[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<MemoryGroup | null>(null);
   const [pending, setPending] = useState<
     Array<{ member: GroupMember; profile: UserProfile | null }>
   >([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
+  const [goalBusy, setGoalBusy] = useState(false);
 
   const selected = memberships.find((m) => m.groupId === selectedGroupId) ?? null;
   const isLeader = selected?.role === 'leader' && selected.status === 'active';
@@ -79,6 +87,8 @@ export function GroupsCard() {
 
         if (preferred) {
           const active = mine.find((m) => m.groupId === preferred);
+          const groupDoc = await getGroup(preferred).catch(() => null);
+          setSelectedGroup(groupDoc);
           if (active?.status === 'active') {
             await repairGroupChartAccess(preferred, user.uid).catch(() => undefined);
             const [memberRows, pendingRows] = await Promise.all([
@@ -94,6 +104,7 @@ export function GroupsCard() {
             setPending([]);
           }
         } else {
+          setSelectedGroup(null);
           setMembers([]);
           setPending([]);
         }
@@ -268,7 +279,7 @@ export function GroupsCard() {
               ) : null}
             </span>
           }
-          description="After you’re approved, you’ll see each member’s name and memorized count — tap to open their Progress Chart."
+          description="After you’re approved, you’ll see a leaderboard with memorized counts and crowns — tap a name to open their Progress Chart."
         />
         <CardBody className="space-y-5">
           {loading ? (
@@ -298,39 +309,7 @@ export function GroupsCard() {
                       }
                       disabled={busy}
                       onClick={() => {
-                        setSelectedGroupId(m.groupId);
-                        void (async () => {
-                          setLoading(true);
-                          try {
-                            if (m.status === 'active') {
-                              await repairGroupChartAccess(
-                                m.groupId,
-                                user.uid,
-                              ).catch(() => undefined);
-                              const [memberRows, pendingRows] =
-                                await Promise.all([
-                                  listActiveGroupMembers(m.groupId),
-                                  m.role === 'leader'
-                                    ? listPendingJoinRequests(m.groupId)
-                                    : Promise.resolve([]),
-                                ]);
-                              setMembers(memberRows);
-                              setPending(pendingRows);
-                            } else {
-                              setMembers([]);
-                              setPending([]);
-                            }
-                          } catch (error) {
-                            notify(
-                              error instanceof Error
-                                ? error.message
-                                : 'Could not load group.',
-                              'error',
-                            );
-                          } finally {
-                            setLoading(false);
-                          }
-                        })();
+                        void reload(m.groupId);
                       }}
                     >
                       {m.name}
@@ -499,88 +478,40 @@ export function GroupsCard() {
                   ) : null}
 
                   {selected.status === 'active' ? (
-                    <section className="space-y-2">
-                      <h3 className="text-sm font-semibold text-ink">
-                        Members
-                      </h3>
-                      {members.length === 0 ? (
-                        <p className="text-sm text-ink-muted">
-                          No active members yet.
-                        </p>
-                      ) : (
-                        <ul className="space-y-2">
-                          {members.map(
-                            ({
-                              member,
-                              profile,
-                              memorizedCount,
-                              needsReviewCount,
-                              total,
-                            }) => {
-                              const name = displayLabel(profile);
-                              const countLabel =
-                                memorizedCount === null || total === null
-                                  ? 'Chart not synced yet'
-                                  : `${memorizedCount} of ${total} memorized`;
-                              const isSelf = member.uid === user.uid;
-                              return (
-                                <li
-                                  key={member.uid}
-                                  className="rounded-lg border border-line"
-                                >
-                                  {isSelf ? (
-                                    <div className="px-3 py-2.5">
-                                      <p className="font-medium text-ink">
-                                        {name}
-                                        <span className="ml-1 text-xs font-normal text-ink-muted">
-                                          (you
-                                          {member.role === 'leader'
-                                            ? ' · leader'
-                                            : ''}
-                                          )
-                                        </span>
-                                      </p>
-                                      <p className="text-xs text-ink-muted">
-                                        {countLabel}
-                                        {needsReviewCount != null &&
-                                        needsReviewCount > 0
-                                          ? ` · ${needsReviewCount} Needs Review`
-                                          : null}
-                                      </p>
-                                    </div>
-                                  ) : (
-                                    <ButtonLink
-                                      to={`/friends/${member.uid}/progress-chart`}
-                                      variant="ghost"
-                                      size="md"
-                                      className="w-full justify-start rounded-lg px-3 py-2.5 text-left hover:bg-surface-muted"
-                                    >
-                                      <span className="flex min-w-0 flex-col items-start gap-0.5">
-                                        <span className="truncate font-medium text-ink">
-                                          {name}
-                                          {member.role === 'leader' ? (
-                                            <span className="ml-1 text-xs font-normal text-ink-muted">
-                                              · leader
-                                            </span>
-                                          ) : null}
-                                        </span>
-                                        <span className="text-xs font-normal text-ink-muted">
-                                          {countLabel}
-                                          {needsReviewCount != null &&
-                                          needsReviewCount > 0
-                                            ? ` · ${needsReviewCount} Needs Review`
-                                            : null}
-                                        </span>
-                                      </span>
-                                    </ButtonLink>
-                                  )}
-                                </li>
-                              );
-                            },
-                          )}
-                        </ul>
-                      )}
-                    </section>
+                    <GroupLeaderboard
+                      members={members}
+                      currentUid={user.uid}
+                      group={selectedGroup}
+                      isLeader={Boolean(isLeader)}
+                      goalBusy={goalBusy}
+                      onSaveGoal={async (goal) => {
+                        if (!user || !selected) return;
+                        setGoalBusy(true);
+                        try {
+                          const next = await setGroupGoal(
+                            selected.groupId,
+                            user.uid,
+                            goal,
+                          );
+                          setSelectedGroup(next);
+                          notify(
+                            goal == null
+                              ? 'Group goal cleared.'
+                              : `Group goal set to ${goal}.`,
+                            'success',
+                          );
+                        } catch (error) {
+                          notify(
+                            error instanceof Error
+                              ? error.message
+                              : 'Could not save goal.',
+                            'error',
+                          );
+                        } finally {
+                          setGoalBusy(false);
+                        }
+                      }}
+                    />
                   ) : null}
                 </div>
               ) : null}

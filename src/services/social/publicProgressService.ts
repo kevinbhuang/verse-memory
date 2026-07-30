@@ -15,24 +15,44 @@ export type PublicProgressSummary = {
   memorizedCount: number;
   needsReviewCount: number;
   total: number;
+  /** Passages newly marked memorized in the last 7 days. */
+  weeklyDelta: number;
   /** Sparse map: only verses that are memorized and/or Needs Review. */
   verses: Record<string, PublicVerseFlag>;
 };
 
+function startOfWeeklyWindow(now: Date = new Date()): Date {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - 6);
+  return start;
+}
+
 export function buildPublicProgressSummary(
   progressList: VerseProgress[],
   updatedAt: string = new Date().toISOString(),
+  now: Date = new Date(),
 ): PublicProgressSummary {
   const byId = new Map(progressList.map((p) => [p.verseId, p]));
   const verseFlags: Record<string, PublicVerseFlag> = {};
   let memorizedCount = 0;
   let needsReviewCount = 0;
+  let weeklyDelta = 0;
+  const weekStart = startOfWeeklyWindow(now).getTime();
 
   for (const verse of verses) {
     const progress = byId.get(verse.id);
     const memorized = progress?.isMemorized ?? false;
     const needsReview = progress?.isDifficult ?? false;
-    if (memorized) memorizedCount += 1;
+    if (memorized) {
+      memorizedCount += 1;
+      if (progress?.memorizedAt) {
+        const stamped = new Date(progress.memorizedAt).getTime();
+        if (!Number.isNaN(stamped) && stamped >= weekStart) {
+          weeklyDelta += 1;
+        }
+      }
+    }
     if (needsReview) needsReviewCount += 1;
     if (memorized || needsReview) {
       verseFlags[verse.id] = { memorized, needsReview };
@@ -44,6 +64,7 @@ export function buildPublicProgressSummary(
     memorizedCount,
     needsReviewCount,
     total: verses.length,
+    weeklyDelta,
     verses: verseFlags,
   };
 }
@@ -79,6 +100,7 @@ export async function readPublicProgressSummary(
     memorizedCount: data.memorizedCount ?? 0,
     needsReviewCount: data.needsReviewCount ?? 0,
     total: data.total ?? verses.length,
+    weeklyDelta: data.weeklyDelta ?? 0,
     verses: data.verses,
   };
 }
