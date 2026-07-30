@@ -15,6 +15,17 @@ export const appConfig = {
     env.VITE_TRANSLATION_ATTRIBUTION ??
     'Scripture quotations are from the ESV\u00ae Bible (The Holy Bible, English Standard Version\u00ae), copyright \u00a9 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.',
   expectedVerseCount: 171,
+  /**
+   * One-tap join for the official Acts2Network group. Approvals go to the
+   * leader’s Google account (no access code shown to joiners).
+   */
+  officialGroup: {
+    buttonLabel: 'Join A2N Verse Memory Group',
+    leaderEmail: 'kevin.huang@acts2.network',
+    preferredName: 'A2N Verse Memory Group',
+    /** Optional hard-coded group id from Firebase (overrides name lookup). */
+    groupId: (env.VITE_OFFICIAL_GROUP_ID as string | undefined)?.trim() || null,
+  },
 } as const;
 
 export const SECTION_RANGES: ReadonlyArray<{

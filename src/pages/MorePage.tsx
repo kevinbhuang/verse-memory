@@ -118,7 +118,7 @@ export function MorePage() {
               <span className="text-ink">5</span> Quiz ·{' '}
               <span className="text-ink">6</span> Print ·{' '}
               <span className="text-ink">7</span> More ·{' '}
-              <span className="text-ink">8</span> Join a Group (also L / C / P / Q). On
+              <span className="text-ink">8</span> Groups (also L / C / P / Q). On
               Flash Cards, F / M / N / Space handle first letters, Memorized,
               Needs Review, and show/hide.
             </p>

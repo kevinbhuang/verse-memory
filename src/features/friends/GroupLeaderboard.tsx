@@ -79,8 +79,8 @@ export function GroupLeaderboard({
           Leaderboard
         </h3>
         <p className="mt-1.5 text-xs leading-snug text-ink-muted">
-          Ranked by passages memorized. Crowns mark category leaders — tap a
-          name for their Progress Chart.
+          Ranked by passages memorized. Crowns mark category leaders — tap any
+          name (including yours) to open a Progress Chart.
         </p>
       </div>
 
@@ -280,16 +280,16 @@ export function GroupLeaderboard({
                 entry.rank === 1 && 'border-brand/30 bg-brand-soft/35',
               )}
             >
-              {isSelf ? (
-                body
-              ) : (
-                <Link
-                  to={`/friends/${entry.uid}/progress-chart`}
-                  className="block outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                >
-                  {body}
-                </Link>
-              )}
+              <Link
+                to={
+                  isSelf
+                    ? '/progress-chart'
+                    : `/friends/${entry.uid}/progress-chart`
+                }
+                className="block outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+              >
+                {body}
+              </Link>
             </li>
           );
         })}

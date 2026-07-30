@@ -10,7 +10,12 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { getFirestoreDb } from '@/lib/firebase';
-import { getUserProfile, type UserProfile } from './profileService';
+import { appConfig } from '@/config/app';
+import {
+  getUserProfile,
+  lookupUidByEmail,
+  type UserProfile,
+} from './profileService';
 import { readPublicProgressSummary } from './publicProgressService';
 
 export type GroupRole = 'leader' | 'member';
@@ -341,17 +346,12 @@ export async function lookupGroupByAccessCode(
 }
 
 /**
- * Request to join via access code. Leader must approve.
+ * Request to join a known group. Leader must approve.
  */
-export async function requestJoinWithCode(
+export async function requestJoinGroup(
   uid: string,
-  code: string,
+  group: MemoryGroup,
 ): Promise<{ group: MemoryGroup; status: MembershipStatus }> {
-  const group = await lookupGroupByAccessCode(code);
-  if (!group) {
-    throw new Error('No group found for that access code.');
-  }
-
   const db = requireDb();
   const existing = await getDoc(memberRef(db, group.id, uid));
   if (existing.exists()) {
@@ -377,6 +377,80 @@ export async function requestJoinWithCode(
   await setDoc(memberRef(db, group.id, uid), member);
   await writeMembershipIndex(db, uid, group, 'member', 'pending', now);
   return { group, status: 'pending' };
+}
+
+/**
+ * Request to join via access code. Leader must approve.
+ */
+export async function requestJoinWithCode(
+  uid: string,
+  code: string,
+): Promise<{ group: MemoryGroup; status: MembershipStatus }> {
+  const group = await lookupGroupByAccessCode(code);
+  if (!group) {
+    throw new Error('No group found for that access code.');
+  }
+  return requestJoinGroup(uid, group);
+}
+
+/**
+ * Resolve the official A2N group (no access code required for joiners).
+ * Approvals go to the configured leader email’s account.
+ */
+export async function resolveOfficialGroup(): Promise<MemoryGroup> {
+  const { groupId, leaderEmail, preferredName } = appConfig.officialGroup;
+
+  if (groupId) {
+    const byId = await getGroup(groupId);
+    if (!byId) {
+      throw new Error('The official group isn’t available right now.');
+    }
+    return byId;
+  }
+
+  const leader = await lookupUidByEmail(leaderEmail);
+  if (!leader) {
+    throw new Error(
+      'The official group isn’t set up yet. Ask the group leader to sign in once.',
+    );
+  }
+
+  const db = requireDb();
+  const snap = await getDocs(
+    query(collection(db, 'groups'), where('createdBy', '==', leader.uid)),
+  );
+  const groups = snap.docs
+    .map((docSnap) => parseGroup(docSnap.id, docSnap.data() as Record<string, unknown>))
+    .filter((g): g is MemoryGroup => g !== null);
+
+  if (groups.length === 0) {
+    throw new Error(
+      `No official group found. Ask the leader to create “${preferredName}”.`,
+    );
+  }
+
+  const preferredLower = preferredName.trim().toLowerCase();
+  const exact = groups.find((g) => g.name.trim().toLowerCase() === preferredLower);
+  if (exact) return exact;
+
+  const a2n = groups.find((g) => /\ba2n\b/i.test(g.name));
+  if (a2n) return a2n;
+
+  // Single group under the leader — treat as the official one.
+  if (groups.length === 1) return groups[0]!;
+
+  groups.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return groups[0]!;
+}
+
+export async function requestJoinOfficialGroup(
+  uid: string,
+): Promise<{ group: MemoryGroup; status: MembershipStatus }> {
+  const group = await resolveOfficialGroup();
+  if (group.createdBy === uid) {
+    throw new Error('You’re already the leader of this group.');
+  }
+  return requestJoinGroup(uid, group);
 }
 
 export async function listMyGroupMemberships(

@@ -8,10 +8,12 @@ import {
   Printer,
   Repeat2,
   UserPlus,
+  Users,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
 import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
+import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { Footer } from './Footer';
 import { AppBrand } from './AppBrand';
 import { NavAccountControl } from './NavAccountControl';
@@ -37,13 +39,6 @@ const NAV_ITEMS = [
   { to: '/more', label: 'More', shortLabel: 'More', icon: Ellipsis },
 ];
 
-const FRIENDS_NAV = {
-  to: '/friends',
-  label: 'Join a Group',
-  shortLabel: 'Join',
-  icon: UserPlus,
-};
-
 function navLinkClass(isActive: boolean, compact = false) {
   if (compact) {
     return clsx(
@@ -61,11 +56,26 @@ function navLinkClass(isActive: boolean, compact = false) {
 
 export function AppLayout() {
   const location = useLocation();
+  const { hasJoinedGroup } = useJoinedGroups();
   useAppNavHotkeys();
   // The active review / quiz screen is deliberately free of navigation chrome.
   const focusMode =
     location.pathname.startsWith('/review/session') ||
     location.pathname.startsWith('/quiz/session');
+
+  const groupsNav = hasJoinedGroup
+    ? {
+        to: '/friends',
+        label: 'View Groups',
+        shortLabel: 'Groups',
+        icon: Users,
+      }
+    : {
+        to: '/friends',
+        label: 'Join a Group',
+        shortLabel: 'Join',
+        icon: UserPlus,
+      };
 
   if (focusMode) {
     return (
@@ -111,21 +121,21 @@ export function AppLayout() {
           </nav>
 
           <nav
-            aria-label="Friends"
+            aria-label="Groups"
             className="mt-auto border-t border-line pt-4"
           >
             <NavLink
-              to={FRIENDS_NAV.to}
+              to={groupsNav.to}
               className={({ isActive }) => navLinkClass(isActive)}
             >
               {({ isActive }) => (
                 <>
-                  <FRIENDS_NAV.icon
+                  <groupsNav.icon
                     className="size-4 shrink-0"
                     aria-hidden="true"
                     strokeWidth={isActive ? 2.25 : 1.75}
                   />
-                  {FRIENDS_NAV.label}
+                  {groupsNav.label}
                 </>
               )}
             </NavLink>
@@ -159,7 +169,7 @@ export function AppLayout() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <ul className="flex">
-          {[...NAV_ITEMS, FRIENDS_NAV].map((item) => (
+          {[...NAV_ITEMS, groupsNav].map((item) => (
             <li key={item.to} className="flex-1">
               <NavLink
                 to={item.to}
