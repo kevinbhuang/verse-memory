@@ -275,7 +275,9 @@ export function GroupsCard() {
       <Button
         variant="primary"
         size="md"
-        disabled={busy || (!!user && loading) || (user && !officialLookupDone)}
+        disabled={
+          busy || (!!user && loading) || (!!user && !officialLookupDone)
+        }
         onClick={() => void onJoinOfficial()}
         className="shadow-sm"
       >
