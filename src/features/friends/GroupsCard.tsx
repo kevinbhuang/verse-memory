@@ -16,6 +16,7 @@ import {
   listMyGroupMemberships,
   listPendingJoinRequests,
   rejectJoinRequest,
+  repairGroupChartAccess,
   requestJoinWithCode,
   type GroupMembershipIndex,
   type GroupMember,
@@ -79,6 +80,7 @@ export function GroupsCard() {
         if (preferred) {
           const active = mine.find((m) => m.groupId === preferred);
           if (active?.status === 'active') {
+            await repairGroupChartAccess(preferred, user.uid).catch(() => undefined);
             const [memberRows, pendingRows] = await Promise.all([
               listActiveGroupMembers(preferred),
               active.role === 'leader'
@@ -301,6 +303,10 @@ export function GroupsCard() {
                           setLoading(true);
                           try {
                             if (m.status === 'active') {
+                              await repairGroupChartAccess(
+                                m.groupId,
+                                user.uid,
+                              ).catch(() => undefined);
                               const [memberRows, pendingRows] =
                                 await Promise.all([
                                   listActiveGroupMembers(m.groupId),

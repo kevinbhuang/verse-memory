@@ -194,6 +194,51 @@ async function listActiveMemberUids(
 }
 
 /**
+ * Ensure chart-share edges exist for this group.
+ * - Every member grants others access to their own chart (outgoing shares).
+ * - Group creator also writes mutual edges for all pairs (repairs older approvals).
+ */
+export async function repairGroupChartAccess(
+  groupId: string,
+  actingUid: string,
+): Promise<void> {
+  const db = requireDb();
+  const group = await getGroup(groupId);
+  if (!group) return;
+
+  const activeUids = await listActiveMemberUids(db, groupId);
+  if (!activeUids.includes(actingUid)) return;
+
+  const now = new Date().toISOString();
+  const others = activeUids.filter((uid) => uid !== actingUid);
+
+  // Always grant others access to my chart.
+  await Promise.all(
+    others.map((viewerUid) =>
+      setDoc(
+        shareRef(db, actingUid, viewerUid),
+        {
+          ownerUid: actingUid,
+          viewerUid,
+          groupId,
+          createdAt: now,
+        },
+        { merge: true },
+      ),
+    ),
+  );
+
+  // Leader repairs full mutual access (needed after earlier approve bugs).
+  if (group.createdBy === actingUid) {
+    for (let i = 0; i < activeUids.length; i += 1) {
+      for (let j = i + 1; j < activeUids.length; j += 1) {
+        await grantMutualShare(db, activeUids[i]!, activeUids[j]!, groupId);
+      }
+    }
+  }
+}
+
+/**
  * Create a group. Creator becomes leader (active) and receives an access code.
  */
 export async function createGroup(
@@ -421,14 +466,16 @@ export async function approveJoinRequest(
     { ...member, status: 'active', role: 'member', updatedAt: now },
     { merge: true },
   );
-  await writeMembershipIndex(db, memberUid, group, 'member', 'active', now);
 
+  // Chart access first — membership index is secondary UI state.
   const activeUids = await listActiveMemberUids(db, groupId);
   await Promise.all(
     activeUids
       .filter((uid) => uid !== memberUid)
       .map((uid) => grantMutualShare(db, uid, memberUid, groupId)),
   );
+
+  await writeMembershipIndex(db, memberUid, group, 'member', 'active', now);
 }
 
 export async function rejectJoinRequest(

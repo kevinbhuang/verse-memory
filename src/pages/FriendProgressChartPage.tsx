@@ -16,7 +16,7 @@ import { canViewPublicProgress } from '@/services/social/groupService';
 import { formatTimeAgo } from '@/utils/format';
 
 /**
- * Read-only Progress Chart for an approved friend (cloud summary only).
+ * Read-only Progress Chart for a fellow group member (cloud summary only).
  */
 export function FriendProgressChartPage() {
   const { friendUid } = useParams<{ friendUid: string }>();
@@ -30,12 +30,12 @@ export function FriendProgressChartPage() {
     if (authLoading) return;
     if (!configured || !user) {
       setLoading(false);
-      setError('Sign in with Google to view a friend’s Progress Chart.');
+      setError('Sign in with Google to view a group member’s Progress Chart.');
       return;
     }
     if (!friendUid) {
       setLoading(false);
-      setError('Missing friend id.');
+      setError('Missing member id.');
       return;
     }
 
@@ -48,7 +48,7 @@ export function FriendProgressChartPage() {
         const allowed = await canViewPublicProgress(friendUid, user.uid);
         if (!allowed) {
           throw new Error(
-            'You don’t have access to this chart. Ask them to approve your Friends request.',
+            'You don’t have access to this chart yet. Open Join a Group once (as the group creator if you lead it), then try again. Both of you also need to be active members of the same group.',
           );
         }
         const [profile, nextSummary] = await Promise.all([
@@ -93,14 +93,14 @@ export function FriendProgressChartPage() {
   if (error || !summary) {
     return (
       <>
-        <PageHeader title="Friend’s Progress Chart" />
+        <PageHeader title="Member’s Progress Chart" />
         <div className="card">
           <EmptyState
             title="Can’t open this chart"
             description={error ?? 'Something went wrong.'}
             action={
               <ButtonLink to="/friends" variant="secondary">
-                Back to Groups
+                Back to Join a Group
               </ButtonLink>
             }
           />
