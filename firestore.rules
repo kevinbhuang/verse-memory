@@ -103,7 +103,13 @@ service cloud.firestore {
 
       match /groupMemberships/{groupId} {
         allow read: if isSelf(uid);
-        allow write: if isSelf(uid);
+        // Self updates own index; group creator may update a joiner’s index
+        // when approving / rejecting (same groupId path segment).
+        allow write: if isSelf(uid)
+          || (signedIn()
+              && isGroupCreator(groupId)
+              && request.resource.data.groupId == groupId
+              && request.resource.data.status in ['active', 'rejected', 'pending', 'left']);
       }
 
       // Shareable Progress Chart summary — owner or mutual group share edge.
