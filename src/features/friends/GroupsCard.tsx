@@ -60,6 +60,7 @@ export function GroupsCard() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<MemoryGroup | null>(null);
   const [officialGroupId, setOfficialGroupId] = useState<string | null>(null);
+  const [officialLookupDone, setOfficialLookupDone] = useState(false);
   const [pending, setPending] = useState<
     Array<{ member: GroupMember; profile: UserProfile | null }>
   >([]);
@@ -134,15 +135,23 @@ export function GroupsCard() {
   useEffect(() => {
     if (!configured || authLoading || !user) {
       setOfficialGroupId(null);
+      setOfficialLookupDone(false);
       return;
     }
     let cancelled = false;
+    setOfficialLookupDone(false);
     void resolveOfficialGroup()
       .then((group) => {
-        if (!cancelled) setOfficialGroupId(group.id);
+        if (!cancelled) {
+          setOfficialGroupId(group.id);
+          setOfficialLookupDone(true);
+        }
       })
       .catch(() => {
-        if (!cancelled) setOfficialGroupId(null);
+        if (!cancelled) {
+          setOfficialGroupId(null);
+          setOfficialLookupDone(true);
+        }
       });
     return () => {
       cancelled = true;
@@ -249,20 +258,33 @@ export function GroupsCard() {
   const officialJoined =
     officialMembership?.status === 'active' ||
     officialMembership?.status === 'pending';
+  const isOfficialLeaderAccount =
+    !!user?.email &&
+    user.email.trim().toLowerCase() ===
+      appConfig.officialGroup.leaderEmail.trim().toLowerCase();
+  const officialNeedsSetup =
+    officialLookupDone && !officialGroupId && isOfficialLeaderAccount;
 
   const officialJoinButton = (
     <div className="flex flex-wrap items-center gap-2">
-      {officialJoined ? (
+      {officialNeedsSetup ? (
+        <p className="text-xs text-ink-muted">
+          To enable one-tap join, create a group named “
+          {appConfig.officialGroup.preferredName}” (you’ll approve joiners).
+        </p>
+      ) : officialJoined ? (
         <p className="text-xs text-ink-muted">
           {officialMembership?.status === 'pending'
             ? 'A2N join request pending approval.'
-            : 'You’re in the A2N Verse Memory Group.'}
+            : officialMembership?.role === 'leader'
+              ? `You’re the leader of ${appConfig.officialGroup.preferredName}.`
+              : `You’re in ${appConfig.officialGroup.preferredName}.`}
         </p>
       ) : (
         <Button
           variant="secondary"
           size="sm"
-          disabled={busy || (!!user && loading)}
+          disabled={busy || (!!user && loading) || (user && !officialLookupDone)}
           onClick={() => void onJoinOfficial()}
         >
           <LogIn className="size-3.5" aria-hidden="true" />
