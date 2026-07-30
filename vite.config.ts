@@ -18,6 +18,8 @@ export default defineConfig(({ mode }) => {
         // Activate new builds automatically so users are not stuck on an old
         // cached shell waiting for a "Reload" click.
         registerType: 'autoUpdate',
+        // Avoid workbox+terser flaking out during SW generation (exit code 1).
+        minify: false,
         includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
         manifest: {
           name: 'Verse Memory',
