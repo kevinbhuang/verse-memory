@@ -62,10 +62,12 @@ export function AppLayout() {
       <div className="mx-auto flex w-full max-w-7xl">
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line px-4 py-6 lg:block">
           <div className="px-2">
-            <p className="font-serif text-base leading-snug font-semibold text-ink">
+            <p className="font-serif text-lg leading-tight font-semibold text-ink">
+              {appConfig.appName}
+            </p>
+            <p className="mt-1 text-xs leading-snug text-ink-muted">
               {appConfig.collectionTitle}
             </p>
-            <p className="mt-1 text-xs text-ink-muted">{appConfig.appName}</p>
           </div>
 
           <nav aria-label="Main" className="mt-8 space-y-0.5">
@@ -99,12 +101,9 @@ export function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-paper/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
-            <div className="min-w-0 lg:sr-only">
-              <p className="truncate font-serif text-sm font-semibold leading-snug text-ink">
-                {appConfig.collectionTitle}
-              </p>
-              <p className="truncate text-xs text-ink-muted">{appConfig.appName}</p>
-            </div>
+            <p className="min-w-0 truncate font-serif text-base font-semibold text-ink lg:sr-only">
+              {appConfig.appName}
+            </p>
             <div className="ml-auto flex justify-end">
               <NavAccountControl />
             </div>

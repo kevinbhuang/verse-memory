@@ -21,6 +21,11 @@ describe('FlashCardsPage', () => {
     expect(
       await screen.findByRole('heading', { name: /^flash cards$/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /100 Verses Every Christian Should Know/i,
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText(first.reference)).toBeInTheDocument();
     expect(visibleText()).toContain(first.text.slice(0, 24));
     expect(
