@@ -9,9 +9,9 @@ import {
   Repeat2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { appConfig } from '@/config/app';
 import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
 import { Footer } from './Footer';
+import { AppBrand } from './AppBrand';
 import { NavAccountControl } from './NavAccountControl';
 import { UpdatePrompt } from './UpdatePrompt';
 
@@ -61,13 +61,8 @@ export function AppLayout() {
 
       <div className="mx-auto flex w-full max-w-7xl">
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line px-4 py-6 lg:block">
-          <div className="px-2">
-            <p className="font-serif text-lg leading-tight font-semibold text-ink">
-              {appConfig.appName}
-            </p>
-            <p className="mt-1 text-xs leading-snug text-ink-muted">
-              {appConfig.collectionTitle}
-            </p>
+          <div className="px-1">
+            <AppBrand showSubtitle />
           </div>
 
           <nav aria-label="Main" className="mt-8 space-y-0.5">
@@ -79,7 +74,7 @@ export function AppLayout() {
                   clsx(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
                     isActive
-                      ? 'bg-accent-soft font-medium text-accent'
+                      ? 'bg-brand-soft font-medium text-brand'
                       : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
                   )
                 }
@@ -101,9 +96,9 @@ export function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-paper/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
-            <p className="min-w-0 truncate font-serif text-base font-semibold text-ink lg:sr-only">
-              {appConfig.appName}
-            </p>
+            <div className="min-w-0 lg:sr-only">
+              <AppBrand compact />
+            </div>
             <div className="ml-auto flex justify-end">
               <NavAccountControl />
             </div>
@@ -130,7 +125,7 @@ export function AppLayout() {
                 className={({ isActive }) =>
                   clsx(
                     'flex flex-col items-center gap-1 py-2.5 text-[0.6875rem]',
-                    isActive ? 'text-accent' : 'text-ink-muted',
+                    isActive ? 'text-brand' : 'text-ink-muted',
                   )
                 }
               >

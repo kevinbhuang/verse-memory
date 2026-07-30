@@ -227,7 +227,7 @@ export function FirstLetterMode({
 
       <div className="h-1 w-full overflow-hidden rounded-full bg-surface-sunken">
         <div
-          className="h-full bg-accent transition-[width]"
+          className="h-full bg-brand transition-[width]"
           style={{ width: `${progressPercent}%` }}
         />
       </div>

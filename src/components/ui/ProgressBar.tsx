@@ -5,13 +5,13 @@ export function ProgressBar({
   max = 100,
   label,
   className,
-  tone = 'accent',
+  tone = 'brand',
 }: {
   value: number;
   max?: number;
   label: string;
   className?: string;
-  tone?: 'accent' | 'success';
+  tone?: 'accent' | 'brand' | 'success';
 }) {
   const percent = max === 0 ? 0 : Math.max(0, Math.min(100, (value / max) * 100));
 
@@ -27,7 +27,11 @@ export function ProgressBar({
       <div
         className={clsx(
           'h-full rounded-full transition-[width] duration-300',
-          tone === 'accent' ? 'bg-accent' : 'bg-success',
+          tone === 'success'
+            ? 'bg-success'
+            : tone === 'accent'
+              ? 'bg-accent'
+              : 'bg-brand',
         )}
         style={{ width: `${percent}%` }}
       />

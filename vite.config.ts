@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
           short_name: 'Verse Memory',
           description:
             'A focused Scripture memory workspace for learning, reviewing, and retaining a fixed collection of 171 passages.',
-          theme_color: '#1f2937',
+          theme_color: '#c45c26',
           background_color: '#f5f6f8',
           display: 'standalone',
           orientation: 'portrait-primary',

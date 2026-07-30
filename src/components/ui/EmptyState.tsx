@@ -34,7 +34,7 @@ export function LoadingState({ label = 'Loading\u2026' }: { label?: string }) {
       role="status"
       aria-live="polite"
     >
-      <span className="size-2 animate-pulse rounded-full bg-accent" aria-hidden="true" />
+      <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden="true" />
       {label}
     </div>
   );

@@ -103,7 +103,7 @@ export function LibraryFilters({
             <Search className="size-3.5" aria-hidden="true" />
             Search
             {hasSearchScope(filters) ? (
-              <span className="ml-0.5 size-1.5 rounded-full bg-accent" aria-hidden="true" />
+              <span className="ml-0.5 size-1.5 rounded-full bg-brand" aria-hidden="true" />
             ) : null}
           </Button>
         </div>

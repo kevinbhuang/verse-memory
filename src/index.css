@@ -10,8 +10,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Cool paper, a single slate accent, and Source Sans / Source Serif for a
- * settled reading UI. Colours swap via CSS variables for dark theme.
+ * Cool paper base, slate for quieter chrome, and a burnt-orange brand
+ * for the logo and a few high-emphasis highlights. Colours swap via
+ * CSS variables for dark theme.
  */
 :root {
   --paper: #f5f6f8;
@@ -27,6 +28,10 @@
   --accent-strong: #24425c;
   --accent-soft: #e8eef5;
   --accent-contrast: #ffffff;
+  --brand: #c45c26;
+  --brand-strong: #9e4418;
+  --brand-soft: #f8ebe3;
+  --brand-contrast: #ffffff;
   --success: #2f6a4f;
   --success-soft: #e6f0ea;
   --warning: #8a6320;
@@ -52,6 +57,10 @@
   --accent-strong: #a6c4e5;
   --accent-soft: #1f2c3a;
   --accent-contrast: #10151b;
+  --brand: #e8915c;
+  --brand-strong: #f0a878;
+  --brand-soft: #3a2418;
+  --brand-contrast: #1a0f0a;
   --success: #7fbf9d;
   --success-soft: #1c2a24;
   --warning: #d7b273;
@@ -84,6 +93,10 @@
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
   --color-accent-contrast: var(--accent-contrast);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-contrast: var(--brand-contrast);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);

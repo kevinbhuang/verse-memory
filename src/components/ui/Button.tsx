@@ -11,11 +11,11 @@ export type ButtonVariant =
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent text-accent-contrast hover:bg-accent-strong border border-transparent',
+    'bg-brand text-brand-contrast hover:bg-brand-strong border border-transparent',
   secondary:
     'bg-surface text-ink border border-line-strong hover:bg-surface-muted',
   ghost: 'bg-transparent text-ink-muted hover:bg-surface-muted hover:text-ink',

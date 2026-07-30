@@ -308,7 +308,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         aria-label="Session progress"
       >
         <div
-          className="h-full bg-accent transition-[width]"
+          className="h-full bg-brand transition-[width]"
           style={{ width: `${(session.currentIndex / total) * 100}%` }}
         />
       </div>
