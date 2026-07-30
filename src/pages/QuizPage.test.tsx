@@ -8,7 +8,9 @@ describe('QuizPage', () => {
     localStorage.clear();
     const { user } = renderWithProviders(<QuizPage />, { route: '/quiz' });
 
-    expect(screen.getByRole('heading', { name: /^quiz$/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /^quiz$/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /reference.*book and chapter/i }),
     ).toBeInTheDocument();
@@ -36,6 +38,14 @@ describe('QuizPage', () => {
 
     await user.click(screen.getByRole('button', { name: /all verses/i }));
     expect(screen.getByText(/every passage/i)).toBeInTheDocument();
+
+    expect(screen.getByRole('group', { name: /passage filter/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^memorized$/i }));
+    expect(screen.getByRole('button', { name: /^memorized$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: /^all$/i }));
 
     await user.click(screen.getByRole('button', { name: /start quiz/i }));
     await waitFor(() => {

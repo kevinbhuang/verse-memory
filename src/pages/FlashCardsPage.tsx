@@ -18,7 +18,6 @@ import { verses } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { setDifficult, setMemorized } from '@/services/progressService';
 import { VerseAudioControls } from '@/features/review/VerseAudioControls';
-import { SignInPrompt } from '@/features/settings/SignInPrompt';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
 const REVEALED_KEY = 'verse-memory:flashcards-revealed';
@@ -195,8 +194,6 @@ export function FlashCardsPage() {
         title="Flash Cards"
         description="Press spacebar to hide, or press F for first-letter only."
       />
-
-      <SignInPrompt className="mb-4" />
 
       <div className="mb-5 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">
         <p className="text-sm text-ink-muted tabular-nums">{positionLabel}</p>

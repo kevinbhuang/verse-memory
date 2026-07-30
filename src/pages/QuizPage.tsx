@@ -9,19 +9,21 @@ import {
   Quote,
 } from 'lucide-react';
 import { BookCheckboxList } from '@/components/BookCheckboxList';
-import { booksLabel, passageCountForBooks } from '@/lib/text/bookSelection';
+import { booksLabel } from '@/lib/text/bookSelection';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
 import { DECKS, appConfig } from '@/config/app';
 import { COLLECTION_BOOKS } from '@/lib/text/books';
 import { verses } from '@/data/verses';
+import { useAllProgress } from '@/hooks/useProgressData';
 import {
   createQuizSession,
   selectQuizVerseIds,
+  type QuizProgressFilter,
   type QuizScope,
 } from '@/services/quizService';
 import { SECTIONS, type Section } from '@/types';
@@ -50,12 +52,19 @@ function decksLabel(sections: readonly Section[]): string {
   return `${sections.length} decks`;
 }
 
+function progressFilterLabel(filter: QuizProgressFilter): string {
+  if (filter === 'memorized') return ' · Memorized';
+  if (filter === 'needs-review') return ' · Needs Review';
+  return '';
+}
+
 /**
- * Build a scored quiz: pick scope, size, and quiz type, then start.
+ * Build a scored quiz: pick scope, progress filter, size, and quiz type, then start.
  */
 export function QuizPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
+  const progressList = useAllProgress();
 
   const [scope, setScope] = useState<QuizScope>('deck');
   const [sections, setSections] = useState<Section[]>([SECTIONS[0]]);
@@ -63,32 +72,42 @@ export function QuizPage() {
     const romans = COLLECTION_BOOKS.find((item) => item.name === 'Romans');
     return [romans?.name ?? COLLECTION_BOOKS[0]?.name ?? 'John'];
   });
+  const [progressFilter, setProgressFilter] =
+    useState<QuizProgressFilter>('all');
   const [sizeChoice, setSizeChoice] = useState<SizeChoice>(10);
   const [mode, setMode] = useState<QuizMode>('reference');
   const [starting, setStarting] = useState(false);
 
+  const baseCriteria = useMemo(
+    () => ({
+      scope,
+      sections,
+      books,
+      mode,
+      progressFilter,
+      shuffle: false as const,
+    }),
+    [books, mode, progressFilter, scope, sections],
+  );
+
   const matchingTotal = useMemo(() => {
-    if (scope === 'all') return verses.length;
-    if (scope === 'deck') {
-      return DECKS.filter((deck) => sections.includes(deck.section)).reduce(
-        (sum, deck) => sum + deck.passageCount,
-        0,
-      );
-    }
-    return passageCountForBooks(books);
-  }, [books, scope, sections]);
+    if (!progressList && progressFilter !== 'all') return 0;
+    return selectQuizVerseIds(
+      { ...baseCriteria, size: 'all' },
+      progressList ?? undefined,
+    ).length;
+  }, [baseCriteria, progressFilter, progressList]);
 
   const size: number | 'all' =
     sizeChoice === 'all' ? 'all' : Math.min(10, matchingTotal || 10);
 
-  const previewCount = selectQuizVerseIds({
-    scope,
-    sections,
-    books,
-    size,
-    mode,
-    shuffle: false,
-  }).length;
+  const previewCount = useMemo(() => {
+    if (!progressList && progressFilter !== 'all') return 0;
+    return selectQuizVerseIds(
+      { ...baseCriteria, size },
+      progressList ?? undefined,
+    ).length;
+  }, [baseCriteria, progressFilter, progressList, size]);
 
   const toggleSection = (section: Section) => {
     setSections((current) => {
@@ -100,9 +119,16 @@ export function QuizPage() {
     });
   };
 
+  if (!progressList) return <LoadingState />;
+
   const start = () => {
     if (previewCount === 0) {
-      notify('Select at least one deck or book with passages.', 'error');
+      notify(
+        progressFilter === 'all'
+          ? 'Select at least one deck or book with passages.'
+          : 'No passages match that filter. Try All, or mark some passages first.',
+        'error',
+      );
       return;
     }
     setStarting(true);
@@ -114,8 +140,17 @@ export function QuizPage() {
             ? decksLabel(sections)
             : booksLabel(books);
       const session = createQuizSession(
-        { scope, sections, books, size, mode, shuffle: true },
-        `${QUIZ_MODE_LABELS[mode]} \u00b7 ${scopePart}`,
+        {
+          scope,
+          sections,
+          books,
+          size,
+          mode,
+          progressFilter,
+          shuffle: true,
+        },
+        `${QUIZ_MODE_LABELS[mode]} \u00b7 ${scopePart}${progressFilterLabel(progressFilter)}`,
+        progressList,
       );
       if (!session) {
         notify('No passages match that choice.', 'error');
@@ -198,6 +233,21 @@ export function QuizPage() {
             ) : null}
 
             <div>
+              <p className="mb-1.5 text-sm font-medium text-ink">Passages</p>
+              <SegmentedControl
+                aria-label="Passage filter"
+                size="sm"
+                value={progressFilter}
+                onChange={setProgressFilter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'memorized', label: 'Memorized' },
+                  { value: 'needs-review', label: 'Needs Review' },
+                ]}
+              />
+            </div>
+
+            <div>
               <p className="mb-1.5 text-sm font-medium text-ink">How many</p>
               <SegmentedControl
                 aria-label="Quiz length"
@@ -272,13 +322,18 @@ export function QuizPage() {
                 <EmptyState
                   icon={<ClipboardList className="size-6" aria-hidden="true" />}
                   title="Nothing selected"
-                  description="Pick at least one deck or book."
+                  description={
+                    progressFilter === 'all'
+                      ? 'Pick at least one deck or book.'
+                      : 'No passages match that filter yet.'
+                  }
                 />
               ) : (
                 <p className="text-sm text-ink-muted">
                   {sizeChoice === 'all'
                     ? `All ${previewCount} passages`
                     : `${previewCount} of ${matchingTotal} passages`}
+                  {progressFilterLabel(progressFilter)}
                   {` \u00b7 ${QUIZ_MODE_LABELS[mode]}`}
                 </p>
               )}

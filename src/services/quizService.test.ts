@@ -47,6 +47,48 @@ describe('quizService', () => {
     expect(ten).toHaveLength(10);
   });
 
+  it('filters to memorized or Needs Review passages', async () => {
+    const { createDefaultProgress } = await import('@/db/defaults');
+    const progress = [
+      {
+        ...createDefaultProgress('verse-001'),
+        isMemorized: true,
+      },
+      {
+        ...createDefaultProgress('verse-002'),
+        isDifficult: true,
+      },
+    ];
+
+    const memorized = selectQuizVerseIds(
+      {
+        scope: 'all',
+        sections: [],
+        books: [],
+        size: 'all',
+        mode: 'reference',
+        progressFilter: 'memorized',
+        shuffle: false,
+      },
+      progress,
+    );
+    expect(memorized).toEqual(['verse-001']);
+
+    const needsReview = selectQuizVerseIds(
+      {
+        scope: 'all',
+        sections: [],
+        books: [],
+        size: 'all',
+        mode: 'reference',
+        progressFilter: 'needs-review',
+        shuffle: false,
+      },
+      progress,
+    );
+    expect(needsReview).toEqual(['verse-002']);
+  });
+
   it('creates, answers, and scores a quiz session', () => {
     const session = createQuizSession(
       {

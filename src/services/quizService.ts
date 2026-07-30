@@ -1,12 +1,14 @@
 import { createId } from '@/lib/id';
 import { verses } from '@/data/verses';
 import { bookFromReference } from '@/lib/text/books';
-import type { Section } from '@/types';
+import type { Section, VerseProgress } from '@/types';
 import type { QuizAnswer, QuizMode, QuizSession } from '@/types/quiz';
 
 const STORAGE_PREFIX = 'verse-memory:quiz:';
 
 export type QuizScope = 'all' | 'deck' | 'book';
+
+export type QuizProgressFilter = 'all' | 'memorized' | 'needs-review';
 
 export type QuizCriteria = {
   scope: QuizScope;
@@ -16,6 +18,8 @@ export type QuizCriteria = {
   books: string[];
   size: number | 'all';
   mode: QuizMode;
+  /** Limit to memorized or Needs Review passages (on top of scope). */
+  progressFilter?: QuizProgressFilter;
   shuffle?: boolean;
 };
 
@@ -29,15 +33,37 @@ function shuffleInPlace<T>(items: T[]): T[] {
   return items;
 }
 
+function progressMap(
+  progressList: VerseProgress[] | Map<string, VerseProgress> | undefined,
+): Map<string, VerseProgress> {
+  if (!progressList) return new Map();
+  if (progressList instanceof Map) return progressList;
+  return new Map(progressList.map((record) => [record.verseId, record]));
+}
+
 /** Resolve passage ids for a quiz from the full collection, deck(s), or book(s). */
-export function selectQuizVerseIds(criteria: QuizCriteria): string[] {
+export function selectQuizVerseIds(
+  criteria: QuizCriteria,
+  progressList?: VerseProgress[] | Map<string, VerseProgress>,
+): string[] {
+  const byId = progressMap(progressList);
+  const progressFilter = criteria.progressFilter ?? 'all';
+
   const matching = verses.filter((verse) => {
-    if (criteria.scope === 'all') return true;
     if (criteria.scope === 'deck') {
-      return criteria.sections.includes(verse.section);
+      if (!criteria.sections.includes(verse.section)) return false;
+    } else if (criteria.scope === 'book') {
+      const book = bookFromReference(verse.reference);
+      if (!book || !criteria.books.includes(book)) return false;
     }
-    const book = bookFromReference(verse.reference);
-    return Boolean(book && criteria.books.includes(book));
+
+    if (progressFilter === 'memorized') {
+      return byId.get(verse.id)?.isMemorized === true;
+    }
+    if (progressFilter === 'needs-review') {
+      return byId.get(verse.id)?.isDifficult === true;
+    }
+    return true;
   });
 
   const ids = matching.map((verse) => verse.id);
@@ -50,9 +76,10 @@ export function selectQuizVerseIds(criteria: QuizCriteria): string[] {
 export function createQuizSession(
   criteria: QuizCriteria,
   label: string,
+  progressList?: VerseProgress[] | Map<string, VerseProgress>,
   now: Date = new Date(),
 ): QuizSession | null {
-  const verseIds = selectQuizVerseIds(criteria);
+  const verseIds = selectQuizVerseIds(criteria, progressList);
   if (verseIds.length === 0) return null;
 
   const session: QuizSession = {
