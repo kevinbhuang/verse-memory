@@ -347,18 +347,65 @@ export async function listMyGroupMemberships(
   const db = requireDb();
   const snap = await getDocs(collection(db, 'users', uid, 'groupMemberships'));
   const list: GroupMembershipIndex[] = [];
+
   for (const docSnap of snap.docs) {
     const data = docSnap.data() as Partial<GroupMembershipIndex>;
     if (!data.groupId || !data.name || !data.status || !data.role) continue;
+
+    let status = data.status;
+    let role = data.role;
+    let accessCode = data.accessCode ?? '';
+    let name = data.name;
+    let updatedAt = data.updatedAt ?? '';
+
+    // Reconcile with the source-of-truth member doc (index can lag after approve).
+    try {
+      const [group, memberSnap] = await Promise.all([
+        getGroup(data.groupId),
+        getDoc(memberRef(db, data.groupId, uid)),
+      ]);
+      if (group) {
+        name = group.name;
+        accessCode = group.accessCode;
+      }
+      if (memberSnap.exists()) {
+        const member = parseMember(
+          uid,
+          memberSnap.data() as Record<string, unknown>,
+        );
+        if (member && member.status !== status) {
+          status = member.status;
+          role = member.role;
+          updatedAt = member.updatedAt || updatedAt;
+          if (group) {
+            await writeMembershipIndex(
+              db,
+              uid,
+              group,
+              role,
+              status,
+              updatedAt || new Date().toISOString(),
+            );
+          }
+        } else if (member) {
+          status = member.status;
+          role = member.role;
+        }
+      }
+    } catch {
+      // Keep indexed values if reconciliation fails (offline / rules).
+    }
+
     list.push({
       groupId: data.groupId,
-      name: data.name,
-      accessCode: data.accessCode ?? '',
-      role: data.role,
-      status: data.status,
-      updatedAt: data.updatedAt ?? '',
+      name,
+      accessCode,
+      role,
+      status,
+      updatedAt,
     });
   }
+
   return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
@@ -507,7 +554,7 @@ export async function rejectJoinRequest(
   await writeMembershipIndex(db, memberUid, group, 'member', 'rejected', now);
 }
 
-/** Member cancels their own pending request. */
+/** Member cancels their own pending request (also clears a stale pending index). */
 export async function cancelJoinRequest(
   groupId: string,
   uid: string,
@@ -517,12 +564,31 @@ export async function cancelJoinRequest(
   if (!group) throw new Error('Group not found.');
   const ref = memberRef(db, groupId, uid);
   const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-  const member = parseMember(uid, snap.data() as Record<string, unknown>);
-  if (!member || member.status !== 'pending') {
-    throw new Error('No pending request to cancel.');
-  }
   const now = new Date().toISOString();
+
+  if (!snap.exists()) {
+    await writeMembershipIndex(db, uid, group, 'member', 'left', now);
+    return;
+  }
+
+  const member = parseMember(uid, snap.data() as Record<string, unknown>);
+  if (!member) {
+    await writeMembershipIndex(db, uid, group, 'member', 'left', now);
+    return;
+  }
+
+  if (member.status === 'active') {
+    await writeMembershipIndex(db, uid, group, member.role, 'active', now);
+    throw new Error(
+      'You’re already in this group. Refresh the page to see members.',
+    );
+  }
+
+  if (member.status !== 'pending') {
+    await writeMembershipIndex(db, uid, group, member.role, member.status, now);
+    return;
+  }
+
   await setDoc(
     ref,
     { ...member, status: 'left', updatedAt: now },
