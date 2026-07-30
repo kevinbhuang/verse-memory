@@ -8,7 +8,7 @@ describe('PrintPage', () => {
     const { user } = renderWithProviders(<PrintPage />, { route: '/print' });
 
     expect(
-      screen.getByRole('heading', { level: 2, name: /^print$/i }),
+      screen.getByRole('heading', { level: 1, name: /^print$/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^all \(/i })).toBeInTheDocument();
     expect(

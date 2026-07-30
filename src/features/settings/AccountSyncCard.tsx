@@ -147,7 +147,7 @@ export function AccountSyncCard() {
             <p className="text-sm text-ink-muted">
               Sign in with Google to keep memorized marks, Needs Review, and
               review history in sync across your devices. You can also sign in
-              from the sidebar (or the top bar on phones).
+              from the button in the upper right.
             </p>
             <Button
               variant="primary"

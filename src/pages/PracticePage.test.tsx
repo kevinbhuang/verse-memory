@@ -139,7 +139,7 @@ describe('PracticePage', () => {
     renderWithProviders(<PracticePage />, { route: '/practice' });
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: /^practice$/i }),
+      await screen.findByRole('heading', { level: 1, name: /^practice$/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/you have an unfinished session/i),

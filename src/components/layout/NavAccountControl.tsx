@@ -5,18 +5,10 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/hooks/useAuth';
 
-type NavAccountControlProps = {
-  /** Compact for the mobile top bar; fuller for the desktop sidebar. */
-  variant?: 'sidebar' | 'header';
-};
-
 /**
- * Global account chrome: Sign in, or “Logged in as …” linking to More.
- * Matches the usual site pattern of one consistent control in the shell.
+ * Top-right account chrome: Sign in with Google, or “Logged in as …” → More.
  */
-export function NavAccountControl({
-  variant = 'sidebar',
-}: NavAccountControlProps) {
+export function NavAccountControl() {
   const { configured, user, loading, signInWithGoogle } = useAuth();
   const { notify } = useToast();
   const [busy, setBusy] = useState(false);
@@ -38,30 +30,15 @@ export function NavAccountControl({
   };
 
   if (!user) {
-    if (variant === 'header') {
-      return (
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={busy}
-          onClick={() => void onSignIn()}
-          className="shrink-0"
-        >
-          <LogIn className="size-3.5" aria-hidden="true" />
-          {busy ? 'Signing in…' : 'Sign in'}
-        </Button>
-      );
-    }
-
     return (
       <Button
         variant="secondary"
         size="sm"
         disabled={busy}
         onClick={() => void onSignIn()}
-        className="w-full justify-start"
+        className="shrink-0"
       >
-        <LogIn className="size-4" aria-hidden="true" />
+        <LogIn className="size-3.5" aria-hidden="true" />
         {busy ? 'Signing in…' : 'Sign in with Google'}
       </Button>
     );
@@ -69,28 +46,13 @@ export function NavAccountControl({
 
   const label = user.displayName ?? user.email ?? 'Signed in';
 
-  if (variant === 'header') {
-    return (
-      <Link
-        to="/more"
-        className="max-w-[11rem] truncate text-right text-xs text-ink-muted hover:text-ink"
-        title={`Logged in as ${label}. Open Account on More.`}
-      >
-        Logged in as {label}
-      </Link>
-    );
-  }
-
   return (
     <Link
       to="/more"
-      className="block rounded-lg px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
-      title="Account and sync status"
+      className="max-w-[16rem] truncate text-right text-sm text-ink-muted hover:text-ink"
+      title={`Logged in as ${label}. Open Account on More.`}
     >
-      <span className="block text-xs tracking-wide text-ink-subtle uppercase">
-        Logged in as
-      </span>
-      <span className="mt-0.5 block truncate font-medium text-ink">{label}</span>
+      Logged in as {label}
     </Link>
   );
 }

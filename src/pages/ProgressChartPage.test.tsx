@@ -8,7 +8,7 @@ describe('ProgressChartPage', () => {
     renderWithProviders(<ProgressChartPage />, { route: '/progress-chart' });
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: /^progress chart$/i }),
+      await screen.findByRole('heading', { level: 1, name: /^progress chart$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /^progress chart$/i }),
