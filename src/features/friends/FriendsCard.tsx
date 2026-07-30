@@ -151,7 +151,7 @@ export function FriendsCard() {
     setBusy(true);
     try {
       await sendShareRequest(user.uid, confirmTarget.uid);
-      notify('Request sent. They’ll see it under Friends on More.', 'success');
+      notify('Request sent. They’ll see it under Add Friends.', 'success');
       setEmail('');
       setConfirmTarget(null);
       await reload();
@@ -203,7 +203,7 @@ export function FriendsCard() {
   }
 
   return (
-    <Card className="lg:col-span-2">
+    <Card>
       <CardHeader
         title={
           <span className="inline-flex items-center gap-2">

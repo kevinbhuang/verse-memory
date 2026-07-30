@@ -7,6 +7,7 @@ import {
   Layers,
   Printer,
   Repeat2,
+  UserPlus,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
@@ -36,6 +37,28 @@ const NAV_ITEMS = [
   { to: '/more', label: 'More', shortLabel: 'More', icon: Ellipsis },
 ];
 
+const FRIENDS_NAV = {
+  to: '/friends',
+  label: 'Add Friends',
+  shortLabel: 'Friends',
+  icon: UserPlus,
+};
+
+function navLinkClass(isActive: boolean, compact = false) {
+  if (compact) {
+    return clsx(
+      'flex flex-col items-center gap-1 py-2.5 text-[0.6875rem]',
+      isActive ? 'text-brand' : 'text-ink-muted',
+    );
+  }
+  return clsx(
+    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+    isActive
+      ? 'bg-brand-soft font-medium text-brand'
+      : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
+  );
+}
+
 export function AppLayout() {
   const location = useLocation();
   useAppNavHotkeys();
@@ -61,24 +84,17 @@ export function AppLayout() {
       <UpdatePrompt />
 
       <div className="mx-auto flex w-full max-w-7xl">
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-line px-4 py-6 lg:block">
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line px-4 py-6 lg:flex">
           <div className="px-1">
             <AppBrand showSubtitle />
           </div>
 
-          <nav aria-label="Main" className="mt-8 space-y-0.5">
+          <nav aria-label="Main" className="mt-8 flex-1 space-y-0.5">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  clsx(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                    isActive
-                      ? 'bg-brand-soft font-medium text-brand'
-                      : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
-                  )
-                }
+                className={({ isActive }) => navLinkClass(isActive)}
               >
                 {({ isActive }) => (
                   <>
@@ -92,6 +108,27 @@ export function AppLayout() {
                 )}
               </NavLink>
             ))}
+          </nav>
+
+          <nav
+            aria-label="Friends"
+            className="mt-auto border-t border-line pt-4"
+          >
+            <NavLink
+              to={FRIENDS_NAV.to}
+              className={({ isActive }) => navLinkClass(isActive)}
+            >
+              {({ isActive }) => (
+                <>
+                  <FRIENDS_NAV.icon
+                    className="size-4 shrink-0"
+                    aria-hidden="true"
+                    strokeWidth={isActive ? 2.25 : 1.75}
+                  />
+                  {FRIENDS_NAV.label}
+                </>
+              )}
+            </NavLink>
           </nav>
         </aside>
 
@@ -122,16 +159,11 @@ export function AppLayout() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <ul className="flex">
-          {NAV_ITEMS.map((item) => (
+          {[...NAV_ITEMS, FRIENDS_NAV].map((item) => (
             <li key={item.to} className="flex-1">
               <NavLink
                 to={item.to}
-                className={({ isActive }) =>
-                  clsx(
-                    'flex flex-col items-center gap-1 py-2.5 text-[0.6875rem]',
-                    isActive ? 'text-brand' : 'text-ink-muted',
-                  )
-                }
+                className={({ isActive }) => navLinkClass(isActive, true)}
               >
                 {({ isActive }) => (
                   <>

@@ -99,7 +99,7 @@ export function FriendProgressChartPage() {
             title="Can’t open this chart"
             description={error ?? 'Something went wrong.'}
             action={
-              <ButtonLink to="/more" variant="secondary">
+              <ButtonLink to="/friends" variant="secondary">
                 Back to Friends
               </ButtonLink>
             }
@@ -118,7 +118,7 @@ export function FriendProgressChartPage() {
             Read-only view · Last updated{' '}
             {formatTimeAgo(summary.updatedAt)}
             {' · '}
-            <Link to="/more" className="text-accent hover:underline">
+            <Link to="/friends" className="text-accent hover:underline">
               Friends
             </Link>
           </>

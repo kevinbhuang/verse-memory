@@ -16,7 +16,6 @@ import { formatPercent } from '@/utils/format';
 import type { ThemePreference } from '@/types';
 import { AccountSyncCard } from '@/features/settings/AccountSyncCard';
 import { DataManagement } from '@/features/settings/DataManagement';
-import { FriendsCard } from '@/features/friends/FriendsCard';
 
 /**
  * Secondary hub: a few progress stats, theme, backup, and about.
@@ -99,8 +98,6 @@ export function MorePage() {
           </CardBody>
         </Card>
 
-        <FriendsCard />
-
         <DataManagement />
 
         <Card className="lg:col-span-2">
@@ -120,7 +117,8 @@ export function MorePage() {
               <span className="text-ink">4</span> Practice ·{' '}
               <span className="text-ink">5</span> Quiz ·{' '}
               <span className="text-ink">6</span> Print ·{' '}
-              <span className="text-ink">7</span> More (also L / C / P / Q). On
+              <span className="text-ink">7</span> More ·{' '}
+              <span className="text-ink">8</span> Add Friends (also L / C / P / Q). On
               Flash Cards, F / M / N / Space handle first letters, Memorized,
               Needs Review, and show/hide.
             </p>

@@ -13,6 +13,7 @@ import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
 import { PrintPage } from '@/pages/PrintPage';
 import { ProgressChartPage } from '@/pages/ProgressChartPage';
 import { FriendProgressChartPage } from '@/pages/FriendProgressChartPage';
+import { FriendsPage } from '@/pages/FriendsPage';
 import { MorePage } from '@/pages/MorePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
@@ -32,6 +33,7 @@ export function App() {
                 <Route path="/verses" element={<LibraryPage />} />
                 <Route path="/verses/:verseId" element={<VerseDetailPage />} />
                 <Route path="/progress-chart" element={<ProgressChartPage />} />
+                <Route path="/friends" element={<FriendsPage />} />
                 <Route
                   path="/friends/:friendUid/progress-chart"
                   element={<FriendProgressChartPage />}
