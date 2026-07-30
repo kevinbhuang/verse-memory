@@ -9,17 +9,19 @@ import type { SyncStatus } from '@/services/cloudSyncService';
 function statusLabel(status: SyncStatus, detail: string | null): string {
   switch (status) {
     case 'syncing':
-      return 'Syncing…';
+      return 'Saving your progress to the cloud…';
     case 'synced':
-      return 'Synced';
+      return 'Up to date — progress is synced to your Google account.';
     case 'offline':
-      return 'Offline — will sync when you reconnect';
+      return 'You’re offline. Changes stay on this device and will sync when you reconnect.';
     case 'error':
-      return detail ? `Sync error: ${detail}` : 'Sync error';
+      return detail
+        ? `Couldn’t sync: ${detail}`
+        : 'Couldn’t sync right now. Your progress is still saved on this device.';
     case 'disabled':
-      return 'Cloud sync is not configured for this build';
+      return 'Cloud sync is not configured for this build.';
     default:
-      return 'Ready to sync';
+      return 'Ready to sync when you make changes.';
   }
 }
 
@@ -128,11 +130,6 @@ export function AccountSyncCard() {
                 <Cloud className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               )}
               <span>{statusLabel(syncStatus, syncDetail)}</span>
-            </p>
-
-            <p className="text-sm text-ink-muted">
-              Progress saves on this device and syncs to your Google account so
-              you can continue on another phone or computer.
             </p>
 
             <Button
