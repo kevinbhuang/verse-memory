@@ -15,7 +15,9 @@ export default defineConfig(({ mode }) => {
       ttfBase64Plugin(),
 
       VitePWA({
-        registerType: 'prompt',
+        // Activate new builds automatically so users are not stuck on an old
+        // cached shell waiting for a "Reload" click.
+        registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
         manifest: {
           name: 'Verse Memory',
@@ -44,6 +46,7 @@ export default defineConfig(({ mode }) => {
           navigateFallback: '/index.html',
           cleanupOutdatedCaches: true,
           clientsClaim: true,
+          skipWaiting: true,
         },
         devOptions: {
           enabled: false,

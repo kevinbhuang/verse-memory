@@ -1,40 +1,26 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+
+const HOUR_MS = 60 * 60 * 1000;
 
 /**
- * A quiet banner offering the new version. Updating swaps the app shell only;
- * IndexedDB progress is untouched by a service-worker update.
+ * Registers the service worker in auto-update mode.
+ * When Netlify deploys a new build, open tabs pick it up and reload
+ * without asking the user to click anything. IndexedDB progress is kept.
  */
 export function UpdatePrompt() {
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
+  useRegisterSW({
+    immediate: true,
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return;
+      // Tabs left open for a long time still notice new deploys.
+      window.setInterval(() => {
+        void registration.update();
+      }, HOUR_MS);
+    },
     onRegisterError(error) {
       console.warn('Service worker registration failed', error);
     },
   });
 
-  if (!needRefresh) return null;
-
-  return (
-    <div
-      role="status"
-      className="sticky top-0 z-40 flex flex-wrap items-center justify-center gap-3 border-b border-accent/30 bg-accent-soft px-4 py-2 text-sm text-accent"
-    >
-      <span className="flex items-center gap-2">
-        <RefreshCw className="size-4" aria-hidden="true" />
-        A new version of the app is ready. Your progress is kept.
-      </span>
-      <span className="flex gap-2">
-        <Button size="sm" variant="primary" onClick={() => void updateServiceWorker(true)}>
-          Reload
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => setNeedRefresh(false)}>
-          Later
-        </Button>
-      </span>
-    </div>
-  );
+  return null;
 }
