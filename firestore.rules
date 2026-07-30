@@ -10,7 +10,24 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    // Google email → uid lookup (exact match only; not a directory browse).
+    function groupDoc(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)).data;
+    }
+
+    function isGroupCreator(groupId) {
+      return signedIn() && groupDoc(groupId).createdBy == request.auth.uid;
+    }
+
+    function memberData(groupId, uid) {
+      return get(/databases/$(database)/documents/groups/$(groupId)/members/$(uid)).data;
+    }
+
+    function isActiveMember(groupId, uid) {
+      return exists(/databases/$(database)/documents/groups/$(groupId)/members/$(uid))
+        && memberData(groupId, uid).status == 'active';
+    }
+
+    // Profile still written on Google sign-in (display names in groups).
     match /emailIndex/{email} {
       allow read: if signedIn();
       allow create: if signedIn()
@@ -21,41 +38,57 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
-    match /shareRequests/{requestId} {
-      allow read: if signedIn()
-        && (resource.data.fromUid == request.auth.uid
-            || resource.data.toUid == request.auth.uid);
-
+    match /groupCodes/{code} {
+      allow read: if signedIn();
       allow create: if signedIn()
-        && request.resource.data.fromUid == request.auth.uid
-        && request.resource.data.toUid is string
-        && request.resource.data.toUid != request.auth.uid
-        && request.resource.data.status == 'pending';
+        && request.resource.data.groupId is string;
+      allow update, delete: if false;
+    }
 
-      // Recipient: approve / decline. Sender: cancel pending.
-      allow update: if signedIn()
-        && (
-          (resource.data.toUid == request.auth.uid
-            && resource.data.status == 'pending'
-            && request.resource.data.status in ['approved', 'declined']
-            && request.resource.data.fromUid == resource.data.fromUid
-            && request.resource.data.toUid == resource.data.toUid)
-          ||
-          (resource.data.fromUid == request.auth.uid
-            && resource.data.status == 'pending'
-            && request.resource.data.status == 'cancelled'
-            && request.resource.data.fromUid == resource.data.fromUid
-            && request.resource.data.toUid == resource.data.toUid)
-          ||
-          // Either party may mark revoked after a share existed.
-          (request.resource.data.status == 'revoked'
-            && (resource.data.fromUid == request.auth.uid
-                || resource.data.toUid == request.auth.uid)
-            && request.resource.data.fromUid == resource.data.fromUid
-            && request.resource.data.toUid == resource.data.toUid)
+    match /groups/{groupId} {
+      // Signed-in read is OK: ids are unguessable; joining still requires the code.
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.accessCode is string;
+      allow update: if isGroupCreator(groupId);
+      allow delete: if isGroupCreator(groupId);
+
+      match /members/{uid} {
+        allow read: if signedIn() && (
+          isGroupCreator(groupId)
+          || request.auth.uid == uid
+          || (isActiveMember(groupId, request.auth.uid)
+              && resource.data.status == 'active')
+          || (isGroupCreator(groupId) && resource.data.status == 'pending')
         );
 
-      allow delete: if false;
+        // Creator adds themselves as leader, or someone requests to join.
+        allow create: if signedIn() && request.auth.uid == uid && (
+          (request.resource.data.role == 'leader'
+            && request.resource.data.status == 'active'
+            && isGroupCreator(groupId))
+          || (request.resource.data.role == 'member'
+            && request.resource.data.status == 'pending')
+        );
+
+        allow update: if signedIn() && (
+          // Leader approve / reject pending
+          (isGroupCreator(groupId)
+            && resource.data.status == 'pending'
+            && request.resource.data.status in ['active', 'rejected']
+            && request.resource.data.uid == resource.data.uid)
+          ||
+          // Member cancel pending or leave
+          (request.auth.uid == uid
+            && resource.data.status in ['pending', 'active']
+            && request.resource.data.status in ['left', 'rejected']
+            && request.resource.data.uid == uid)
+        );
+
+        allow delete: if isGroupCreator(groupId) || request.auth.uid == uid;
+      }
     }
 
     match /users/{uid} {
@@ -64,12 +97,16 @@ service cloud.firestore {
         allow write: if isSelf(uid);
       }
 
-      // Full private backup — owner only.
       match /data/{docId} {
         allow read, write: if isSelf(uid);
       }
 
-      // Shareable Progress Chart summary.
+      match /groupMemberships/{groupId} {
+        allow read: if isSelf(uid);
+        allow write: if isSelf(uid);
+      }
+
+      // Shareable Progress Chart summary — owner or mutual group share edge.
       match /publicProgress/summary {
         allow read: if isSelf(uid)
           || (signedIn()
@@ -77,15 +114,19 @@ service cloud.firestore {
         allow write: if isSelf(uid);
       }
 
-      // viewers who may read this owner's publicProgress.
-      // Doc id = viewerUid.
+      // Written when a join is approved (mutual chart access within a group).
       match /shares/{viewerUid} {
         allow read: if isSelf(uid) || (signedIn() && request.auth.uid == viewerUid);
-        allow create, update: if isSelf(uid)
+        allow create, update: if signedIn()
           && request.resource.data.ownerUid == uid
-          && request.resource.data.viewerUid == viewerUid;
-        allow delete: if isSelf(uid)
-          || (signedIn() && request.auth.uid == viewerUid);
+          && request.resource.data.viewerUid == viewerUid
+          && (
+            request.auth.uid == uid
+            || (request.resource.data.groupId is string
+                && isGroupCreator(request.resource.data.groupId))
+          );
+        allow delete: if signedIn()
+          && (request.auth.uid == uid || request.auth.uid == viewerUid);
       }
     }
   }

@@ -12,7 +12,7 @@ import {
   summaryToProgressMap,
   type PublicProgressSummary,
 } from '@/services/social/publicProgressService';
-import { canViewPublicProgress } from '@/services/social/shareService';
+import { canViewPublicProgress } from '@/services/social/groupService';
 import { formatTimeAgo } from '@/utils/format';
 
 /**
@@ -100,7 +100,7 @@ export function FriendProgressChartPage() {
             description={error ?? 'Something went wrong.'}
             action={
               <ButtonLink to="/friends" variant="secondary">
-                Back to Friends
+                Back to Groups
               </ButtonLink>
             }
           />
@@ -119,7 +119,7 @@ export function FriendProgressChartPage() {
             {formatTimeAgo(summary.updatedAt)}
             {' · '}
             <Link to="/friends" className="text-accent hover:underline">
-              Friends
+              Groups
             </Link>
           </>
         }

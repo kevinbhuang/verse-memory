@@ -1,17 +1,17 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { FriendsCard } from '@/features/friends/FriendsCard';
+import { GroupsCard } from '@/features/friends/GroupsCard';
 
 /**
- * Friends hub: invite by email, approve requests, view shared progress.
+ * Groups hub: create a group (access code), join with a code, leader approves.
  */
 export function FriendsPage() {
   return (
     <>
       <PageHeader
-        title="Add Friends"
-        description="Invite someone by Google email, approve requests, and view their Progress Chart."
+        title="Groups"
+        description="Create a group to get an access code, or join with a code. The group creator approves who gets in — then everyone can see names, memorized counts, and read-only Progress Charts."
       />
-      <FriendsCard />
+      <GroupsCard />
     </>
   );
 }

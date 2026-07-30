@@ -39,8 +39,8 @@ const NAV_ITEMS = [
 
 const FRIENDS_NAV = {
   to: '/friends',
-  label: 'Add Friends',
-  shortLabel: 'Friends',
+  label: 'Groups',
+  shortLabel: 'Groups',
   icon: UserPlus,
 };
 
