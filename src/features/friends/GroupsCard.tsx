@@ -282,12 +282,12 @@ export function GroupsCard() {
         </p>
       ) : (
         <Button
-          variant="secondary"
-          size="sm"
+          variant="primary"
+          size="md"
           disabled={busy || (!!user && loading) || (user && !officialLookupDone)}
           onClick={() => void onJoinOfficial()}
+          className="shadow-sm"
         >
-          <LogIn className="size-3.5" aria-hidden="true" />
           {appConfig.officialGroup.buttonLabel}
         </Button>
       )}
@@ -467,25 +467,39 @@ export function GroupsCard() {
         ) : (
           <>
             {visibleMemberships.length > 1 ? (
-              <div className="flex flex-wrap gap-2">
-                {visibleMemberships.map((m) => (
-                  <button
-                    key={m.groupId}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      void reload(m.groupId);
-                    }}
-                    className={
-                      m.groupId === selectedGroupId
-                        ? 'rounded-md bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand'
-                        : 'rounded-md px-2.5 py-1 text-xs font-medium text-ink-muted hover:bg-surface-muted hover:text-ink'
-                    }
-                  >
-                    {m.name}
-                    {m.status === 'pending' ? ' · pending' : null}
-                  </button>
-                ))}
+              <div
+                role="tablist"
+                aria-label="Your groups"
+                className="-mx-1 flex gap-0 overflow-x-auto border-b border-line px-1"
+              >
+                {visibleMemberships.map((m) => {
+                  const selected = m.groupId === selectedGroupId;
+                  return (
+                    <button
+                      key={m.groupId}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      disabled={busy}
+                      onClick={() => {
+                        void reload(m.groupId);
+                      }}
+                      className={
+                        selected
+                          ? '-mb-px shrink-0 border-b-2 border-brand px-3 py-2.5 text-sm font-medium text-ink'
+                          : '-mb-px shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-ink-muted hover:text-ink'
+                      }
+                    >
+                      {m.name}
+                      {m.status === 'pending' ? (
+                        <span className="font-normal text-ink-subtle">
+                          {' '}
+                          · pending
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
 

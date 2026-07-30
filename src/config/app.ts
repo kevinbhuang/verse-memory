@@ -20,7 +20,7 @@ export const appConfig = {
    * leader’s Google account (no access code shown to joiners).
    */
   officialGroup: {
-    buttonLabel: 'Join A2N Verse Memory Group',
+    buttonLabel: '💪📖 Join the Official A2N Verse Memory Group!',
     leaderEmail: 'kevin.huang@acts2.network',
     preferredName: 'A2N Verse Memory Group',
     /** Optional hard-coded group id from Firebase (overrides name lookup). */

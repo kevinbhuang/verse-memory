@@ -30,6 +30,7 @@ function emailIndexRef(normalizedEmail: string) {
 /**
  * Upsert the signed-in user's profile and email → uid index.
  * Call after Google sign-in / auth restore.
+ * Preserves a custom displayName if the user already set one.
  */
 export async function upsertUserProfile(user: User): Promise<void> {
   const db = getFirestoreDb();
@@ -40,19 +41,15 @@ export async function upsertUserProfile(user: User): Promise<void> {
 
   const email = normalizeEmail(user.email);
   const updatedAt = new Date().toISOString();
-  const profile: UserProfile = {
-    uid: user.uid,
-    email,
-    displayName: user.displayName,
-    photoURL: user.photoURL,
-    updatedAt,
-  };
-
   const pRef = profileRef(user.uid);
   const eRef = emailIndexRef(email);
   if (!pRef || !eRef) return;
 
-  const existingIndex = await getDoc(eRef);
+  const [existingProfile, existingIndex] = await Promise.all([
+    getDoc(pRef),
+    getDoc(eRef),
+  ]);
+
   if (existingIndex.exists()) {
     const owner = (existingIndex.data() as { uid?: string }).uid;
     if (owner && owner !== user.uid) {
@@ -62,10 +59,70 @@ export async function upsertUserProfile(user: User): Promise<void> {
     }
   }
 
+  const previousName = existingProfile.exists()
+    ? ((existingProfile.data() as Partial<UserProfile>).displayName ?? null)
+    : null;
+  const displayName =
+    typeof previousName === 'string' && previousName.trim().length > 0
+      ? previousName.trim()
+      : user.displayName;
+
+  const profile: UserProfile = {
+    uid: user.uid,
+    email,
+    displayName,
+    photoURL: user.photoURL,
+    updatedAt,
+  };
+
   await Promise.all([
     setDoc(pRef, profile, { merge: true }),
     setDoc(eRef, { uid: user.uid, updatedAt }, { merge: true }),
   ]);
+}
+
+const DISPLAY_NAME_MAX = 40;
+
+/**
+ * Update the public display name shown in groups / leaderboards.
+ */
+export async function updateDisplayName(
+  user: User,
+  displayName: string,
+): Promise<UserProfile> {
+  const trimmed = displayName.trim().replace(/\s+/g, ' ');
+  if (trimmed.length < 1) {
+    throw new Error('Enter a display name.');
+  }
+  if (trimmed.length > DISPLAY_NAME_MAX) {
+    throw new Error(`Keep display names to ${DISPLAY_NAME_MAX} characters.`);
+  }
+  if (!user.email) {
+    throw new Error('Your Google account has no email address.');
+  }
+
+  const pRef = profileRef(user.uid);
+  if (!pRef) throw new Error('Firebase is not configured.');
+
+  const updatedAt = new Date().toISOString();
+  const email = normalizeEmail(user.email);
+
+  // Ensure a full profile exists (first-time name edit before upsert finishes).
+  await setDoc(
+    pRef,
+    {
+      uid: user.uid,
+      email,
+      displayName: trimmed,
+      photoURL: user.photoURL,
+      updatedAt,
+    } satisfies UserProfile,
+    { merge: true },
+  );
+
+  const next = await getUserProfile(user.uid);
+  if (!next) throw new Error('Could not save display name.');
+  return next;
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {

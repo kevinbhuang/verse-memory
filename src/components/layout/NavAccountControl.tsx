@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LogIn, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/hooks/useAuth';
+import { subscribeProfileChanged } from '@/lib/profileEvents';
+import { getUserProfile } from '@/services/social/profileService';
 
 /**
  * Top-right account chrome: Sign in with Google, or avatar + “Logged in as …” → More.
@@ -12,6 +14,33 @@ export function NavAccountControl() {
   const { configured, user, loading, signInWithGoogle } = useAuth();
   const { notify } = useToast();
   const [busy, setBusy] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setProfileName(null);
+      return;
+    }
+
+    let cancelled = false;
+    const load = () => {
+      void getUserProfile(user.uid)
+        .then((profile) => {
+          if (cancelled) return;
+          setProfileName(profile?.displayName?.trim() || null);
+        })
+        .catch(() => {
+          if (!cancelled) setProfileName(null);
+        });
+    };
+
+    load();
+    const unsubscribe = subscribeProfileChanged(load);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user]);
 
   if (!configured || loading) return null;
 
@@ -44,7 +73,7 @@ export function NavAccountControl() {
     );
   }
 
-  const label = user.displayName ?? user.email ?? 'Signed in';
+  const label = profileName || user.displayName || user.email || 'Signed in';
 
   return (
     <Link
