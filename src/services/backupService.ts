@@ -12,6 +12,7 @@ import {
   VERSE_STATUSES,
   type VerseProgress,
 } from '@/types';
+import { notifyLocalDataChanged } from '@/lib/localDataEvents';
 import { computeCollectionStats, computeSectionProgress } from './statsService';
 import { withDefaults } from './progressService';
 
@@ -512,6 +513,8 @@ export async function applyImport(
     await store().settings.restore(backup.settings);
   }
 
+  notifyLocalDataChanged();
+
   return {
     progressWritten: progress.length,
     logsWritten: logs.length,
@@ -524,4 +527,5 @@ export async function applyImport(
 
 export async function resetAllProgress(): Promise<void> {
   await store().clearAll();
+  notifyLocalDataChanged();
 }

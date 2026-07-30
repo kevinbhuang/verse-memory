@@ -14,6 +14,7 @@ import {
 } from '@/services/statsService';
 import { formatPercent } from '@/utils/format';
 import type { ThemePreference } from '@/types';
+import { AccountSyncCard } from '@/features/settings/AccountSyncCard';
 import { DataManagement } from '@/features/settings/DataManagement';
 
 /**
@@ -70,6 +71,8 @@ export function MorePage() {
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2">
+        <AccountSyncCard />
+
         <Card>
           <CardHeader title="Appearance" />
           <CardBody className="divide-y divide-[var(--border-subtle)]">
@@ -103,7 +106,8 @@ export function MorePage() {
             <p>
               <span className="font-medium text-ink">{appConfig.appName}</span>{' '}
               is a personal Scripture memory workspace for{' '}
-              {appConfig.collectionTitle}. All data stays on this device.
+              {appConfig.collectionTitle}. Progress is saved on this device and
+              can sync to your Google account when you sign in.
             </p>
             <p>{appConfig.translationAttribution}</p>
             <p>

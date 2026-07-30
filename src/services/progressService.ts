@@ -4,6 +4,7 @@ import { createDefaultProgress } from '@/db/defaults';
 import { assessDifficulty } from '@/lib/difficulty';
 import { withManualDueDate } from '@/lib/scheduler';
 import { verses } from '@/data/verses';
+import { notifyLocalDataChanged } from '@/lib/localDataEvents';
 import type {
   ProblemCategory,
   Section,
@@ -54,6 +55,7 @@ export async function updateProgress(
     updatedAt: now.toISOString(),
   };
   await store().progress.put(next);
+  notifyLocalDataChanged();
   return next;
 }
 
@@ -206,6 +208,7 @@ export async function resetVerse(
   });
   await store().reviewLogs.removeForVerse(verseId);
   await store().wordStats.removeForVerse(verseId);
+  notifyLocalDataChanged();
 }
 
 export async function resetSection(
@@ -235,6 +238,7 @@ export async function resetScheduling(
       updatedAt: now.toISOString(),
     })),
   );
+  notifyLocalDataChanged();
 }
 
 export type BulkAction =

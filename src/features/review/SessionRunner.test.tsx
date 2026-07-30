@@ -74,8 +74,11 @@ describe('SessionRunner', () => {
       screen.getByRole('button', { name: /play passage once/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /play passage 5 times/i }),
+      screen.getByRole('button', { name: /play passage on repeat/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /play passage 5 times/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /play passage 10 times/i }),
     ).not.toBeInTheDocument();

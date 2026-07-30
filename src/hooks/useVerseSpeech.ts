@@ -11,8 +11,8 @@ import {
 export type VerseSpeechState = {
   supported: boolean;
   playing: boolean;
+  looping: boolean;
   playIndex: number;
-  playTotal: number;
   rate: SpeakRate;
   setRate: (rate: SpeakRate) => void;
   play: (times?: SpeakRepeatCount) => void;
@@ -30,8 +30,8 @@ export function useVerseSpeech(
 ): VerseSpeechState {
   const [supported] = useState(() => true);
   const [playing, setPlaying] = useState(false);
+  const [looping, setLooping] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
-  const [playTotal, setPlayTotal] = useState(0);
   const [rate, setRateState] = useState<SpeakRate>(DEFAULT_SPEAK_RATE);
   const rateRef = useRef(rate);
   rateRef.current = rate;
@@ -43,8 +43,8 @@ export function useVerseSpeech(
     stopRef.current = null;
     liveSetRateRef.current = null;
     setPlaying(false);
+    setLooping(false);
     setPlayIndex(0);
-    setPlayTotal(0);
   }, []);
 
   const setRate = useCallback((next: SpeakRate) => {
@@ -63,13 +63,14 @@ export function useVerseSpeech(
     (times: SpeakRepeatCount = 1) => {
       stopRef.current?.();
       liveSetRateRef.current = null;
+      const isLoop = times === 'loop';
       setPlaying(true);
-      setPlayTotal(times);
+      setLooping(isLoop);
       setPlayIndex(1);
 
-      const onProgress = (progress: { play: number; plays: number }) => {
+      const onProgress = (progress: { play: number; plays: number | 'loop' }) => {
         setPlayIndex(progress.play);
-        setPlayTotal(progress.plays);
+        setLooping(progress.plays === 'loop');
       };
 
       const finishIfCurrent = (controllerStop: () => void) => {
@@ -77,16 +78,16 @@ export function useVerseSpeech(
           stopRef.current = null;
           liveSetRateRef.current = null;
           setPlaying(false);
+          setLooping(false);
           setPlayIndex(0);
-          setPlayTotal(0);
         }
       };
 
       const startTts = () => {
         if (!speechSupported()) {
           setPlaying(false);
+          setLooping(false);
           setPlayIndex(0);
-          setPlayTotal(0);
           return;
         }
         const controller = playPassageSpeech(text, times, {
@@ -122,8 +123,8 @@ export function useVerseSpeech(
   return {
     supported,
     playing,
+    looping,
     playIndex,
-    playTotal,
     rate,
     setRate,
     play,

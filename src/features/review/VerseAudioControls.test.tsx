@@ -64,29 +64,25 @@ describe('splitForSpeech', () => {
 });
 
 describe('playPassageSpeech', () => {
-  it('loops the passage the requested number of times', async () => {
+  it('loops the passage until stopped', async () => {
     const { spoken } = installSpeechMock();
-    const progress: Array<{ play: number; plays: number }> = [];
+    const progress: Array<{ play: number; plays: number | 'loop' }> = [];
 
-    const { done } = playPassageSpeech('Jesus wept.', 5, {
+    const { stop, done } = playPassageSpeech('Jesus wept.', 'loop', {
       gapMs: 0,
-      onProgress: (entry) => progress.push(entry),
+      onProgress: (entry) => {
+        progress.push(entry);
+        // Stop once the 4th play begins so the first three finished speaking.
+        if (entry.play >= 4) stop();
+      },
     });
     await done;
 
-    expect(spoken).toEqual([
-      'Jesus wept.',
-      'Jesus wept.',
-      'Jesus wept.',
-      'Jesus wept.',
-      'Jesus wept.',
-    ]);
-    expect(progress).toEqual([
-      { play: 1, plays: 5 },
-      { play: 2, plays: 5 },
-      { play: 3, plays: 5 },
-      { play: 4, plays: 5 },
-      { play: 5, plays: 5 },
+    expect(spoken.length).toBeGreaterThanOrEqual(3);
+    expect(progress.slice(0, 3)).toEqual([
+      { play: 1, plays: 'loop' },
+      { play: 2, plays: 'loop' },
+      { play: 3, plays: 'loop' },
     ]);
   });
 });
@@ -145,8 +141,11 @@ describe('VerseAudioControls', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: /play passage 5 times/i }),
+      screen.getByRole('button', { name: /play passage on repeat/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /play passage 5 times/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /play passage 10 times/i }),
     ).not.toBeInTheDocument();
@@ -259,9 +258,9 @@ describe('VerseAudioControls', () => {
       <VerseAudioControls text="Jesus wept." passageKey="v1" />,
     );
 
-    await user.click(screen.getByRole('button', { name: /play passage 5 times/i }));
+    await user.click(screen.getByRole('button', { name: /play passage on repeat/i }));
     expect(await screen.findByRole('button', { name: /stop/i })).toBeInTheDocument();
-    expect(screen.getByText(/1\/5/i)).toBeInTheDocument();
+    expect(screen.getByText(/^on repeat/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /stop/i }));
     expect(synthesis.cancel).toHaveBeenCalled();

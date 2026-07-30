@@ -2,6 +2,7 @@ import { render, type RenderOptions, type RenderResult } from '@testing-library/
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { ReactElement, ReactNode } from 'react';
+import { AuthProvider } from '@/hooks/useAuth';
 import { SettingsProvider } from '@/hooks/useSettings';
 import { ToastProvider } from '@/components/ui/Toast';
 import { createDefaultProgress, DEFAULT_SETTINGS } from '@/db/defaults';
@@ -19,15 +20,17 @@ function Providers({
   return (
     <MemoryRouter initialEntries={[route]}>
       <SettingsProvider>
-        <ToastProvider>
-          {path ? (
-            <Routes>
-              <Route path={path} element={children} />
-            </Routes>
-          ) : (
-            children
-          )}
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            {path ? (
+              <Routes>
+                <Route path={path} element={children} />
+              </Routes>
+            ) : (
+              children
+            )}
+          </ToastProvider>
+        </AuthProvider>
       </SettingsProvider>
     </MemoryRouter>
   );

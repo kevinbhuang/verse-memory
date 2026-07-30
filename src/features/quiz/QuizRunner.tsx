@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
-import { ConfirmDialog } from '@/components/ui/Dialog';
 import { LoadingState } from '@/components/ui/EmptyState';
 import { useHotkeys } from '@/hooks/useHotkeys';
 import { getVerse } from '@/data/verses';
 import {
+  discardQuizSession,
   getQuizSession,
   quizScore,
   recordQuizAnswer,
-  saveQuizSession,
 } from '@/services/quizService';
 import type { QuizMode, QuizSession } from '@/types/quiz';
 import { QUIZ_MODE_LABELS } from '@/types/quiz';
@@ -33,7 +32,6 @@ export function QuizRunner({ quizId }: { quizId: string }) {
   const navigate = useNavigate();
   const [session, setSession] = useState<QuizSession | null | undefined>(undefined);
   const [pendingResult, setPendingResult] = useState<QuizModeResult | null>(null);
-  const [confirmExit, setConfirmExit] = useState(false);
   /** Blocks Enter-to-advance until the key is released after checking an answer. */
   const enterArmed = useRef(true);
 
@@ -78,15 +76,24 @@ export function QuizRunner({ quizId }: { quizId: string }) {
     setPendingResult(result);
   }, []);
 
+  const leaveQuiz = useCallback(() => {
+    if (session && !session.completedAt) {
+      discardQuizSession(session.id);
+    }
+    navigate('/quiz');
+  }, [navigate, session]);
+
   const hotkeys = useMemo(
     () => ({
       enter: () => {
         if (!pendingResult || !enterArmed.current) return;
         continueAfterAnswer();
       },
-      escape: () => setConfirmExit(true),
+      escape: () => {
+        void leaveQuiz();
+      },
     }),
-    [continueAfterAnswer, pendingResult],
+    [continueAfterAnswer, leaveQuiz, pendingResult],
   );
 
   useHotkeys(hotkeys, {
@@ -138,8 +145,8 @@ export function QuizRunner({ quizId }: { quizId: string }) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setConfirmExit(true)}
-          title="Leave quiz"
+          onClick={() => void leaveQuiz()}
+          title="Leave quiz (Escape)"
         >
           <X className="size-4" aria-hidden="true" />
           <span className="sr-only">Leave quiz</span>
@@ -185,29 +192,6 @@ export function QuizRunner({ quizId }: { quizId: string }) {
           <p className="text-xs text-ink-muted">Answer to continue.</p>
         )}
       </footer>
-
-      <ConfirmDialog
-        open={confirmExit}
-        title="Leave this quiz?"
-        description="Progress on unanswered questions will not be kept as a score. You can start a new quiz anytime."
-        confirmLabel="Leave quiz"
-        cancelLabel="Keep going"
-        onCancel={() => setConfirmExit(false)}
-        onConfirm={() => {
-          setConfirmExit(false);
-          if (session && !session.completedAt) {
-            saveQuizSession({ ...session, completedAt: new Date().toISOString() });
-          }
-          navigate('/quiz');
-        }}
-      >
-        <p className="text-sm text-ink-muted">
-          <Link to="/verses" className="underline">
-            Back to Library
-          </Link>{' '}
-          instead.
-        </p>
-      </ConfirmDialog>
     </div>
   );
 }

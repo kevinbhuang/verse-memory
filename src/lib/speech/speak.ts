@@ -3,7 +3,7 @@
  * Uses the Web Speech Synthesis API (no licensed audio files).
  */
 
-export type SpeakRepeatCount = 1 | 5 | 10;
+export type SpeakRepeatCount = 1 | 'loop';
 
 export const DEFAULT_REPEAT_GAP_MS = 750;
 
@@ -120,7 +120,8 @@ function speakChunks(
 
 export type RepeatProgress = {
   play: number;
-  plays: number;
+  /** Finite total, or `'loop'` when repeating until stopped. */
+  plays: number | 'loop';
 };
 
 export type SpeakRate = 1 | 1.2 | 1.5 | 2;
@@ -148,7 +149,7 @@ type PlayPassageOptions = {
 };
 
 /**
- * Speak `text` once, or loop it `times` with a short gap between plays.
+ * Speak `text` once, or on a continuous loop until stopped.
  * Callers can cancel via the returned controller.
  * `setRate` applies on the next utterance chunk (Web Speech has no live rate).
  */
@@ -165,6 +166,8 @@ export function playPassageSpeech(
   const signal = { cancelled: false };
   let gapTimer: ReturnType<typeof setTimeout> | null = null;
   const rateRef = { current: rate };
+  const looping = times === 'loop';
+  const maxPlays = looping ? null : times;
 
   const stop = () => {
     signal.cancelled = true;
@@ -181,14 +184,14 @@ export function playPassageSpeech(
   const done = (async () => {
     if (!speechSupported() || chunks.length === 0) return;
 
-    for (let play = 1; play <= times; play += 1) {
+    for (let play = 1; maxPlays === null || play <= maxPlays; play += 1) {
       if (signal.cancelled) return;
-      onProgress?.({ play, plays: times });
+      onProgress?.({ play, plays: looping ? 'loop' : times });
       await speakChunks(chunks, {
         signal,
         getRate: () => rateRef.current,
       });
-      if (signal.cancelled || play >= times) return;
+      if (signal.cancelled || (maxPlays !== null && play >= maxPlays)) return;
 
       await new Promise<void>((resolve) => {
         gapTimer = setTimeout(() => {

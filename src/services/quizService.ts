@@ -73,6 +73,10 @@ export function saveQuizSession(session: QuizSession): void {
   localStorage.setItem(`${STORAGE_PREFIX}${session.id}`, JSON.stringify(session));
 }
 
+export function discardQuizSession(id: string): void {
+  localStorage.removeItem(`${STORAGE_PREFIX}${id}`);
+}
+
 export function getQuizSession(id: string): QuizSession | null {
   const raw = localStorage.getItem(`${STORAGE_PREFIX}${id}`);
   if (!raw) return null;

@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { getDataStore } from '@/repositories';
 import { DEFAULT_SETTINGS } from '@/db/defaults';
+import { notifyLocalDataChanged } from '@/lib/localDataEvents';
 import type { Settings } from '@/types';
 
 const THEME_STORAGE_KEY = 'verse-memory:theme';
@@ -77,6 +78,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(next);
       applyTheme(next.theme, next.reducedMotion);
       await getDataStore().settings.save(next);
+      notifyLocalDataChanged();
     },
     [settings],
   );
@@ -85,6 +87,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const fresh = await getDataStore().settings.reset();
     setSettings(fresh);
     applyTheme(fresh.theme, fresh.reducedMotion);
+    notifyLocalDataChanged();
   }, []);
 
   const value = useMemo(

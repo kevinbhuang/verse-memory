@@ -3,7 +3,7 @@ import { DEFAULT_REPEAT_GAP_MS, DEFAULT_SPEAK_RATE } from './speak';
 
 export type EsvAudioProgress = {
   play: number;
-  plays: number;
+  plays: number | 'loop';
 };
 
 export type EsvAudioController = {
@@ -42,6 +42,8 @@ export function playPassageEsvAudio(
   let gapTimer: ReturnType<typeof setTimeout> | null = null;
   let audio: HTMLAudioElement | null = null;
   let currentRate = rate;
+  const looping = times === 'loop';
+  const maxPlays = looping ? null : times;
 
   const stop = () => {
     signal.cancelled = true;
@@ -63,9 +65,9 @@ export function playPassageEsvAudio(
   const done = (async () => {
     const url = esvAudioUrl(reference);
 
-    for (let play = 1; play <= times; play += 1) {
+    for (let play = 1; maxPlays === null || play <= maxPlays; play += 1) {
       if (signal.cancelled) return;
-      onProgress?.({ play, plays: times });
+      onProgress?.({ play, plays: looping ? 'loop' : times });
 
       await new Promise<void>((resolve, reject) => {
         if (signal.cancelled) {
@@ -99,7 +101,7 @@ export function playPassageEsvAudio(
         });
       });
 
-      if (signal.cancelled || play >= times) return;
+      if (signal.cancelled || (maxPlays !== null && play >= maxPlays)) return;
 
       await new Promise<void>((resolve) => {
         gapTimer = setTimeout(() => {

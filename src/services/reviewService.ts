@@ -14,6 +14,7 @@ import type {
   Settings,
   VerseProgress,
 } from '@/types';
+import { notifyLocalDataChanged } from '@/lib/localDataEvents';
 import { getProgress } from './progressService';
 
 const store = () => getDataStore();
@@ -121,6 +122,7 @@ export async function recordReview({
   };
 
   await store().progress.put(next);
+  notifyLocalDataChanged();
 
   return { log, progress: next };
 }

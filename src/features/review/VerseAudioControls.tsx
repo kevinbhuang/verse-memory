@@ -16,7 +16,7 @@ type VerseAudioControlsProps = {
 };
 
 /**
- * Compact listen-along controls: play / ×5 and speed, in one quiet row.
+ * Compact listen-along controls: play once / on repeat and speed.
  * Prefers official ESV narration when `reference` is set; falls back to TTS.
  */
 export function VerseAudioControls({
@@ -46,9 +46,7 @@ export function VerseAudioControls({
       {speech.playing ? (
         <>
           <span className="tabular-nums" aria-live="polite">
-            {speech.playTotal > 1
-              ? `${speech.playIndex}/${speech.playTotal}`
-              : 'Playing'}
+            {speech.looping ? 'On repeat' : 'Playing'}
             {` · ${formatSpeakRate(speech.rate)}`}
           </span>
           <button
@@ -72,11 +70,11 @@ export function VerseAudioControls({
           </button>
           <button
             type="button"
-            onClick={() => speech.play(5)}
-            aria-label="Play passage 5 times"
+            onClick={() => speech.play('loop')}
+            aria-label="Play passage on repeat"
             className="text-ink-muted underline-offset-2 hover:text-ink hover:underline"
           >
-            ×5
+            Play on repeat
           </button>
         </>
       )}
