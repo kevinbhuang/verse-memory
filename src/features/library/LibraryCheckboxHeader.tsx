@@ -3,12 +3,18 @@ export const LIBRARY_MEMORIZED_COL = 'w-16';
 export const LIBRARY_REVIEW_COL = 'w-16';
 
 /**
+ * Stick below the app header (title + account). Matches AppLayout sticky bar.
+ */
+export const STICKY_BELOW_APP_HEADER =
+  'sticky top-14 z-20 bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/90';
+
+/**
  * Persistent labels for the library’s Memorized / Needs Review columns.
  */
 export function LibraryCheckboxHeader() {
   return (
     <div
-      className="sticky top-12 z-20 mb-2 border-b border-line bg-paper/95 py-1.5 backdrop-blur lg:top-0"
+      className={`${STICKY_BELOW_APP_HEADER} mb-2 border-b border-line py-1.5`}
       role="row"
     >
       <div className="flex items-end gap-2.5 px-2 sm:px-3">

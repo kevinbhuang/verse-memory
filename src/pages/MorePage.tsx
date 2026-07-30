@@ -16,6 +16,7 @@ import { formatPercent } from '@/utils/format';
 import type { ThemePreference } from '@/types';
 import { AccountSyncCard } from '@/features/settings/AccountSyncCard';
 import { DataManagement } from '@/features/settings/DataManagement';
+import { FriendsCard } from '@/features/friends/FriendsCard';
 
 /**
  * Secondary hub: a few progress stats, theme, backup, and about.
@@ -97,6 +98,8 @@ export function MorePage() {
             />
           </CardBody>
         </Card>
+
+        <FriendsCard />
 
         <DataManagement />
 

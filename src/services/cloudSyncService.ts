@@ -8,6 +8,7 @@ import {
   type BackupFile,
 } from '@/services/backupService';
 import { getDataStore } from '@/repositories';
+import { writePublicProgressSummary } from '@/services/social/publicProgressService';
 
 const META_KEY = 'verse-memory:cloud-sync-meta';
 const PUSH_DEBOUNCE_MS = 3000;
@@ -189,6 +190,7 @@ async function pushToCloud(uid: string): Promise<void> {
     lastSyncedCloudUpdatedAt: updatedAt,
     lastLocalPushAt: updatedAt,
   });
+  await writePublicProgressSummary(uid);
 }
 
 /**
@@ -221,6 +223,7 @@ export async function runCloudSync(uid: string): Promise<void> {
 
     if (decision === 'pull' && cloud) {
       await pullFromCloud(uid, cloud);
+      await writePublicProgressSummary(uid);
     } else if (decision === 'push') {
       await pushToCloud(uid);
     } else if (cloud) {
@@ -229,6 +232,10 @@ export async function runCloudSync(uid: string): Promise<void> {
         lastSyncedCloudUpdatedAt: cloud.updatedAt,
         lastLocalPushAt: readMeta().lastLocalPushAt,
       });
+      // Keep the shareable summary fresh even when backup LWW is a noop.
+      await writePublicProgressSummary(uid);
+    } else {
+      await writePublicProgressSummary(uid);
     }
 
     setStatus('synced');

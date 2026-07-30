@@ -9,6 +9,7 @@ import {
   Repeat2,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { appConfig } from '@/config/app';
 import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
 import { Footer } from './Footer';
 import { AppBrand } from './AppBrand';
@@ -96,10 +97,13 @@ export function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-paper/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
-            <div className="min-w-0 lg:sr-only">
+            <div className="min-w-0 lg:hidden">
               <AppBrand compact />
             </div>
-            <div className="ml-auto flex justify-end">
+            <h1 className="hidden min-w-0 truncate font-serif text-xl font-semibold tracking-tight text-ink lg:block xl:text-2xl">
+              {appConfig.collectionTitle}
+            </h1>
+            <div className="ml-auto flex shrink-0 justify-end">
               <NavAccountControl />
             </div>
           </header>

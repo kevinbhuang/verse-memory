@@ -3,9 +3,16 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { verses } from '@/data/verses';
 import { abbreviateReference } from '@/lib/text/reference';
-import type { Verse, VerseProgress } from '@/types';
+import type { Verse } from '@/types';
+import { STICKY_BELOW_APP_HEADER } from './LibraryCheckboxHeader';
 
 const COLUMN_COUNT = 5;
+
+export type ProgressChartRow = {
+  verseId: string;
+  isMemorized: boolean;
+  isDifficult: boolean;
+};
 
 function splitIntoColumns(list: readonly Verse[], columns: number): Verse[][] {
   const size = Math.ceil(list.length / columns);
@@ -15,17 +22,19 @@ function splitIntoColumns(list: readonly Verse[], columns: number): Verse[][] {
 }
 
 /**
- * Four-column progress table: every passage in collection order, with
- * Memorized / Needs Review toggles and soft status tinting.
+ * Five-column progress table: every passage in collection order, with
+ * Memorized / Needs Review toggles (or read-only indicators) and soft tinting.
  */
 export function ProgressChart({
   progressById,
   onToggleMemorized,
   onToggleNeedsReview,
+  readOnly = false,
 }: {
-  progressById: Map<string, VerseProgress>;
-  onToggleMemorized: (verseId: string, memorized: boolean) => void;
-  onToggleNeedsReview: (verseId: string, needsReview: boolean) => void;
+  progressById: Map<string, ProgressChartRow>;
+  onToggleMemorized?: (verseId: string, memorized: boolean) => void;
+  onToggleNeedsReview?: (verseId: string, needsReview: boolean) => void;
+  readOnly?: boolean;
 }) {
   const columns = useMemo(
     () => splitIntoColumns(verses, COLUMN_COUNT),
@@ -34,7 +43,9 @@ export function ProgressChart({
 
   return (
     <div role="region" aria-label="Progress chart">
-      <div className="mb-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-muted">
+      <div
+        className={`${STICKY_BELOW_APP_HEADER} mb-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line py-1.5 text-sm text-ink-muted`}
+      >
         <span className="inline-flex items-center gap-1.5">
           <span
             className="inline-block size-3 rounded-sm bg-success-soft ring-1 ring-success/25"
@@ -59,10 +70,18 @@ export function ProgressChart({
           >
             <thead>
               <tr className="border-b border-line bg-surface-muted text-xs font-medium text-ink-muted">
-                <th scope="col" className="w-8 px-1.5 py-1.5 text-center">
+                <th
+                  scope="col"
+                  className="w-8 px-1.5 py-1.5 text-center"
+                  title="Memorized"
+                >
                   M
                 </th>
-                <th scope="col" className="w-8 px-1.5 py-1.5 text-center">
+                <th
+                  scope="col"
+                  className="w-8 px-1.5 py-1.5 text-center"
+                  title="Needs Review"
+                >
                   NR
                 </th>
                 <th scope="col" className="px-2 py-1.5">
@@ -90,10 +109,21 @@ export function ProgressChart({
                         type="checkbox"
                         className="size-3.5 accent-[var(--success)]"
                         checked={memorized}
-                        onChange={(event) =>
-                          onToggleMemorized(verse.id, event.target.checked)
+                        disabled={readOnly}
+                        onChange={
+                          readOnly || !onToggleMemorized
+                            ? undefined
+                            : (event) =>
+                                onToggleMemorized(
+                                  verse.id,
+                                  event.target.checked,
+                                )
                         }
-                        aria-label={`Mark ${verse.reference} as memorized`}
+                        aria-label={
+                          readOnly
+                            ? `${verse.reference}: ${memorized ? 'memorized' : 'not memorized'}`
+                            : `Mark ${verse.reference} as memorized`
+                        }
                       />
                     </td>
                     <td className="px-1.5 py-1 text-center align-middle">
@@ -101,20 +131,40 @@ export function ProgressChart({
                         type="checkbox"
                         className="size-3.5 accent-[var(--warning)]"
                         checked={needsReview}
-                        onChange={(event) =>
-                          onToggleNeedsReview(verse.id, event.target.checked)
+                        disabled={readOnly}
+                        onChange={
+                          readOnly || !onToggleNeedsReview
+                            ? undefined
+                            : (event) =>
+                                onToggleNeedsReview(
+                                  verse.id,
+                                  event.target.checked,
+                                )
                         }
-                        aria-label={`Mark ${verse.reference} as Needs Review`}
+                        aria-label={
+                          readOnly
+                            ? `${verse.reference}: ${needsReview ? 'Needs Review' : 'not Needs Review'}`
+                            : `Mark ${verse.reference} as Needs Review`
+                        }
                       />
                     </td>
                     <td className="px-2 py-1 align-middle">
-                      <Link
-                        to={`/verses/${verse.id}`}
-                        className="block truncate font-serif text-sm font-semibold leading-snug text-ink hover:text-accent hover:underline"
-                        title={verse.reference}
-                      >
-                        {abbreviateReference(verse.reference)}
-                      </Link>
+                      {readOnly ? (
+                        <span
+                          className="block truncate font-serif text-sm font-semibold leading-snug text-ink"
+                          title={verse.reference}
+                        >
+                          {abbreviateReference(verse.reference)}
+                        </span>
+                      ) : (
+                        <Link
+                          to={`/verses/${verse.id}`}
+                          className="block truncate font-serif text-sm font-semibold leading-snug text-ink hover:text-accent hover:underline"
+                          title={verse.reference}
+                        >
+                          {abbreviateReference(verse.reference)}
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 );

@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { appConfig } from '@/config/app';
 
 /**
- * Shared page chrome: collection title as the primary heading, with the
- * current tab/section as a quieter subtitle underneath.
+ * Shared page chrome: on mobile the collection title leads; on desktop it
+ * lives in the sticky header beside login, so only the section name shows here.
  */
 export function PageHeader({
   title,
@@ -11,7 +11,7 @@ export function PageHeader({
   actions,
   className,
 }: {
-  /** Page/section name shown under the collection title (e.g. Flash Cards). */
+  /** Page/section name (e.g. Flash Cards). */
   title: string;
   description?: ReactNode;
   actions?: ReactNode;
@@ -25,10 +25,10 @@ export function PageHeader({
       }
     >
       <div className="min-w-0">
-        <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+        <h1 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl lg:hidden">
           {appConfig.collectionTitle}
         </h1>
-        <h2 className="mt-0.5 font-serif text-lg font-medium tracking-tight text-ink-muted sm:text-xl">
+        <h2 className="mt-0.5 font-serif text-lg font-medium tracking-tight text-ink-muted sm:text-xl lg:mt-0">
           {title}
         </h2>
         {description ? (

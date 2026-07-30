@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Google email → uid lookup (exact match only; not a directory browse).
+    match /emailIndex/{email} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /shareRequests/{requestId} {
+      allow read: if signedIn()
+        && (resource.data.fromUid == request.auth.uid
+            || resource.data.toUid == request.auth.uid);
+
+      allow create: if signedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.toUid is string
+        && request.resource.data.toUid != request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      // Recipient: approve / decline. Sender: cancel pending.
+      allow update: if signedIn()
+        && (
+          (resource.data.toUid == request.auth.uid
+            && resource.data.status == 'pending'
+            && request.resource.data.status in ['approved', 'declined']
+            && request.resource.data.fromUid == resource.data.fromUid
+            && request.resource.data.toUid == resource.data.toUid)
+          ||
+          (resource.data.fromUid == request.auth.uid
+            && resource.data.status == 'pending'
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.fromUid == resource.data.fromUid
+            && request.resource.data.toUid == resource.data.toUid)
+          ||
+          // Either party may mark revoked after a share existed.
+          (request.resource.data.status == 'revoked'
+            && (resource.data.fromUid == request.auth.uid
+                || resource.data.toUid == request.auth.uid)
+            && request.resource.data.fromUid == resource.data.fromUid
+            && request.resource.data.toUid == resource.data.toUid)
+        );
+
+      allow delete: if false;
+    }
+
+    match /users/{uid} {
+      match /profile/{docId} {
+        allow read: if signedIn();
+        allow write: if isSelf(uid);
+      }
+
+      // Full private backup — owner only.
+      match /data/{docId} {
+        allow read, write: if isSelf(uid);
+      }
+
+      // Shareable Progress Chart summary.
+      match /publicProgress/summary {
+        allow read: if isSelf(uid)
+          || (signedIn()
+              && exists(/databases/$(database)/documents/users/$(uid)/shares/$(request.auth.uid)));
+        allow write: if isSelf(uid);
+      }
+
+      // viewers who may read this owner's publicProgress.
+      // Doc id = viewerUid.
+      match /shares/{viewerUid} {
+        allow read: if isSelf(uid) || (signedIn() && request.auth.uid == viewerUid);
+        allow create, update: if isSelf(uid)
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.viewerUid == viewerUid;
+        allow delete: if isSelf(uid)
+          || (signedIn() && request.auth.uid == viewerUid);
+      }
+    }
+  }
+}

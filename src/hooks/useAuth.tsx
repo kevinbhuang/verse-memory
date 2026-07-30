@@ -23,6 +23,7 @@ import {
   subscribeSyncStatus,
   type SyncStatus,
 } from '@/services/cloudSyncService';
+import { upsertUserProfile } from '@/services/social/profileService';
 import { useSettings } from '@/hooks/useSettings';
 
 type AuthContextValue = {
@@ -72,7 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       setActiveSyncUser(next?.uid ?? null);
       if (next) {
-        void runCloudSync(next.uid).then(() => reloadSettings());
+        void (async () => {
+          try {
+            await upsertUserProfile(next);
+          } catch (error) {
+            console.warn('Could not upsert user profile:', error);
+          }
+          await runCloudSync(next.uid);
+          reloadSettings();
+        })();
       }
     });
     return unsub;
