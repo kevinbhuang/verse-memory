@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { LogIn, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/hooks/useAuth';
 
 /**
- * Top-right account chrome: Sign in with Google, or “Logged in as …” → More.
+ * Top-right account chrome: Sign in with Google, or avatar + “Logged in as …” → More.
  */
 export function NavAccountControl() {
   const { configured, user, loading, signInWithGoogle } = useAuth();
@@ -49,10 +49,16 @@ export function NavAccountControl() {
   return (
     <Link
       to="/more"
-      className="max-w-[16rem] truncate text-right text-sm text-ink-muted hover:text-ink"
+      className="flex max-w-[16rem] items-center gap-2 text-sm text-ink-muted hover:text-ink"
       title={`Logged in as ${label}. Open Account on More.`}
     >
-      Logged in as {label}
+      <span
+        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+        aria-hidden="true"
+      >
+        <User className="size-3.5" strokeWidth={2.25} />
+      </span>
+      <span className="min-w-0 truncate text-right">Logged in as {label}</span>
     </Link>
   );
 }
