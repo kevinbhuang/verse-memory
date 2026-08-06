@@ -412,6 +412,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
             wordStats={wordStats}
             onComplete={setResult}
             attemptKey={`${cardKey}:${mode}`}
+            onRetry={() => setResult(null)}
             onPractice={(next) => switchLearnPractice(next)}
           />
         ) : ModeComponent ? (
@@ -422,6 +423,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
             wordStats={wordStats}
             onComplete={setResult}
             attemptKey={`${cardKey}:${mode}`}
+            onRetry={() => setResult(null)}
           />
         ) : (
           <LoadingState />

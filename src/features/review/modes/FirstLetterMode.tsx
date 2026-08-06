@@ -6,11 +6,13 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
-import { Eye, Lightbulb, Undo2 } from 'lucide-react';
+import { Eye, Lightbulb, RotateCcw, Undo2 } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
+import { Toggle } from '@/components/ui/Field';
 import { ScriptureText } from '@/components/ScriptureText';
+import { useSettings } from '@/hooks/useSettings';
 import { tokenize } from '@/lib/text/tokenize';
 import { heatLevel } from '@/lib/weakWords';
 import { formatDuration } from '@/utils/format';
@@ -25,7 +27,9 @@ export function FirstLetterMode({
   wordStats,
   onComplete,
   attemptKey,
+  onRetry,
 }: ReviewModeProps) {
+  const { update: updateSettings } = useSettings();
   const tokens = useMemo(() => tokenize(verse.text), [verse.text]);
 
   const [index, setIndex] = useState(0);
@@ -36,6 +40,7 @@ export function FirstLetterMode({
   const [confirmReveal, setConfirmReveal] = useState(false);
   const [finished, setFinished] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [localAttempt, setLocalAttempt] = useState(0);
 
   const startedAt = useRef(Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +57,12 @@ export function FirstLetterMode({
     startedAt.current = Date.now();
     completedRef.current = false;
     inputRef.current?.focus();
-  }, [attemptKey]);
+  }, [attemptKey, localAttempt]);
+
+  const retry = () => {
+    onRetry?.();
+    setLocalAttempt((current) => current + 1);
+  };
 
   const heat = useMemo(() => {
     const map = new Map<number, ReturnType<typeof heatLevel>>();
@@ -307,6 +317,18 @@ export function FirstLetterMode({
         </p>
       ) : null}
 
+      {!finished && !settings.blindFirstLetterMode && onRetry ? (
+        <Toggle
+          id="show-next-first-letter"
+          label="Show next letter"
+          description="Preview the letter to type next and upcoming first letters."
+          checked={settings.showFirstLetterSkeleton}
+          onChange={(checked) =>
+            void updateSettings({ showFirstLetterSkeleton: checked })
+          }
+        />
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant="secondary"
@@ -344,28 +366,36 @@ export function FirstLetterMode({
       </div>
 
       {finished ? (
-        <div className="rounded-lg border border-line bg-surface-muted px-4 py-3 text-sm text-ink">
-          <p className="font-medium">
-            {fullReveal
-              ? 'Passage revealed \u2014 recorded as an assisted review.'
-              : 'Passage complete.'}
-          </p>
-          <p className="mt-1 text-ink-muted">
-            {[
-              formatDuration(elapsedMs),
-              `${mistakes.length} incorrect key${mistakes.length === 1 ? '' : 's'}`,
-              `${hintedWords.length} hint${hintedWords.length === 1 ? '' : 's'}`,
-            ].join(' \u00b7 ')}
-          </p>
-          {mistakes.length > 0 ? (
-            <p className="mt-2 text-ink-muted">
-              Most missed:{' '}
-              {[...new Set(mistakes.map((mistake) => mistake.wordIndex))]
-                .slice(0, 6)
-                .map((wordIndex) => tokens[wordIndex]?.text)
-                .filter(Boolean)
-                .join(', ')}
+        <div className="space-y-3 rounded-lg border border-line bg-surface-muted px-4 py-3 text-sm text-ink">
+          <div>
+            <p className="font-medium">
+              {fullReveal
+                ? 'Passage revealed \u2014 recorded as an assisted review.'
+                : 'Passage complete.'}
             </p>
+            <p className="mt-1 text-ink-muted">
+              {[
+                formatDuration(elapsedMs),
+                `${mistakes.length} incorrect key${mistakes.length === 1 ? '' : 's'}`,
+                `${hintedWords.length} hint${hintedWords.length === 1 ? '' : 's'}`,
+              ].join(' \u00b7 ')}
+            </p>
+            {mistakes.length > 0 ? (
+              <p className="mt-2 text-ink-muted">
+                Most missed:{' '}
+                {[...new Set(mistakes.map((mistake) => mistake.wordIndex))]
+                  .slice(0, 6)
+                  .map((wordIndex) => tokens[wordIndex]?.text)
+                  .filter(Boolean)
+                  .join(', ')}
+              </p>
+            ) : null}
+          </div>
+          {onRetry ? (
+            <Button variant="secondary" size="sm" onClick={retry}>
+              <RotateCcw className="size-4" aria-hidden="true" />
+              Retry
+            </Button>
           ) : null}
         </div>
       ) : null}

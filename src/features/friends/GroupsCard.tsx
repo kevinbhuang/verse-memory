@@ -433,7 +433,7 @@ export function GroupsCard() {
       <div
         role="tablist"
         aria-label="Your groups"
-        className="flex gap-1 overflow-x-auto border-b border-line bg-surface-muted/40 px-2"
+        className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line bg-surface-muted/40 px-2"
       >
         {visibleMemberships.map((m) => {
           const selected = m.groupId === selectedGroupId;

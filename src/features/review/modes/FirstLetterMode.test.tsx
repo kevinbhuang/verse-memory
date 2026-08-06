@@ -194,4 +194,32 @@ describe('FirstLetterMode', () => {
       screen.queryByText(new RegExp(letters.slice(0, 3).join(' '))),
     ).not.toBeInTheDocument();
   });
+
+  it('offers Retry after completion and restarts the exercise', async () => {
+    const onRetry = vi.fn();
+    const onComplete = vi.fn();
+    const { user } = renderWithProviders(
+      <FirstLetterMode
+        verse={verse}
+        progress={testProgress(verse.id)}
+        settings={testSettings()}
+        wordStats={[]}
+        onComplete={onComplete}
+        onRetry={onRetry}
+        attemptKey="attempt-1"
+      />,
+    );
+
+    await user.type(typingArea(), letters.join(''));
+    expect(screen.getByText(/passage complete/i)).toBeInTheDocument();
+    expect(onComplete).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: /^retry$/i }));
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText(/type the first letter of the first word to begin/i),
+    ).toBeInTheDocument();
+    expect(progressText()).toContain(`0 of ${tokens.length} words`);
+  });
 });

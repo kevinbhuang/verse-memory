@@ -16,6 +16,8 @@ export type ReviewModeProps = {
   onComplete: (result: ModeResult) => void;
   /** Remounts the exercise when the reader repeats the same passage. */
   attemptKey: string;
+  /** Clears the parent session result when the reader retries this card. */
+  onRetry?: () => void;
 };
 
 /** Maps measured performance to the rating the mode recommends. */

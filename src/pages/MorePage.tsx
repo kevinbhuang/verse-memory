@@ -98,6 +98,20 @@ export function MorePage() {
           </CardBody>
         </Card>
 
+        <Card>
+          <CardHeader title="Practice" />
+          <CardBody className="divide-y divide-[var(--border-subtle)]">
+            <Toggle
+              label="Show next letter in first-letter practice"
+              description="Preview the letter to type next and upcoming first letters. Turn off for a harder drill."
+              checked={settings.showFirstLetterSkeleton}
+              onChange={(value) =>
+                void update({ showFirstLetterSkeleton: value })
+              }
+            />
+          </CardBody>
+        </Card>
+
         <DataManagement />
 
         <Card className="lg:col-span-2">

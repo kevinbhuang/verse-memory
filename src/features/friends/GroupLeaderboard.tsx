@@ -247,10 +247,10 @@ export function GroupLeaderboard({
                 ) : null}
               </div>
 
-              <div className="flex flex-col items-end gap-1 pt-0.5 text-right">
-                <p className="text-sm font-semibold leading-5 tabular-nums text-ink">
+              <div className="flex flex-col items-end gap-0.5 pt-0.5 text-right">
+                <p className="font-serif text-3xl font-semibold leading-none tracking-tight tabular-nums text-ink sm:text-4xl">
                   {entry.synced ? entry.memorizedCount : '—'}
-                  <span className="text-xs font-normal text-ink-muted">
+                  <span className="ml-0.5 text-base font-normal text-ink-muted sm:text-lg">
                     /{entry.total}
                   </span>
                 </p>
