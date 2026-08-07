@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
+  BookMarked,
   BookOpen,
   ChartColumn,
   ClipboardList,
@@ -19,7 +20,15 @@ import { AppBrand } from './AppBrand';
 import { NavAccountControl } from './NavAccountControl';
 import { UpdatePrompt } from './UpdatePrompt';
 
-const NAV_ITEMS = [
+type NavItem = {
+  to: string;
+  label: string;
+  shortLabel: string;
+  icon: typeof Layers;
+};
+
+/** Main collection tabs — Print is the last item before the DT divider. */
+const PRIMARY_NAV: NavItem[] = [
   {
     to: '/flashcards',
     label: 'Flash Cards',
@@ -36,8 +45,21 @@ const NAV_ITEMS = [
   { to: '/practice', label: 'Practice', shortLabel: 'Practice', icon: Repeat2 },
   { to: '/quiz', label: 'Quiz', shortLabel: 'Quiz', icon: ClipboardList },
   { to: '/print', label: 'Print', shortLabel: 'Print', icon: Printer },
-  { to: '/more', label: 'More', shortLabel: 'More', icon: Ellipsis },
 ];
+
+const DT_NAV: NavItem = {
+  to: '/dt-chapter-memory',
+  label: 'DT Chapter Memory',
+  shortLabel: 'DT',
+  icon: BookMarked,
+};
+
+const MORE_NAV: NavItem = {
+  to: '/more',
+  label: 'More',
+  shortLabel: 'More',
+  icon: Ellipsis,
+};
 
 function navLinkClass(isActive: boolean, compact = false) {
   if (compact) {
@@ -54,6 +76,26 @@ function navLinkClass(isActive: boolean, compact = false) {
   );
 }
 
+function NavItemLink({ item }: { item: NavItem }) {
+  return (
+    <NavLink
+      to={item.to}
+      className={({ isActive }) => navLinkClass(isActive)}
+    >
+      {({ isActive }) => (
+        <>
+          <item.icon
+            className="size-4 shrink-0"
+            aria-hidden="true"
+            strokeWidth={isActive ? 2.25 : 1.75}
+          />
+          {item.label}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 export function AppLayout() {
   const location = useLocation();
   const { hasJoinedGroup } = useJoinedGroups();
@@ -61,7 +103,10 @@ export function AppLayout() {
   // The active review / quiz screen is deliberately free of navigation chrome.
   const focusMode =
     location.pathname.startsWith('/review/session') ||
-    location.pathname.startsWith('/quiz/session');
+    location.pathname.startsWith('/quiz/session') ||
+    (location.pathname.startsWith('/dt-chapter-memory') &&
+      /[?&]practice=[^&]+/.test(location.search) &&
+      /[?&]mode=(first-letter|flashcard)/.test(location.search));
 
   const groupsNav = hasJoinedGroup
     ? {
@@ -86,6 +131,8 @@ export function AppLayout() {
     );
   }
 
+  const mobileNav = [...PRIMARY_NAV, DT_NAV, MORE_NAV, groupsNav];
+
   return (
     <div className="min-h-full bg-paper">
       <a href="#main" className="skip-link">
@@ -100,24 +147,18 @@ export function AppLayout() {
           </div>
 
           <nav aria-label="Main" className="mt-8 flex-1 space-y-0.5">
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => navLinkClass(isActive)}
-              >
-                {({ isActive }) => (
-                  <>
-                    <item.icon
-                      className="size-4 shrink-0"
-                      aria-hidden="true"
-                      strokeWidth={isActive ? 2.25 : 1.75}
-                    />
-                    {item.label}
-                  </>
-                )}
-              </NavLink>
+            {PRIMARY_NAV.map((item) => (
+              <NavItemLink key={item.to} item={item} />
             ))}
+
+            <div
+              className="my-3 border-t border-line"
+              role="separator"
+              aria-hidden="true"
+            />
+
+            <NavItemLink item={DT_NAV} />
+            <NavItemLink item={MORE_NAV} />
           </nav>
 
           <nav
@@ -168,9 +209,9 @@ export function AppLayout() {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <ul className="flex">
-          {[...NAV_ITEMS, groupsNav].map((item) => (
-            <li key={item.to} className="flex-1">
+        <ul className="flex overflow-x-auto">
+          {mobileNav.map((item) => (
+            <li key={item.to} className="min-w-[4.25rem] flex-1">
               <NavLink
                 to={item.to}
                 className={({ isActive }) => navLinkClass(isActive, true)}

@@ -10,7 +10,8 @@ const NAV_SHORTCUTS: Record<string, string> = {
   '5': '/quiz',
   '6': '/print',
   '7': '/more',
-  '8': '/friends',
+  '8': '/dt-chapter-memory',
+  '9': '/friends',
   // F / M / N are reserved on Flash Cards; use digits for those tabs.
   l: '/verses',
   c: '/progress-chart',
@@ -20,7 +21,7 @@ const NAV_SHORTCUTS: Record<string, string> = {
 
 /**
  * Global tab shortcuts when not inside a focus-mode session.
- * Digits 1–8 and letters L / C / P / Q jump between primary tabs.
+ * Digits 1–9 and letters L / C / P / Q jump between primary tabs.
  * (F / M / N are reserved for Flash Cards actions.)
  */
 export function useAppNavHotkeys() {
@@ -28,7 +29,12 @@ export function useAppNavHotkeys() {
   const location = useLocation();
   const focusMode =
     location.pathname.startsWith('/review/session') ||
-    location.pathname.startsWith('/quiz/session');
+    location.pathname.startsWith('/quiz/session') ||
+    // DT chapter practice uses query params on the same route; suppress
+    // digit/letter nav shortcuts so typing “p” can’t jump to Practice.
+    (location.pathname.startsWith('/dt-chapter-memory') &&
+      /[?&]practice=[^&]+/.test(location.search) &&
+      /[?&]mode=(first-letter|flashcard)/.test(location.search));
 
   const hotkeys = useMemo(
     () =>

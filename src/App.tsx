@@ -15,6 +15,7 @@ import { ProgressChartPage } from '@/pages/ProgressChartPage';
 import { FriendProgressChartPage } from '@/pages/FriendProgressChartPage';
 import { FriendsPage } from '@/pages/FriendsPage';
 import { MorePage } from '@/pages/MorePage';
+import { DtChapterMemoryPage } from '@/pages/DtChapterMemoryPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export function App() {
@@ -40,6 +41,10 @@ export function App() {
                 />
                 <Route path="/review/session" element={<ReviewSessionPage />} />
                 <Route path="/print" element={<PrintPage />} />
+                <Route
+                  path="/dt-chapter-memory"
+                  element={<DtChapterMemoryPage />}
+                />
                 <Route path="/more" element={<MorePage />} />
                 <Route path="/learn" element={<Navigate to="/practice" replace />} />
                 <Route path="/review" element={<Navigate to="/practice" replace />} />

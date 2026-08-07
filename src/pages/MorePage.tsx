@@ -103,7 +103,7 @@ export function MorePage() {
           <CardBody className="divide-y divide-[var(--border-subtle)]">
             <Toggle
               label="Show next letter in first-letter practice"
-              description="Preview the letter to type next and upcoming first letters. Turn off for a harder drill."
+              description="Off by default. Preview the letter to type next and upcoming first letters when you want a cue."
               checked={settings.showFirstLetterSkeleton}
               onChange={(value) =>
                 void update({ showFirstLetterSkeleton: value })
@@ -132,7 +132,8 @@ export function MorePage() {
               <span className="text-ink">5</span> Quiz ·{' '}
               <span className="text-ink">6</span> Print ·{' '}
               <span className="text-ink">7</span> More ·{' '}
-              <span className="text-ink">8</span> Groups (also L / C / P / Q). On
+              <span className="text-ink">8</span> DT Chapter Memory ·{' '}
+              <span className="text-ink">9</span> Groups (also L / C / P / Q). On
               Flash Cards, F / M / N / Space handle first letters, Memorized,
               Needs Review, and show/hide.
             </p>

@@ -52,7 +52,9 @@ export function useHotkeys(
       const handlerForKey = map[key];
       if (!handlerForKey) return;
 
-      const typing = isTypingTarget(event.target);
+      const typing =
+        isTypingTarget(event.target) ||
+        isTypingTarget(document.activeElement);
       if (typing && key !== 'escape' && !allowedWhileTyping.has(key)) return;
 
       event.preventDefault();

@@ -28,6 +28,7 @@ export function FirstLetterMode({
   onComplete,
   attemptKey,
   onRetry,
+  onShowFirstLetterSkeletonChange,
 }: ReviewModeProps) {
   const { update: updateSettings } = useSettings();
   const tokens = useMemo(() => tokenize(verse.text), [verse.text]);
@@ -186,7 +187,9 @@ export function FirstLetterMode({
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.key.length !== 1) return;
 
+    // Keep global nav hotkeys (p/l/c/q/digits) from stealing letter keys.
     event.preventDefault();
+    event.stopPropagation();
     const expected = tokens[index];
     if (!expected) return;
 
@@ -323,9 +326,13 @@ export function FirstLetterMode({
           label="Show next letter"
           description="Preview the letter to type next and upcoming first letters."
           checked={settings.showFirstLetterSkeleton}
-          onChange={(checked) =>
-            void updateSettings({ showFirstLetterSkeleton: checked })
-          }
+          onChange={(checked) => {
+            if (onShowFirstLetterSkeletonChange) {
+              onShowFirstLetterSkeletonChange(checked);
+              return;
+            }
+            void updateSettings({ showFirstLetterSkeleton: checked });
+          }}
         />
       ) : null}
 

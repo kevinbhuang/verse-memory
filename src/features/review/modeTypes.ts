@@ -18,6 +18,11 @@ export type ReviewModeProps = {
   attemptKey: string;
   /** Clears the parent session result when the reader retries this card. */
   onRetry?: () => void;
+  /**
+   * Optional override for the “Show next letter” toggle. When set, the mode
+   * does not write the preference into global Settings.
+   */
+  onShowFirstLetterSkeletonChange?: (checked: boolean) => void;
 };
 
 /** Maps measured performance to the rating the mode recommends. */

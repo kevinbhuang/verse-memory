@@ -1,0 +1,529 @@
+[
+  {
+    "id": "psalm-1",
+    "name": "Psalm 1",
+    "referenceLabel": "Psalm 1",
+    "verses": [
+      {
+        "id": "dt-psalm-1-v01",
+        "order": 1,
+        "reference": "Psalm 1:1",
+        "text": "Blessed is the man who walks not in the counsel of the wicked, nor stands in the way of sinners, nor sits in the seat of scoffers;",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-psalm-1-v02",
+        "order": 2,
+        "reference": "Psalm 1:2",
+        "text": "but his delight is in the law of the LORD, and on his law he meditates day and night.",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-psalm-1-v03",
+        "order": 3,
+        "reference": "Psalm 1:3",
+        "text": "He is like a tree planted by streams of water that yields its fruit in its season, and its leaf does not wither. In all that he does, he prospers.",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-psalm-1-v04",
+        "order": 4,
+        "reference": "Psalm 1:4",
+        "text": "The wicked are not so, but are like chaff that the wind drives away.",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-psalm-1-v05",
+        "order": 5,
+        "reference": "Psalm 1:5",
+        "text": "Therefore the wicked will not stand in the judgment, nor sinners in the congregation of the righteous;",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-psalm-1-v06",
+        "order": 6,
+        "reference": "Psalm 1:6",
+        "text": "for the LORD knows the way of the righteous, but the way of the wicked will perish.",
+        "translation": "ESV",
+        "verseNumber": 6
+      }
+    ],
+    "displayText": "[1] Blessed is the man\n    who walks not in the counsel of the wicked,\nnor stands in the way of sinners,\n    nor sits in the seat of scoffers;\n[2] but his delight is in the law of the LORD,\n    and on his law he meditates day and night.\n\n[3] He is like a tree\n    planted by streams of water\nthat yields its fruit in its season,\n    and its leaf does not wither.\nIn all that he does, he prospers.\n[4] The wicked are not so,\n    but are like chaff that the wind drives away.\n\n[5] Therefore the wicked will not stand in the judgment,\n    nor sinners in the congregation of the righteous;\n[6] for the LORD knows the way of the righteous,\n    but the way of the wicked will perish."
+  },
+  {
+    "id": "psalm-8",
+    "name": "Psalm 8",
+    "referenceLabel": "Psalm 8",
+    "verses": [
+      {
+        "id": "dt-psalm-8-v01",
+        "order": 7,
+        "reference": "Psalm 8:1",
+        "text": "O LORD, our Lord, how majestic is your name in all the earth! You have set your glory above the heavens.",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-psalm-8-v02",
+        "order": 8,
+        "reference": "Psalm 8:2",
+        "text": "Out of the mouth of babies and infants, you have established strength because of your foes, to still the enemy and the avenger.",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-psalm-8-v03",
+        "order": 9,
+        "reference": "Psalm 8:3",
+        "text": "When I look at your heavens, the work of your fingers, the moon and the stars, which you have set in place,",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-psalm-8-v04",
+        "order": 10,
+        "reference": "Psalm 8:4",
+        "text": "what is man that you are mindful of him, and the son of man that you care for him?",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-psalm-8-v05",
+        "order": 11,
+        "reference": "Psalm 8:5",
+        "text": "Yet you have made him a little lower than the heavenly beings and crowned him with glory and honor.",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-psalm-8-v06",
+        "order": 12,
+        "reference": "Psalm 8:6",
+        "text": "You have given him dominion over the works of your hands; you have put all things under his feet,",
+        "translation": "ESV",
+        "verseNumber": 6
+      },
+      {
+        "id": "dt-psalm-8-v07",
+        "order": 13,
+        "reference": "Psalm 8:7",
+        "text": "all sheep and oxen, and also the beasts of the field,",
+        "translation": "ESV",
+        "verseNumber": 7
+      },
+      {
+        "id": "dt-psalm-8-v08",
+        "order": 14,
+        "reference": "Psalm 8:8",
+        "text": "the birds of the heavens, and the fish of the sea, whatever passes along the paths of the seas.",
+        "translation": "ESV",
+        "verseNumber": 8
+      },
+      {
+        "id": "dt-psalm-8-v09",
+        "order": 15,
+        "reference": "Psalm 8:9",
+        "text": "O LORD, our Lord, how majestic is your name in all the earth!",
+        "translation": "ESV",
+        "verseNumber": 9
+      }
+    ],
+    "displayText": "[1] O LORD, our Lord,\n        how majestic is your name in all the earth!\n    You have set your glory above the heavens.\n    [2]     Out of the mouth of babies and infants,\n    you have established strength because of your foes,\n        to still the enemy and the avenger.\n\n    [3] When I look at your heavens, the work of your fingers,\n        the moon and the stars, which you have set in place,\n    [4] what is man that you are mindful of him,\n        and the son of man that you care for him?\n\n    [5] Yet you have made him a little lower than the heavenly beings\n        and crowned him with glory and honor.\n    [6] You have given him dominion over the works of your hands;\n        you have put all things under his feet,\n    [7] all sheep and oxen,\n        and also the beasts of the field,\n    [8] the birds of the heavens, and the fish of the sea,\n        whatever passes along the paths of the seas.\n\n    [9] O LORD, our Lord,\n        how majestic is your name in all the earth!"
+  },
+  {
+    "id": "psalm-16",
+    "name": "Psalm 16",
+    "referenceLabel": "Psalm 16",
+    "verses": [
+      {
+        "id": "dt-psalm-16-v01",
+        "order": 16,
+        "reference": "Psalm 16:1",
+        "text": "Preserve me, O God, for in you I take refuge.",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-psalm-16-v02",
+        "order": 17,
+        "reference": "Psalm 16:2",
+        "text": "I say to the LORD, “You are my Lord; I have no good apart from you.”",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-psalm-16-v03",
+        "order": 18,
+        "reference": "Psalm 16:3",
+        "text": "As for the saints in the land, they are the excellent ones, in whom is all my delight.",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-psalm-16-v04",
+        "order": 19,
+        "reference": "Psalm 16:4",
+        "text": "The sorrows of those who run after another god shall multiply; their drink offerings of blood I will not pour out or take their names on my lips.",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-psalm-16-v05",
+        "order": 20,
+        "reference": "Psalm 16:5",
+        "text": "The LORD is my chosen portion and my cup; you hold my lot.",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-psalm-16-v06",
+        "order": 21,
+        "reference": "Psalm 16:6",
+        "text": "The lines have fallen for me in pleasant places; indeed, I have a beautiful inheritance.",
+        "translation": "ESV",
+        "verseNumber": 6
+      },
+      {
+        "id": "dt-psalm-16-v07",
+        "order": 22,
+        "reference": "Psalm 16:7",
+        "text": "I bless the LORD who gives me counsel; in the night also my heart instructs me.",
+        "translation": "ESV",
+        "verseNumber": 7
+      },
+      {
+        "id": "dt-psalm-16-v08",
+        "order": 23,
+        "reference": "Psalm 16:8",
+        "text": "I have set the LORD always before me; because he is at my right hand, I shall not be shaken.",
+        "translation": "ESV",
+        "verseNumber": 8
+      },
+      {
+        "id": "dt-psalm-16-v09",
+        "order": 24,
+        "reference": "Psalm 16:9",
+        "text": "Therefore my heart is glad, and my whole being rejoices; my flesh also dwells secure.",
+        "translation": "ESV",
+        "verseNumber": 9
+      },
+      {
+        "id": "dt-psalm-16-v10",
+        "order": 25,
+        "reference": "Psalm 16:10",
+        "text": "For you will not abandon my soul to Sheol, or let your holy one see corruption.",
+        "translation": "ESV",
+        "verseNumber": 10
+      },
+      {
+        "id": "dt-psalm-16-v11",
+        "order": 26,
+        "reference": "Psalm 16:11",
+        "text": "You make known to me the path of life; in your presence there is fullness of joy; at your right hand are pleasures forevermore.",
+        "translation": "ESV",
+        "verseNumber": 11
+      }
+    ],
+    "displayText": "[1] Preserve me, O God, for in you I take refuge.\n    [2] I say to the LORD, “You are my Lord;\n        I have no good apart from you.”\n\n    [3] As for the saints in the land, they are the excellent ones,\n        in whom is all my delight.\n\n    [4] The sorrows of those who run after another god shall multiply;\n        their drink offerings of blood I will not pour out\n        or take their names on my lips.\n\n    [5] The LORD is my chosen portion and my cup;\n        you hold my lot.\n    [6] The lines have fallen for me in pleasant places;\n        indeed, I have a beautiful inheritance.\n\n    [7] I bless the LORD who gives me counsel;\n        in the night also my heart instructs me.\n    [8] I have set the LORD always before me;\n        because he is at my right hand, I shall not be shaken.\n\n    [9] Therefore my heart is glad, and my whole being rejoices;\n        my flesh also dwells secure.\n    [10] For you will not abandon my soul to Sheol,\n        or let your holy one see corruption.\n\n    [11] You make known to me the path of life;\n        in your presence there is fullness of joy;\n        at your right hand are pleasures forevermore."
+  },
+  {
+    "id": "psalm-23",
+    "name": "Psalm 23",
+    "referenceLabel": "Psalm 23",
+    "verses": [
+      {
+        "id": "dt-psalm-23-v01",
+        "order": 27,
+        "reference": "Psalm 23:1",
+        "text": "The LORD is my shepherd; I shall not want.",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-psalm-23-v02",
+        "order": 28,
+        "reference": "Psalm 23:2",
+        "text": "He makes me lie down in green pastures. He leads me beside still waters.",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-psalm-23-v03",
+        "order": 29,
+        "reference": "Psalm 23:3",
+        "text": "He restores my soul. He leads me in paths of righteousness for his name’s sake.",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-psalm-23-v04",
+        "order": 30,
+        "reference": "Psalm 23:4",
+        "text": "Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me.",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-psalm-23-v05",
+        "order": 31,
+        "reference": "Psalm 23:5",
+        "text": "You prepare a table before me in the presence of my enemies; you anoint my head with oil; my cup overflows.",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-psalm-23-v06",
+        "order": 32,
+        "reference": "Psalm 23:6",
+        "text": "Surely goodness and mercy shall follow me all the days of my life, and I shall dwell in the house of the LORD forever.",
+        "translation": "ESV",
+        "verseNumber": 6
+      }
+    ],
+    "displayText": "[1] The LORD is my shepherd; I shall not want.\n    [2]     He makes me lie down in green pastures.\n    He leads me beside still waters.\n    [3]     He restores my soul.\n    He leads me in paths of righteousness\n        for his name’s sake.\n\n    [4] Even though I walk through the valley of the shadow of death,\n        I will fear no evil,\n    for you are with me;\n        your rod and your staff,\n        they comfort me.\n\n    [5] You prepare a table before me\n        in the presence of my enemies;\n    you anoint my head with oil;\n        my cup overflows.\n    [6] Surely goodness and mercy shall follow me\n        all the days of my life,\n    and I shall dwell in the house of the LORD\n        forever."
+  },
+  {
+    "id": "psalm-32",
+    "name": "Psalm 32",
+    "referenceLabel": "Psalm 32",
+    "verses": [
+      {
+        "id": "dt-psalm-32-v01",
+        "order": 33,
+        "reference": "Psalm 32:1",
+        "text": "Blessed is the one whose transgression is forgiven, whose sin is covered.",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-psalm-32-v02",
+        "order": 34,
+        "reference": "Psalm 32:2",
+        "text": "Blessed is the man against whom the LORD counts no iniquity, and in whose spirit there is no deceit.",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-psalm-32-v03",
+        "order": 35,
+        "reference": "Psalm 32:3",
+        "text": "For when I kept silent, my bones wasted away through my groaning all day long.",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-psalm-32-v04",
+        "order": 36,
+        "reference": "Psalm 32:4",
+        "text": "For day and night your hand was heavy upon me; my strength was dried up as by the heat of summer. Selah",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-psalm-32-v05",
+        "order": 37,
+        "reference": "Psalm 32:5",
+        "text": "I acknowledged my sin to you, and I did not cover my iniquity; I said, “I will confess my transgressions to the LORD,” and you forgave the iniquity of my sin. Selah",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-psalm-32-v06",
+        "order": 38,
+        "reference": "Psalm 32:6",
+        "text": "Therefore let everyone who is godly offer prayer to you at a time when you may be found; surely in the rush of great waters, they shall not reach him.",
+        "translation": "ESV",
+        "verseNumber": 6
+      },
+      {
+        "id": "dt-psalm-32-v07",
+        "order": 39,
+        "reference": "Psalm 32:7",
+        "text": "You are a hiding place for me; you preserve me from trouble; you surround me with shouts of deliverance. Selah",
+        "translation": "ESV",
+        "verseNumber": 7
+      },
+      {
+        "id": "dt-psalm-32-v08",
+        "order": 40,
+        "reference": "Psalm 32:8",
+        "text": "I will instruct you and teach you in the way you should go; I will counsel you with my eye upon you.",
+        "translation": "ESV",
+        "verseNumber": 8
+      },
+      {
+        "id": "dt-psalm-32-v09",
+        "order": 41,
+        "reference": "Psalm 32:9",
+        "text": "Be not like a horse or a mule, without understanding, which must be curbed with bit and bridle, or it will not stay near you.",
+        "translation": "ESV",
+        "verseNumber": 9
+      },
+      {
+        "id": "dt-psalm-32-v10",
+        "order": 42,
+        "reference": "Psalm 32:10",
+        "text": "Many are the sorrows of the wicked, but steadfast love surrounds the one who trusts in the LORD.",
+        "translation": "ESV",
+        "verseNumber": 10
+      },
+      {
+        "id": "dt-psalm-32-v11",
+        "order": 43,
+        "reference": "Psalm 32:11",
+        "text": "Be glad in the LORD, and rejoice, O righteous, and shout for joy, all you upright in heart!",
+        "translation": "ESV",
+        "verseNumber": 11
+      }
+    ],
+    "displayText": "[1] Blessed is the one whose transgression is forgiven,\n        whose sin is covered.\n    [2] Blessed is the man against whom the LORD counts no iniquity,\n        and in whose spirit there is no deceit.\n\n    [3] For when I kept silent, my bones wasted away\n        through my groaning all day long.\n    [4] For day and night your hand was heavy upon me;\n        my strength was dried up as by the heat of summer. Selah\n\n    [5] I acknowledged my sin to you,\n        and I did not cover my iniquity;\n    I said, “I will confess my transgressions to the LORD,”\n        and you forgave the iniquity of my sin. Selah\n\n    [6] Therefore let everyone who is godly\n        offer prayer to you at a time when you may be found;\n    surely in the rush of great waters,\n        they shall not reach him.\n    [7] You are a hiding place for me;\n        you preserve me from trouble;\n        you surround me with shouts of deliverance. Selah\n\n    [8] I will instruct you and teach you in the way you should go;\n        I will counsel you with my eye upon you.\n    [9] Be not like a horse or a mule, without understanding,\n        which must be curbed with bit and bridle,\n        or it will not stay near you.\n\n    [10] Many are the sorrows of the wicked,\n        but steadfast love surrounds the one who trusts in the LORD.\n    [11] Be glad in the LORD, and rejoice, O righteous,\n        and shout for joy, all you upright in heart!"
+  },
+  {
+    "id": "psalm-37-1-9",
+    "name": "Psalm 37:1–9",
+    "referenceLabel": "Psalm 37:1–9",
+    "verses": [
+      {
+        "id": "dt-psalm-37-1-9-v01",
+        "order": 44,
+        "reference": "Psalm 37:1",
+        "text": "Fret not yourself because of evildoers; be not envious of wrongdoers!",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-psalm-37-1-9-v02",
+        "order": 45,
+        "reference": "Psalm 37:2",
+        "text": "For they will soon fade like the grass and wither like the green herb.",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-psalm-37-1-9-v03",
+        "order": 46,
+        "reference": "Psalm 37:3",
+        "text": "Trust in the LORD, and do good; dwell in the land and befriend faithfulness.",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-psalm-37-1-9-v04",
+        "order": 47,
+        "reference": "Psalm 37:4",
+        "text": "Delight yourself in the LORD, and he will give you the desires of your heart.",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-psalm-37-1-9-v05",
+        "order": 48,
+        "reference": "Psalm 37:5",
+        "text": "Commit your way to the LORD; trust in him, and he will act.",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-psalm-37-1-9-v06",
+        "order": 49,
+        "reference": "Psalm 37:6",
+        "text": "He will bring forth your righteousness as the light, and your justice as the noonday.",
+        "translation": "ESV",
+        "verseNumber": 6
+      },
+      {
+        "id": "dt-psalm-37-1-9-v07",
+        "order": 50,
+        "reference": "Psalm 37:7",
+        "text": "Be still before the LORD and wait patiently for him; fret not yourself over the one who prospers in his way, over the man who carries out evil devices!",
+        "translation": "ESV",
+        "verseNumber": 7
+      },
+      {
+        "id": "dt-psalm-37-1-9-v08",
+        "order": 51,
+        "reference": "Psalm 37:8",
+        "text": "Refrain from anger, and forsake wrath! Fret not yourself; it tends only to evil.",
+        "translation": "ESV",
+        "verseNumber": 8
+      },
+      {
+        "id": "dt-psalm-37-1-9-v09",
+        "order": 52,
+        "reference": "Psalm 37:9",
+        "text": "For the evildoers shall be cut off, but those who wait for the LORD shall inherit the land.",
+        "translation": "ESV",
+        "verseNumber": 9
+      }
+    ],
+    "displayText": "[1] Fret not yourself because of evildoers;\n        be not envious of wrongdoers!\n    [2] For they will soon fade like the grass\n        and wither like the green herb.\n\n    [3] Trust in the LORD, and do good;\n        dwell in the land and befriend faithfulness.\n    [4] Delight yourself in the LORD,\n        and he will give you the desires of your heart.\n\n    [5] Commit your way to the LORD;\n        trust in him, and he will act.\n    [6] He will bring forth your righteousness as the light,\n        and your justice as the noonday.\n\n    [7] Be still before the LORD and wait patiently for him;\n        fret not yourself over the one who prospers in his way,\n        over the man who carries out evil devices!\n\n    [8] Refrain from anger, and forsake wrath!\n        Fret not yourself; it tends only to evil.\n    [9] For the evildoers shall be cut off,\n        but those who wait for the LORD shall inherit the land."
+  },
+  {
+    "id": "isaiah-9-1-7",
+    "name": "Isaiah 9:1–7",
+    "referenceLabel": "Isaiah 9:1–7",
+    "verses": [
+      {
+        "id": "dt-isaiah-9-1-7-v01",
+        "order": 53,
+        "reference": "Isaiah 9:1",
+        "text": "But there will be no gloom for her who was in anguish. In the former time he brought into contempt the land of Zebulun and the land of Naphtali, but in the latter time he has made glorious the way of the sea, the land beyond the Jordan, Galilee of the nations.",
+        "translation": "ESV",
+        "verseNumber": 1
+      },
+      {
+        "id": "dt-isaiah-9-1-7-v02",
+        "order": 54,
+        "reference": "Isaiah 9:2",
+        "text": "The people who walked in darkness have seen a great light; those who dwelt in a land of deep darkness, on them has light shone.",
+        "translation": "ESV",
+        "verseNumber": 2
+      },
+      {
+        "id": "dt-isaiah-9-1-7-v03",
+        "order": 55,
+        "reference": "Isaiah 9:3",
+        "text": "You have multiplied the nation; you have increased its joy; they rejoice before you as with joy at the harvest, as they are glad when they divide the spoil.",
+        "translation": "ESV",
+        "verseNumber": 3
+      },
+      {
+        "id": "dt-isaiah-9-1-7-v04",
+        "order": 56,
+        "reference": "Isaiah 9:4",
+        "text": "For the yoke of his burden, and the staff for his shoulder, the rod of his oppressor, you have broken as on the day of Midian.",
+        "translation": "ESV",
+        "verseNumber": 4
+      },
+      {
+        "id": "dt-isaiah-9-1-7-v05",
+        "order": 57,
+        "reference": "Isaiah 9:5",
+        "text": "For every boot of the tramping warrior in battle tumult and every garment rolled in blood will be burned as fuel for the fire.",
+        "translation": "ESV",
+        "verseNumber": 5
+      },
+      {
+        "id": "dt-isaiah-9-1-7-v06",
+        "order": 58,
+        "reference": "Isaiah 9:6",
+        "text": "For to us a child is born, to us a son is given; and the government shall be upon his shoulder, and his name shall be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.",
+        "translation": "ESV",
+        "verseNumber": 6
+      },
+      {
+        "id": "dt-isaiah-9-1-7-v07",
+        "order": 59,
+        "reference": "Isaiah 9:7",
+        "text": "Of the increase of his government and of peace there will be no end, on the throne of David and over his kingdom, to establish it and to uphold it with justice and with righteousness from this time forth and forevermore. The zeal of the LORD of hosts will do this.",
+        "translation": "ESV",
+        "verseNumber": 7
+      }
+    ]
+  }
+]

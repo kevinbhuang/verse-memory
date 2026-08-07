@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   requirePunctuation: false,
   requireCapitalization: false,
   allowBackspaceInFirstLetter: true,
-  showFirstLetterSkeleton: true,
+  showFirstLetterSkeleton: false,
   blindFirstLetterMode: false,
   announceReference: true,
   defaultSessionSize: 10,
