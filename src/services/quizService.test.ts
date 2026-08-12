@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { SECTIONS } from '@/types';
 import {
   createQuizSession,
+  createQuizSessionFromPassages,
   getQuizSession,
   quizScore,
   recordQuizAnswer,
@@ -121,5 +122,25 @@ describe('quizService', () => {
     });
     expect(done.completedAt).not.toBeNull();
     expect(quizScore(done)).toEqual({ correct: 1, total: 2, accuracy: 0.5 });
+  });
+
+  it('creates a quiz from explicit passages with snapshots', () => {
+    const session = createQuizSessionFromPassages(
+      [
+        { id: 'custom-a', reference: 'John 3:16', text: 'For God so loved' },
+        { id: 'custom-b', reference: 'Romans 8:28', text: 'And we know' },
+      ],
+      'reference',
+      'Custom list quiz',
+      {
+        size: 'all',
+        shuffle: false,
+        returnPath: '/custom-verses?view=quiz',
+      },
+    );
+    expect(session).not.toBeNull();
+    expect(session!.verseIds).toEqual(['custom-a', 'custom-b']);
+    expect(session!.verseSnapshots?.['custom-a']?.reference).toBe('John 3:16');
+    expect(session!.returnPath).toBe('/custom-verses?view=quiz');
   });
 });

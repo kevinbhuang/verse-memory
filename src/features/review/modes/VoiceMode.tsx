@@ -124,6 +124,9 @@ export function VoiceMode({ verse, onComplete, attemptKey }: ReviewModeProps) {
   const startedAt = useRef(Date.now());
 
   useEffect(() => {
+    recognitionRef.current?.abort();
+    recognitionRef.current = null;
+    setListening(false);
     setTranscript('');
     setResult(null);
     setError(null);
@@ -179,6 +182,9 @@ export function VoiceMode({ verse, onComplete, attemptKey }: ReviewModeProps) {
 
   const grade = () => {
     if (result) return;
+    // Stop the mic first so compare doesn't keep listening in the background.
+    recognitionRef.current?.stop();
+    setListening(false);
     const graded = gradeAttempt(verse.text, transcript, {});
     setResult(graded);
     onComplete({

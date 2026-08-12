@@ -54,6 +54,106 @@ export default defineConfig(({ mode }) => {
           enabled: false,
         },
       }),
+
+      // Local stand-in for the Netlify esv-text function.
+      {
+        name: 'esv-text-dev-api',
+        configureServer(server) {
+          server.middlewares.use('/api/esv-text', async (req, res, next) => {
+            if (req.method !== 'GET') {
+              next();
+              return;
+            }
+            try {
+              const url = new URL(req.url ?? '', 'http://localhost');
+              const q = url.searchParams.get('q')?.trim();
+              if (!q) {
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(
+                  JSON.stringify({ error: 'Missing q (passage reference)' }),
+                );
+                return;
+              }
+              const token = env.ESV_API_TOKEN;
+              if (!token) {
+                res.statusCode = 503;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(
+                  JSON.stringify({
+                    error:
+                      'ESV text is not configured (set ESV_API_TOKEN in .env).',
+                  }),
+                );
+                return;
+              }
+              const upstreamUrl = new URL(
+                'https://api.esv.org/v3/passage/text/',
+              );
+              upstreamUrl.searchParams.set('q', q);
+              upstreamUrl.searchParams.set('include-headings', 'false');
+              upstreamUrl.searchParams.set('include-footnotes', 'false');
+              upstreamUrl.searchParams.set('include-verse-numbers', 'false');
+              upstreamUrl.searchParams.set('include-short-copyright', 'false');
+              upstreamUrl.searchParams.set(
+                'include-passage-references',
+                'false',
+              );
+              const upstream = await fetch(upstreamUrl, {
+                headers: { Authorization: `Token ${token}` },
+              });
+              if (!upstream.ok) {
+                res.statusCode = upstream.status === 401 ? 502 : upstream.status;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(
+                  JSON.stringify({
+                    error: `ESV text request failed (${upstream.status}).`,
+                  }),
+                );
+                return;
+              }
+              const body = await upstream.json();
+              const passages = body.passages ?? [];
+              if (passages.length === 0) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(
+                  JSON.stringify({
+                    error: `No ESV passage found for “${q}”.`,
+                  }),
+                );
+                return;
+              }
+              const text = passages.join(' ').replace(/\s+/g, ' ').trim();
+              const canonicalReference =
+                typeof body.canonical === 'string' && body.canonical.trim()
+                  ? body.canonical.trim()
+                  : q;
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  reference: q,
+                  canonicalReference,
+                  text,
+                  translation: 'ESV',
+                }),
+              );
+            } catch (error) {
+              res.statusCode = 502;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  error:
+                    error instanceof Error
+                      ? error.message
+                      : 'ESV text proxy error',
+                }),
+              );
+            }
+          });
+        },
+      },
     ],
     resolve: {
       alias: {

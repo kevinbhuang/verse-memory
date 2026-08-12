@@ -31,6 +31,12 @@ export type QuizAnswer = {
   elapsedMs: number;
 };
 
+/** Passage text stored on the session for catalogs outside the main 171. */
+export type QuizVerseSnapshot = {
+  reference: string;
+  text: string;
+};
+
 export type QuizSession = {
   id: string;
   createdAt: string;
@@ -40,4 +46,11 @@ export type QuizSession = {
   verseIds: string[];
   currentIndex: number;
   answers: QuizAnswer[];
+  /**
+   * Optional passage payloads (e.g. custom-list quizzes). When present,
+   * the runner resolves text from here instead of the main collection.
+   */
+  verseSnapshots?: Record<string, QuizVerseSnapshot>;
+  /** Where Leave / Quiz again should return (defaults to /quiz). */
+  returnPath?: string | null;
 };

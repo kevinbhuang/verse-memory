@@ -266,4 +266,27 @@ describe('VerseAudioControls', () => {
     expect(synthesis.cancel).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: /play passage once/i })).toBeInTheDocument();
   });
+
+  it('starts and stops repeat playback with P when enabled', async () => {
+    const { synthesis } = installSpeechMock(false);
+    const { user } = renderWithProviders(
+      <VerseAudioControls
+        text="Jesus wept."
+        passageKey="v1"
+        enableRepeatHotkey
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /play passage on repeat/i }),
+    ).toHaveTextContent(/\(P\)/);
+
+    await user.keyboard('p');
+    expect(await screen.findByRole('button', { name: /stop/i })).toBeInTheDocument();
+    expect(screen.getByText(/^on repeat/i)).toBeInTheDocument();
+
+    await user.keyboard('p');
+    expect(synthesis.cancel).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /play passage once/i })).toBeInTheDocument();
+  });
 });

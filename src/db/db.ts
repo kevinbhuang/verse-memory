@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import type { CustomList, CustomVerse } from '@/types/customVerse';
 import type {
   ReviewLog,
   ReviewSession,
@@ -17,7 +18,7 @@ export type MetaRecord = {
  * block below when the shape changes; never drop or recreate a table, because
  * these records are the reader's only copy of their progress.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 4;
 
 export class VerseMemoryDatabase extends Dexie {
   progress!: EntityTable<VerseProgress, 'verseId'>;
@@ -26,6 +27,8 @@ export class VerseMemoryDatabase extends Dexie {
   wordStats!: EntityTable<WordStat, 'key'>;
   settings!: EntityTable<Settings, 'id'>;
   meta!: EntityTable<MetaRecord, 'key'>;
+  customLists!: EntityTable<CustomList, 'id'>;
+  customVerses!: EntityTable<CustomVerse, 'id'>;
 
   constructor(name = 'verse-memory') {
     super(name);
@@ -71,6 +74,60 @@ export class VerseMemoryDatabase extends Dexie {
             record.sessionId ??= null;
             record.wordErrors ??= [];
           });
+      });
+
+    // v3: user-added custom verses (separate from the 171-passage collection).
+    this.version(3).stores({
+      progress:
+        'verseId, status, isMemorized, isDifficult, nextDueAt, lastReviewedAt, difficultyScore, isPinned',
+      reviewLogs: 'id, verseId, reviewedAt, mode, rating, sessionId',
+      sessions: 'id, createdAt, completedAt',
+      wordStats: 'key, verseId, wordIndex, misses',
+      settings: 'id',
+      meta: 'key',
+      customVerses: 'id, order, reference, createdAt',
+    });
+
+    // v4: named custom lists; every custom verse belongs to a list.
+    this.version(4)
+      .stores({
+        progress:
+          'verseId, status, isMemorized, isDifficult, nextDueAt, lastReviewedAt, difficultyScore, isPinned',
+        reviewLogs: 'id, verseId, reviewedAt, mode, rating, sessionId',
+        sessions: 'id, createdAt, completedAt',
+        wordStats: 'key, verseId, wordIndex, misses',
+        settings: 'id',
+        meta: 'key',
+        customLists: 'id, order, name, createdAt',
+        customVerses: 'id, listId, order, reference, createdAt',
+      })
+      .upgrade(async (transaction) => {
+        const lists = transaction.table<CustomList>('customLists');
+        const verses = transaction.table<CustomVerse>('customVerses');
+        const existing = await verses.toArray();
+        const needsList = existing.some(
+          (verse) => !('listId' in verse) || !verse.listId,
+        );
+        if (!needsList && existing.length === 0) return;
+
+        const now = new Date().toISOString();
+        let defaultList = await lists.orderBy('order').first();
+        if (!defaultList) {
+          defaultList = {
+            id: 'custom-list-default',
+            name: 'My List',
+            order: 1,
+            createdAt: now,
+            updatedAt: now,
+          };
+          await lists.put(defaultList);
+        }
+
+        await verses.toCollection().modify((verse) => {
+          if (!verse.listId) {
+            verse.listId = defaultList!.id;
+          }
+        });
       });
   }
 }

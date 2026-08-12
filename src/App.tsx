@@ -15,6 +15,7 @@ import { FriendProgressChartPage } from '@/pages/FriendProgressChartPage';
 import { FriendsPage } from '@/pages/FriendsPage';
 import { MorePage } from '@/pages/MorePage';
 import { DtChapterMemoryPage } from '@/pages/DtChapterMemoryPage';
+import { CustomVersesPage } from '@/pages/CustomVersesPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export function App() {
@@ -47,6 +48,7 @@ export function App() {
                   path="/dt-chapter-memory"
                   element={<DtChapterMemoryPage />}
                 />
+                <Route path="/custom-verses" element={<CustomVersesPage />} />
                 <Route path="/more" element={<MorePage />} />
                 <Route path="/learn" element={<Navigate to="/quiz" replace />} />
                 <Route path="/review" element={<Navigate to="/quiz" replace />} />

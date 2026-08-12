@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/EmptyState';
+import { verseFromQuizSnapshot } from '@/features/customVerses/toReviewVerse';
 import { useHotkeys } from '@/hooks/useHotkeys';
 import { getVerse } from '@/data/verses';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/services/quizService';
 import type { QuizMode, QuizSession } from '@/types/quiz';
 import { QUIZ_MODE_LABELS } from '@/types/quiz';
+import type { Verse } from '@/types';
 import { formatAccuracy } from '@/utils/format';
 import type { QuizModeProps, QuizModeResult } from './quizModeTypes';
 import { QuizReferenceMode } from './modes/QuizReferenceMode';
@@ -22,6 +24,15 @@ import { QuizFillBlankMode } from './modes/QuizFillBlankMode';
 import { QuizVoiceMode } from './modes/QuizVoiceMode';
 import { QuizSummary } from './QuizSummary';
 
+function resolveQuizVerse(
+  session: QuizSession,
+  verseId: string,
+): Verse | undefined {
+  const snapshot = session.verseSnapshots?.[verseId];
+  if (snapshot) return verseFromQuizSnapshot(verseId, snapshot);
+  return getVerse(verseId);
+}
+
 const MODE_COMPONENTS: Record<QuizMode, ComponentType<QuizModeProps>> = {
   reference: QuizReferenceMode,
   'first-words': QuizFirstWordsMode,
@@ -30,7 +41,14 @@ const MODE_COMPONENTS: Record<QuizMode, ComponentType<QuizModeProps>> = {
   voice: QuizVoiceMode,
 };
 
-export function QuizRunner({ quizId }: { quizId: string }) {
+export function QuizRunner({
+  quizId,
+  fallbackPath = '/quiz',
+}: {
+  quizId: string;
+  /** Used when the session has no returnPath (or is missing). */
+  fallbackPath?: string;
+}) {
   const navigate = useNavigate();
   const [session, setSession] = useState<QuizSession | null | undefined>(undefined);
   const [pendingResult, setPendingResult] = useState<QuizModeResult | null>(null);
@@ -44,8 +62,10 @@ export function QuizRunner({ quizId }: { quizId: string }) {
   }, [quizId]);
 
   const verseId = session?.verseIds[session.currentIndex];
-  const verse = verseId ? getVerse(verseId) : undefined;
+  const verse =
+    session && verseId ? resolveQuizVerse(session, verseId) : undefined;
   const cardKey = `${quizId}:${session?.currentIndex ?? 0}:${verseId ?? ''}`;
+  const homePath = session?.returnPath?.trim() || fallbackPath;
 
   useEffect(() => {
     setPendingResult(null);
@@ -82,8 +102,8 @@ export function QuizRunner({ quizId }: { quizId: string }) {
     if (session && !session.completedAt) {
       discardQuizSession(session.id);
     }
-    navigate('/quiz');
-  }, [navigate, session]);
+    navigate(session?.returnPath?.trim() || fallbackPath);
+  }, [fallbackPath, navigate, session]);
 
   const hotkeys = useMemo(
     () => ({
@@ -110,7 +130,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-sm text-ink-muted">That quiz no longer exists.</p>
-        <ButtonLink to="/quiz" variant="primary" className="mt-4">
+        <ButtonLink to={homePath} variant="primary" className="mt-4">
           Start a new quiz
         </ButtonLink>
       </div>

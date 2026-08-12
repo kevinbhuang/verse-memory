@@ -141,6 +141,12 @@ export function FillBlankMode({
                   [segment.wordIndex]: event.target.value,
                 }))
               }
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || checked) return;
+                event.preventDefault();
+                event.stopPropagation();
+                check();
+              }}
               className={`mx-0.5 inline-block min-w-[4.5rem] border-b-2 bg-transparent px-1 text-center font-serif outline-none ${
                 checked
                   ? ok

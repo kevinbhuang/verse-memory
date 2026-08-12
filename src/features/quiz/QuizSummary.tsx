@@ -7,6 +7,8 @@ import { formatAccuracy } from '@/utils/format';
 
 export function QuizSummary({ session }: { session: QuizSession }) {
   const score = quizScore(session);
+  const againTo = session.returnPath?.trim() || '/quiz';
+  const isCustom = Boolean(session.verseSnapshots);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
@@ -27,14 +29,19 @@ export function QuizSummary({ session }: { session: QuizSession }) {
 
       <ul className="mt-6 divide-y divide-line rounded-xl border border-line bg-surface">
         {session.answers.map((answer) => {
-          const verse = getVerse(answer.verseId);
+          const snapshot = session.verseSnapshots?.[answer.verseId];
+          const verse = snapshot
+            ? null
+            : getVerse(answer.verseId);
+          const reference =
+            snapshot?.reference ?? verse?.reference ?? answer.verseId;
           return (
             <li
               key={`${answer.verseId}-${answer.elapsedMs}`}
               className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
             >
               <span className="min-w-0 truncate font-medium text-ink">
-                {verse?.reference ?? answer.verseId}
+                {reference}
               </span>
               <span
                 className={
@@ -49,12 +56,18 @@ export function QuizSummary({ session }: { session: QuizSession }) {
       </ul>
 
       <div className="mt-8 flex flex-wrap gap-2">
-        <ButtonLink to="/quiz" variant="primary">
+        <ButtonLink to={againTo} variant="primary">
           Quiz again
         </ButtonLink>
-        <ButtonLink to="/verses" variant="secondary">
-          Library
-        </ButtonLink>
+        {isCustom ? (
+          <ButtonLink to={againTo} variant="secondary">
+            Back to custom verses
+          </ButtonLink>
+        ) : (
+          <ButtonLink to="/verses" variant="secondary">
+            Library
+          </ButtonLink>
+        )}
       </div>
     </div>
   );

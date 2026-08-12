@@ -2,7 +2,12 @@ import { createId } from '@/lib/id';
 import { verses } from '@/data/verses';
 import { bookFromReference } from '@/lib/text/books';
 import type { Section, VerseProgress } from '@/types';
-import type { QuizAnswer, QuizMode, QuizSession } from '@/types/quiz';
+import type {
+  QuizAnswer,
+  QuizMode,
+  QuizSession,
+  QuizVerseSnapshot,
+} from '@/types/quiz';
 
 const STORAGE_PREFIX = 'verse-memory:quiz:';
 
@@ -91,6 +96,79 @@ export function createQuizSession(
     verseIds,
     currentIndex: 0,
     answers: [],
+  };
+  saveQuizSession(session);
+  return session;
+}
+
+export type QuizPassageInput = {
+  id: string;
+  reference: string;
+  text: string;
+};
+
+/**
+ * Build a quiz from an explicit passage set (custom lists, etc.).
+ * Snapshots are stored on the session so the runner does not need Dexie.
+ */
+export function createQuizSessionFromPassages(
+  passages: QuizPassageInput[],
+  mode: QuizMode,
+  label: string,
+  options: {
+    size?: number | 'all';
+    shuffle?: boolean;
+    returnPath?: string;
+    progressFilter?: QuizProgressFilter;
+    progressList?: VerseProgress[] | Map<string, VerseProgress>;
+  } = {},
+  now: Date = new Date(),
+): QuizSession | null {
+  const byId = progressMap(options.progressList);
+  const progressFilter = options.progressFilter ?? 'all';
+
+  let filtered = passages.filter((passage) => {
+    if (progressFilter === 'memorized') {
+      return byId.get(passage.id)?.isMemorized === true;
+    }
+    if (progressFilter === 'needs-review') {
+      return byId.get(passage.id)?.isDifficult === true;
+    }
+    return true;
+  });
+
+  if (options.shuffle !== false) {
+    filtered = shuffleInPlace([...filtered]);
+  }
+
+  const size = options.size ?? 'all';
+  if (size !== 'all') {
+    filtered = filtered.slice(0, Math.max(0, size));
+  }
+
+  if (filtered.length === 0) return null;
+
+  const verseSnapshots: Record<string, QuizVerseSnapshot> = {};
+  const verseIds: string[] = [];
+  for (const passage of filtered) {
+    verseIds.push(passage.id);
+    verseSnapshots[passage.id] = {
+      reference: passage.reference,
+      text: passage.text,
+    };
+  }
+
+  const session: QuizSession = {
+    id: createId('quiz'),
+    createdAt: now.toISOString(),
+    completedAt: null,
+    label,
+    mode,
+    verseIds,
+    currentIndex: 0,
+    answers: [],
+    verseSnapshots,
+    returnPath: options.returnPath ?? null,
   };
   saveQuizSession(session);
   return session;

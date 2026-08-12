@@ -14,6 +14,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/esv-text"
+  to = "/.netlify/functions/esv-text"
+  status = 200
+  force = true
+
 # Single-page application fallback. The service worker handles offline
 # navigation once the app has been loaded at least once.
 [[redirects]]

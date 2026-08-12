@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { Pause, Volume2 } from 'lucide-react';
+import { useHotkeys } from '@/hooks/useHotkeys';
 import { useVerseSpeech } from '@/hooks/useVerseSpeech';
 import {
   SPEAK_RATES,
@@ -13,6 +15,11 @@ type VerseAudioControlsProps = {
   /** Change when the active passage changes so playback stops. */
   passageKey: string;
   className?: string;
+  /**
+   * When true, P toggles play-on-repeat (starts looping, or stops if already
+   * playing). Used on Flash Cards.
+   */
+  enableRepeatHotkey?: boolean;
 };
 
 /**
@@ -24,8 +31,25 @@ export function VerseAudioControls({
   reference,
   passageKey,
   className,
+  enableRepeatHotkey = false,
 }: VerseAudioControlsProps) {
   const speech = useVerseSpeech(text, passageKey, reference);
+  const { play, stop, playing, supported } = speech;
+
+  const audioHotkeys = useMemo(
+    () => ({
+      p: () => {
+        if (playing) {
+          stop();
+          return;
+        }
+        play('loop');
+      },
+    }),
+    [play, playing, stop],
+  );
+
+  useHotkeys(audioHotkeys, { enabled: enableRepeatHotkey && supported });
 
   if (!speech.supported) {
     return (
@@ -53,9 +77,10 @@ export function VerseAudioControls({
             type="button"
             onClick={speech.stop}
             className="inline-flex items-center gap-1 text-ink-muted underline-offset-2 hover:text-ink hover:underline"
+            title={enableRepeatHotkey ? 'Stop (P)' : undefined}
           >
             <Pause className="size-3" aria-hidden="true" />
-            Stop
+            Stop{enableRepeatHotkey ? ' (P)' : ''}
           </button>
         </>
       ) : (
@@ -72,9 +97,10 @@ export function VerseAudioControls({
             type="button"
             onClick={() => speech.play('loop')}
             aria-label="Play passage on repeat"
+            title={enableRepeatHotkey ? 'Play on repeat (P)' : undefined}
             className="text-ink-muted underline-offset-2 hover:text-ink hover:underline"
           >
-            Play on repeat
+            Play on repeat{enableRepeatHotkey ? ' (P)' : ''}
           </button>
         </>
       )}

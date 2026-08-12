@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Ellipsis,
   Layers,
+  ListPlus,
   Printer,
   UserPlus,
   Users,
@@ -13,6 +14,7 @@ import {
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
 import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
+import { useAuth } from '@/hooks/useAuth';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { Footer } from './Footer';
 import { AppBrand } from './AppBrand';
@@ -50,6 +52,13 @@ const DT_NAV: NavItem = {
   label: 'DT Chapter Memory',
   shortLabel: 'DT',
   icon: BookMarked,
+};
+
+const CUSTOM_NAV: NavItem = {
+  to: '/custom-verses',
+  label: 'Add Custom Verses',
+  shortLabel: 'Custom',
+  icon: ListPlus,
 };
 
 const MORE_NAV: NavItem = {
@@ -96,15 +105,21 @@ function NavItemLink({ item }: { item: NavItem }) {
 
 export function AppLayout() {
   const location = useLocation();
+  const { configured, user } = useAuth();
   const { hasJoinedGroup } = useJoinedGroups();
   useAppNavHotkeys();
+  const showCustomVerses = Boolean(configured && user);
   // The active review / quiz screen is deliberately free of navigation chrome.
   const focusMode =
     location.pathname.startsWith('/review/session') ||
     location.pathname.startsWith('/quiz/session') ||
     (location.pathname.startsWith('/dt-chapter-memory') &&
       /[?&]practice=[^&]+/.test(location.search) &&
-      /[?&]mode=(first-letter|flashcard)/.test(location.search));
+      /[?&]mode=(first-letter|flashcard)/.test(location.search)) ||
+    (location.pathname.startsWith('/custom-verses') &&
+      ((/[?&]practice=[^&]+/.test(location.search) &&
+        /[?&]mode=(first-letter|fill-blank)/.test(location.search)) ||
+        /[?&]quiz=[^&]+/.test(location.search)));
 
   const groupsNav = hasJoinedGroup
     ? {
@@ -129,7 +144,13 @@ export function AppLayout() {
     );
   }
 
-  const mobileNav = [...PRIMARY_NAV, DT_NAV, MORE_NAV, groupsNav];
+  const mobileNav = [
+    ...PRIMARY_NAV,
+    DT_NAV,
+    ...(showCustomVerses ? [CUSTOM_NAV] : []),
+    MORE_NAV,
+    groupsNav,
+  ];
 
   return (
     <div className="min-h-full bg-paper">
@@ -156,6 +177,7 @@ export function AppLayout() {
             />
 
             <NavItemLink item={DT_NAV} />
+            {showCustomVerses ? <NavItemLink item={CUSTOM_NAV} /> : null}
             <NavItemLink item={MORE_NAV} />
           </nav>
 

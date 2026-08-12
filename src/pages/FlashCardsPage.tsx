@@ -225,12 +225,13 @@ export function FlashCardsPage() {
     <>
       <PageHeader
         title="Flash Cards"
-        description="Space hide · F first-letter cue · T type first letter · B fill in the blank."
+        actions={
+          <p className="pb-0.5 text-sm text-ink-muted tabular-nums">
+            {positionLabel}
+          </p>
+        }
+        className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4"
       />
-
-      <div className="mb-5 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">
-        <p className="text-sm text-ink-muted tabular-nums">{positionLabel}</p>
-      </div>
 
       <div className="mx-auto w-full max-w-2xl space-y-5">
         <div className="flex items-center justify-between gap-2">
@@ -268,6 +269,7 @@ export function FlashCardsPage() {
             reference={verse.reference}
             passageKey={verse.id}
             className="mt-3"
+            enableRepeatHotkey
           />
         </div>
 
@@ -342,7 +344,7 @@ export function FlashCardsPage() {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
           <Button
             variant="ghost"
             size="sm"
@@ -360,13 +362,6 @@ export function FlashCardsPage() {
               </>
             )}
           </Button>
-
-          <p className="text-xs text-ink-subtle" aria-live="polite">
-            T type first letter · B fill blank · F first-letter cue · M memorized
-            · N Needs Review · Space{' '}
-            {firstLetterMode ? 'show/hide first letters' : 'show/hide'} · ← →
-            move
-          </p>
         </div>
       </div>
     </>
