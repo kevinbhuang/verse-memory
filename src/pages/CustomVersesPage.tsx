@@ -643,7 +643,7 @@ export function CustomVersesPage() {
                 aria-label="Custom list"
                 value={activeListId ?? ''}
                 onChange={(event) => selectList(event.target.value)}
-                className="h-8 min-w-[8.5rem] max-w-[13rem] py-1 text-sm"
+                className="min-w-[8.5rem] max-w-[13rem]"
               >
                 {lists.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -739,14 +739,12 @@ export function CustomVersesPage() {
                   onChange={(event) => setNewListName(event.target.value)}
                   placeholder="List name"
                   aria-label="New list name"
-                  className="h-8 py-1"
                 />
               ) : (
                 <Select
                   aria-label="Existing custom list"
                   value={existingListId || activeListId || ''}
                   onChange={(event) => setExistingListId(event.target.value)}
-                  className="h-8 py-1 text-sm"
                 >
                   {lists.map((item) => (
                     <option key={item.id} value={item.id}>

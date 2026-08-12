@@ -9,7 +9,7 @@ import {
 import clsx from 'clsx';
 
 const control =
-  'w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent disabled:opacity-60';
+  'w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm leading-normal text-ink placeholder:text-ink-subtle focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent disabled:opacity-60';
 
 export function Field({
   label,
@@ -62,7 +62,17 @@ export const Select = forwardRef<
   HTMLSelectElement,
   SelectHTMLAttributes<HTMLSelectElement>
 >(({ className, ...props }, ref) => (
-  <select ref={ref} className={clsx(control, 'pr-8', className)} {...props} />
+  <select
+    ref={ref}
+    className={clsx(
+      control,
+      // Native <select> text clips easily with tight height/padding; keep room
+      // for the face metrics used across the app.
+      'min-h-10 pr-8 leading-normal',
+      className,
+    )}
+    {...props}
+  />
 ));
 Select.displayName = 'Select';
 
