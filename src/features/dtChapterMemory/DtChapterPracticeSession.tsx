@@ -39,9 +39,9 @@ export function DtChapterPracticeSession({ deckId, mode, onExit }: Props) {
 
   if (!deck) {
     return (
-      <div className="space-y-4">
+      <div className="mx-auto w-full max-w-3xl px-4 py-4 sm:px-6">
         <p className="text-sm text-ink-muted">Chapter not found.</p>
-        <Button variant="secondary" onClick={onExit}>
+        <Button variant="secondary" className="mt-4" onClick={onExit}>
           Back
         </Button>
       </div>
@@ -57,65 +57,67 @@ export function DtChapterPracticeSession({ deckId, mode, onExit }: Props) {
       : 'See verse using first letters';
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onExit}>
-            <X className="size-4" aria-hidden="true" />
-            Exit
-          </Button>
-          <p className="text-sm text-ink-muted">{modeLabel}</p>
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={onExit}>
+              <X className="size-4" aria-hidden="true" />
+              Exit
+            </Button>
+            <p className="text-sm text-ink-muted">{modeLabel}</p>
+          </div>
         </div>
-      </div>
 
-      <VerseAudioControls
-        text={verse.text}
-        reference={verse.reference}
-        passageKey={attemptKey}
-      />
-
-      {mode === 'first-letter' ? (
-        <FirstLetterMode
-          verse={verse}
-          progress={progress}
-          settings={reviewSettings}
-          wordStats={[]}
-          onComplete={setResult}
-          attemptKey={attemptKey}
-          onRetry={() => {
-            setResult(null);
-            setAttempt((n) => n + 1);
-          }}
-          onShowFirstLetterSkeletonChange={setShowNextLetter}
+        <VerseAudioControls
+          text={verse.text}
+          reference={verse.reference}
+          passageKey={attemptKey}
         />
-      ) : (
-        <FlashcardMode
-          verse={verse}
-          progress={progress}
-          settings={reviewSettings}
-          wordStats={[]}
-          onComplete={setResult}
-          attemptKey={attemptKey}
-        />
-      )}
 
-      {result ? (
-        <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
+        {mode === 'first-letter' ? (
+          <FirstLetterMode
+            verse={verse}
+            progress={progress}
+            settings={reviewSettings}
+            wordStats={[]}
+            onComplete={setResult}
+            attemptKey={attemptKey}
+            onRetry={() => {
               setResult(null);
               setAttempt((n) => n + 1);
             }}
-          >
-            Practice again
-          </Button>
-          <Button variant="primary" size="sm" onClick={onExit}>
-            Back to chapters
-          </Button>
-        </div>
-      ) : null}
+            onShowFirstLetterSkeletonChange={setShowNextLetter}
+          />
+        ) : (
+          <FlashcardMode
+            verse={verse}
+            progress={progress}
+            settings={reviewSettings}
+            wordStats={[]}
+            onComplete={setResult}
+            attemptKey={attemptKey}
+          />
+        )}
+
+        {result ? (
+          <div className="flex flex-wrap gap-2 border-t border-line pt-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setResult(null);
+                setAttempt((n) => n + 1);
+              }}
+            >
+              Practice again
+            </Button>
+            <Button variant="primary" size="sm" onClick={onExit}>
+              Back to chapters
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -11,10 +11,10 @@ export function NotFoundPage() {
       </p>
       <div className="mt-5 flex justify-center gap-2">
         <ButtonLink to="/flashcards" variant="primary">
-          Library
+          Flash Cards
         </ButtonLink>
-        <ButtonLink to="/practice" variant="secondary">
-          Practice
+        <ButtonLink to="/quiz" variant="secondary">
+          Quiz
         </ButtonLink>
       </div>
     </div>

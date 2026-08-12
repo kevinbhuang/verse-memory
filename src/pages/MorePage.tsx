@@ -128,14 +128,14 @@ export function MorePage() {
               Shortcuts: <span className="text-ink">1</span> Flash Cards ·{' '}
               <span className="text-ink">2</span> Library ·{' '}
               <span className="text-ink">3</span> Progress Chart ·{' '}
-              <span className="text-ink">4</span> Practice ·{' '}
-              <span className="text-ink">5</span> Quiz ·{' '}
-              <span className="text-ink">6</span> Print ·{' '}
-              <span className="text-ink">7</span> More ·{' '}
-              <span className="text-ink">8</span> DT Chapter Memory ·{' '}
-              <span className="text-ink">9</span> Groups (also L / C / P / Q). On
-              Flash Cards, F / M / N / Space handle first letters, Memorized,
-              Needs Review, and show/hide.
+              <span className="text-ink">4</span> Quiz ·{' '}
+              <span className="text-ink">5</span> Print ·{' '}
+              <span className="text-ink">6</span> More ·{' '}
+              <span className="text-ink">7</span> DT Chapter Memory ·{' '}
+              <span className="text-ink">8</span> Groups (also L / C / Q). On
+              Flash Cards, T / B start type-first-letter or fill-blank practice;
+              F / M / N / Space handle first-letter cue, Memorized, Needs Review,
+              and show/hide.
             </p>
             <p>
               Questions or feedback?{' '}
@@ -158,8 +158,8 @@ export function MorePage() {
               </a>
             </p>
             <p>
-              <Link to="/practice" className="text-accent hover:underline">
-                Back to Practice
+              <Link to="/quiz" className="text-accent hover:underline">
+                Back to Quiz
               </Link>
             </p>
           </CardBody>

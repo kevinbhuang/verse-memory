@@ -3,6 +3,7 @@ export const QUIZ_MODES = [
   'first-words',
   'first-letter',
   'fill-blank',
+  'voice',
 ] as const;
 
 export type QuizMode = (typeof QUIZ_MODES)[number];
@@ -12,6 +13,7 @@ export const QUIZ_MODE_LABELS: Record<QuizMode, string> = {
   'first-words': 'First three words',
   'first-letter': 'First letters',
   'fill-blank': 'Fill in the blank',
+  voice: 'Practice speaking',
 };
 
 export const QUIZ_MODE_DESCRIPTIONS: Record<QuizMode, string> = {
@@ -19,6 +21,7 @@ export const QUIZ_MODE_DESCRIPTIONS: Record<QuizMode, string> = {
   'first-words': 'See the reference, then type the first three words.',
   'first-letter': 'Type the first letter of each word to reveal the passage.',
   'fill-blank': 'Fill in the missing words in the passage.',
+  voice: 'Recite aloud and check your spoken recall.',
 };
 
 export type QuizAnswer = {

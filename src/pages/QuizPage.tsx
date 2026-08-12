@@ -4,6 +4,7 @@ import {
   BookOpen,
   ClipboardList,
   Keyboard,
+  Mic,
   PencilLine,
   Play,
   Quote,
@@ -41,6 +42,7 @@ const MODE_ICONS: Record<QuizMode, typeof Quote> = {
   'first-words': Quote,
   'first-letter': Keyboard,
   'fill-blank': PencilLine,
+  voice: Mic,
 };
 
 function decksLabel(sections: readonly Section[]): string {

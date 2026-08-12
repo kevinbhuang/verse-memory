@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { requireVerse } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
+import { getDataStore } from '@/repositories';
 import { renderWithProviders, visibleText } from '@/test/render';
 import { FlashCardsPage } from './FlashCardsPage';
 
@@ -138,10 +139,10 @@ describe('FlashCardsPage', () => {
 
     await screen.findByText(first.reference);
     const memorized = await screen.findByRole('button', {
-      name: /mark memorized/i,
+      name: /mark memorized \(m\)/i,
     });
     const needsReview = screen.getByRole('button', {
-      name: /mark needs review/i,
+      name: /mark needs review \(n\)/i,
     });
 
     await user.keyboard('m');
@@ -151,5 +152,71 @@ describe('FlashCardsPage', () => {
     await waitFor(() =>
       expect(needsReview).toHaveAttribute('aria-pressed', 'true'),
     );
+  });
+
+  it('can start type-first-letter practice for the current verse', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    await user.click(
+      screen.getByRole('button', { name: /type first letter \(t\)/i }),
+    );
+
+    await waitFor(async () => {
+      const [session] = await getDataStore().sessions.all();
+      expect(session.fixedMode).toBe('first-letter');
+      expect(session.verseIds).toEqual([first.id]);
+      expect(session.label).toMatch(/type first letter/i);
+    });
+  });
+
+  it('can start fill-in-the-blank practice for the current verse', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    await user.click(
+      screen.getByRole('button', { name: /fill in the blank \(b\)/i }),
+    );
+
+    await waitFor(async () => {
+      const [session] = await getDataStore().sessions.all();
+      expect(session.fixedMode).toBe('fill-blank');
+      expect(session.verseIds).toEqual([first.id]);
+      expect(session.label).toMatch(/fill in the blank/i);
+    });
+  });
+
+  it('starts type-first-letter practice with T', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    await user.keyboard('t');
+
+    await waitFor(async () => {
+      const [session] = await getDataStore().sessions.all();
+      expect(session.fixedMode).toBe('first-letter');
+      expect(session.verseIds).toEqual([first.id]);
+    });
+  });
+
+  it('starts fill-in-the-blank practice with B', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    await user.keyboard('b');
+
+    await waitFor(async () => {
+      const [session] = await getDataStore().sessions.all();
+      expect(session.fixedMode).toBe('fill-blank');
+      expect(session.verseIds).toEqual([first.id]);
+    });
   });
 });

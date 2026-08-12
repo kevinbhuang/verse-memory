@@ -6,6 +6,8 @@ import {
   Eye,
   EyeOff,
   Flag,
+  Keyboard,
+  TextCursorInput,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ScriptureText } from '@/components/ScriptureText';
@@ -17,6 +19,8 @@ import { useVerseProgress } from '@/hooks/useProgressData';
 import { verses } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { setDifficult, setMemorized } from '@/services/progressService';
+import { createSession } from '@/services/sessionService';
+import type { ReviewMode } from '@/types';
 import { VerseAudioControls } from '@/features/review/VerseAudioControls';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
@@ -168,6 +172,29 @@ export function FlashCardsPage() {
     );
   };
 
+  const startPractice = async (
+    mode: Extract<ReviewMode, 'first-letter' | 'fill-blank'>,
+  ) => {
+    const label =
+      mode === 'first-letter'
+        ? `Type first letter \u2014 ${verse.reference}`
+        : `Fill in the blank \u2014 ${verse.reference}`;
+    const session = await createSession(
+      {
+        source: 'custom',
+        verseIds: [verse.id],
+        size: 'all',
+        modeStrategy: 'fixed',
+        fixedMode: mode,
+      },
+      label,
+    );
+    if (session) {
+      const returnTo = encodeURIComponent(`/flashcards?verse=${verse.id}`);
+      navigate(`/review/session?id=${session.id}&return=${returnTo}`);
+    }
+  };
+
   useHotkeys({
     arrowleft: () => {
       if (canGoPrev) goTo(index - 1);
@@ -179,6 +206,12 @@ export function FlashCardsPage() {
     enter: () => toggleVisibility(),
     h: () => toggleVisibility(),
     f: () => toggleFirstLetterMode(),
+    t: () => {
+      void startPractice('first-letter');
+    },
+    b: () => {
+      void startPractice('fill-blank');
+    },
     m: () => toggleMemorized(),
     n: () => toggleNeedsReview(),
   });
@@ -192,7 +225,7 @@ export function FlashCardsPage() {
     <>
       <PageHeader
         title="Flash Cards"
-        description="Press spacebar to hide, or press F for first-letter only."
+        description="Space hide · F first-letter cue · T type first letter · B fill in the blank."
       />
 
       <div className="mb-5 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">
@@ -238,29 +271,53 @@ export function FlashCardsPage() {
           />
         </div>
 
-        {progress ? (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={progress.isMemorized ? 'quiet' : 'secondary'}
-              onClick={toggleMemorized}
-              aria-pressed={progress.isMemorized}
-              title="Toggle memorized (M)"
-            >
-              {progress.isMemorized ? 'Clear memorized' : 'Mark memorized'}
-            </Button>
-            <Button
-              size="sm"
-              variant={progress.isDifficult ? 'quiet' : 'secondary'}
-              onClick={toggleNeedsReview}
-              aria-pressed={progress.isDifficult}
-              title="Toggle Needs Review (N)"
-            >
-              <Flag className="size-3.5" aria-hidden="true" />
-              {progress.isDifficult ? 'Clear Needs Review' : 'Mark Needs Review'}
-            </Button>
-          </div>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void startPractice('first-letter')}
+            title="Type first letter (T)"
+          >
+            <Keyboard className="size-3.5" aria-hidden="true" />
+            Type first letter (T)
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void startPractice('fill-blank')}
+            title="Fill in the blank (B)"
+          >
+            <TextCursorInput className="size-3.5" aria-hidden="true" />
+            Fill in the blank (B)
+          </Button>
+          {progress ? (
+            <>
+              <Button
+                size="sm"
+                variant={progress.isMemorized ? 'quiet' : 'secondary'}
+                onClick={toggleMemorized}
+                aria-pressed={progress.isMemorized}
+                title="Toggle memorized (M)"
+              >
+                {progress.isMemorized
+                  ? 'Clear memorized (M)'
+                  : 'Mark memorized (M)'}
+              </Button>
+              <Button
+                size="sm"
+                variant={progress.isDifficult ? 'quiet' : 'secondary'}
+                onClick={toggleNeedsReview}
+                aria-pressed={progress.isDifficult}
+                title="Toggle Needs Review (N)"
+              >
+                <Flag className="size-3.5" aria-hidden="true" />
+                {progress.isDifficult
+                  ? 'Clear Needs Review (N)'
+                  : 'Mark Needs Review (N)'}
+              </Button>
+            </>
+          ) : null}
+        </div>
 
         {revealed ? (
           <div className="rounded-xl border border-line bg-surface px-5 py-6">
@@ -305,8 +362,8 @@ export function FlashCardsPage() {
           </Button>
 
           <p className="text-xs text-ink-subtle" aria-live="polite">
-            F toggle first letters · M toggle memorized · N toggle Needs Review ·
-            Space{' '}
+            T type first letter · B fill blank · F first-letter cue · M memorized
+            · N Needs Review · Space{' '}
             {firstLetterMode ? 'show/hide first letters' : 'show/hide'} · ← →
             move
           </p>

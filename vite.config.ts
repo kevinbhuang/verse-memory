@@ -80,8 +80,10 @@ export default defineConfig(({ mode }) => {
         '/api/esv-audio': {
           target: 'https://api.esv.org',
           changeOrigin: true,
+          // Trailing slash required — without it ESV 301s and <audio> falls
+          // back to browser TTS (often a female system voice).
           rewrite: (path) =>
-            path.replace(/^\/api\/esv-audio/, '/v3/passage/audio'),
+            path.replace(/^\/api\/esv-audio/, '/v3/passage/audio/'),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
               if (env.ESV_API_TOKEN) {

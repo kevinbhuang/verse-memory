@@ -7,7 +7,6 @@ import {
   Ellipsis,
   Layers,
   Printer,
-  Repeat2,
   UserPlus,
   Users,
 } from 'lucide-react';
@@ -42,7 +41,6 @@ const PRIMARY_NAV: NavItem[] = [
     shortLabel: 'Chart',
     icon: ChartColumn,
   },
-  { to: '/practice', label: 'Practice', shortLabel: 'Practice', icon: Repeat2 },
   { to: '/quiz', label: 'Quiz', shortLabel: 'Quiz', icon: ClipboardList },
   { to: '/print', label: 'Print', shortLabel: 'Print', icon: Printer },
 ];
@@ -143,7 +141,7 @@ export function AppLayout() {
       <div className="mx-auto flex w-full max-w-7xl">
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line px-4 py-6 lg:flex">
           <div className="px-1">
-            <AppBrand showSubtitle />
+            <AppBrand />
           </div>
 
           <nav aria-label="Main" className="mt-8 flex-1 space-y-0.5">

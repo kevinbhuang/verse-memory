@@ -78,36 +78,41 @@ test.describe('completing a first-letter review', () => {
   });
 
   test('discards a session when leaving mid-way', async ({ page }) => {
-    await page.goto('/practice');
+    await page.goto('/quiz');
     await page.getByRole('button', { name: /deck 1/i }).click();
     await page
-      .getByRole('button', { name: /type the first letter of each word/i })
+      .getByRole('button', {
+        name: /first letters.*first letter of each word/i,
+      })
       .click();
-    await expect(page.getByText(/passages/i).first()).toBeVisible();
-    await page.getByRole('button', { name: /^start$/i }).click();
+    await page.getByRole('button', { name: /all \d+ passages/i }).click();
+    await page.getByRole('button', { name: /start quiz/i }).click();
 
-    await expect(page.getByText(/passage 1 of/i)).toBeVisible();
-    await page.getByRole('button', { name: /skip/i }).click();
-    await expect(page.getByText(/passage 2 of/i)).toBeVisible();
-
+    await expect(page.getByText(/question 1 of/i)).toBeVisible();
     await page.keyboard.press('Escape');
 
-    await expect(page.getByRole('heading', { level: 2, name: /^practice$/i })).toBeVisible();
-    await expect(page.getByText(/you have an unfinished session/i)).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 2, name: /^quiz$/i })).toBeVisible();
   });
 
-  test('a deck session stays inside that section', async ({ page }) => {
-    await page.goto('/practice?section=Acts');
+  test('a deck quiz stays inside that section', async ({ page }) => {
+    await page.goto('/quiz');
+    await page.getByRole('button', { name: /deck 5/i }).click();
+    // Deselect default deck 1 if still selected.
+    const deck1 = page.getByRole('button', { name: /deck 1/i });
+    if ((await deck1.getAttribute('aria-pressed')) === 'true') {
+      await deck1.click();
+    }
     await expect(page.getByRole('button', { name: /deck 5/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    await expect(page.getByText(/4 passage/i)).toBeVisible();
-
     await page
-      .getByRole('button', { name: /type the first letter of each word/i })
+      .getByRole('button', {
+        name: /first letters.*first letter of each word/i,
+      })
       .click();
-    await page.getByRole('button', { name: /^start$/i }).click();
-    await expect(page.getByText(/passage 1 of 4/i)).toBeVisible();
+    await page.getByRole('button', { name: /all \d+ passages/i }).click();
+    await page.getByRole('button', { name: /start quiz/i }).click();
+    await expect(page.getByText(/question 1 of 4/i)).toBeVisible();
   });
 });

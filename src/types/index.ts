@@ -38,6 +38,7 @@ export const REVIEW_MODES = [
   'flashcard',
   'learn',
   'first-letter',
+  'fill-blank',
   'progressive-hide',
   'full-typing',
   'reference',

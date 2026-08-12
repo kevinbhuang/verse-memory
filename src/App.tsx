@@ -6,7 +6,6 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { FlashCardsPage } from '@/pages/FlashCardsPage';
 import { VerseDetailPage } from '@/pages/VerseDetailPage';
-import { PracticePage } from '@/pages/PracticePage';
 import { QuizPage } from '@/pages/QuizPage';
 import { QuizSessionPage } from '@/pages/QuizSessionPage';
 import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
@@ -27,7 +26,10 @@ export function App() {
             <Routes>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Navigate to="/flashcards" replace />} />
-                <Route path="/practice" element={<PracticePage />} />
+                <Route
+                  path="/practice"
+                  element={<Navigate to="/quiz" replace />}
+                />
                 <Route path="/flashcards" element={<FlashCardsPage />} />
                 <Route path="/quiz" element={<QuizPage />} />
                 <Route path="/quiz/session" element={<QuizSessionPage />} />
@@ -46,8 +48,8 @@ export function App() {
                   element={<DtChapterMemoryPage />}
                 />
                 <Route path="/more" element={<MorePage />} />
-                <Route path="/learn" element={<Navigate to="/practice" replace />} />
-                <Route path="/review" element={<Navigate to="/practice" replace />} />
+                <Route path="/learn" element={<Navigate to="/quiz" replace />} />
+                <Route path="/review" element={<Navigate to="/quiz" replace />} />
                 <Route
                   path="/progress"
                   element={<Navigate to="/progress-chart" replace />}

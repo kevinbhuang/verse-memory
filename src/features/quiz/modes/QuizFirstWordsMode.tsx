@@ -19,6 +19,7 @@ export function QuizFirstWordsMode({
   const [correct, setCorrect] = useState(false);
   const startedAt = useRef(Date.now());
   const completed = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setEntry('');
@@ -26,6 +27,10 @@ export function QuizFirstWordsMode({
     setCorrect(false);
     startedAt.current = Date.now();
     completed.current = false;
+    const id = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
   }, [attemptKey]);
 
   const check = () => {
@@ -64,6 +69,7 @@ export function QuizFirstWordsMode({
 
       <Field label="First three words" htmlFor="quiz-first-words">
         <TextInput
+          ref={inputRef}
           id="quiz-first-words"
           value={entry}
           onChange={(event) => setEntry(event.target.value)}

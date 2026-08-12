@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Check,
   ChevronLeft,
@@ -26,6 +26,7 @@ import {
   skipCard,
 } from '@/services/sessionService';
 import { setDifficult, setMemorized } from '@/services/progressService';
+import { safeReturnPath } from '@/lib/safeReturnPath';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ModeResult, ReviewMode } from '@/types';
 import { VerseAudioControls } from './VerseAudioControls';
@@ -33,6 +34,7 @@ import { emptyResult } from './modeTypes';
 import { FlashcardMode } from './modes/FlashcardMode';
 import { LearnFlashcardMode } from './modes/LearnFlashcardMode';
 import { FirstLetterMode } from './modes/FirstLetterMode';
+import { FillBlankMode } from './modes/FillBlankMode';
 import { ProgressiveHideMode } from './modes/ProgressiveHideMode';
 import { FullTypingMode } from './modes/FullTypingMode';
 import { ReferenceMode } from './modes/ReferenceMode';
@@ -43,6 +45,7 @@ const MODE_COMPONENTS = {
   flashcard: FlashcardMode,
   learn: LearnFlashcardMode,
   'first-letter': FirstLetterMode,
+  'fill-blank': FillBlankMode,
   'progressive-hide': ProgressiveHideMode,
   'full-typing': FullTypingMode,
   reference: ReferenceMode,
@@ -56,8 +59,10 @@ type LearnPracticeMode = Extract<ReviewMode, 'first-letter' | 'voice'>;
 
 export function SessionRunner({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { notify } = useToast();
   const { settings } = useSettings();
+  const returnTo = safeReturnPath(searchParams.get('return'));
 
   const session = useSession(sessionId);
   const verseId = session?.verseIds[session.currentIndex];
@@ -132,8 +137,20 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     if (session) {
       await abandonSession(session.id);
     }
-    navigate('/practice');
-  }, [navigate, session]);
+    navigate(returnTo);
+  }, [navigate, returnTo, session]);
+
+  const returnToFlashcards = returnTo.startsWith('/flashcards');
+
+  // Single-verse drills from Flash Cards skip the summary and land back on the card.
+  useEffect(() => {
+    if (!session || !returnToFlashcards) return;
+    const done =
+      session.completedAt !== null ||
+      session.currentIndex >= session.verseIds.length;
+    if (!done) return;
+    navigate(returnTo, { replace: true });
+  }, [navigate, returnTo, returnToFlashcards, session]);
 
   const hotkeys = useMemo(
     () => ({
@@ -205,8 +222,12 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
         <p className="text-sm text-ink-muted">
           That practice session no longer exists.
         </p>
-        <ButtonLink to="/practice" variant="primary">
-          Build a new session
+        <ButtonLink to={returnTo} variant="primary">
+          {returnTo.startsWith('/flashcards')
+            ? 'Back to flash cards'
+            : returnTo.startsWith('/quiz')
+              ? 'Back to quiz'
+              : 'Back'}
         </ButtonLink>
       </div>
     );
@@ -217,7 +238,10 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     session.currentIndex >= session.verseIds.length;
 
   if (finished) {
-    return <SessionSummary session={session} />;
+    if (returnToFlashcards) {
+      return <LoadingState label={'Returning to flash cards\u2026'} />;
+    }
+    return <SessionSummary session={session} returnTo={returnTo} />;
   }
 
   if (!verse || !progress || wordStats === undefined) {

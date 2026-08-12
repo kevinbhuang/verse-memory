@@ -23,6 +23,11 @@ describe('QuizPage', () => {
     expect(
       screen.getByRole('button', { name: /fill in the blank/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: /practice speaking.*recite aloud/i,
+      }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^books$/i }));
     expect(screen.getByRole('group', { name: /^books$/i })).toBeInTheDocument();

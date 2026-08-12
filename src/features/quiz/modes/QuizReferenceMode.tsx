@@ -19,12 +19,17 @@ export function QuizReferenceMode({
   const [outcome, setOutcome] = useState<ReferenceMatch | null>(null);
   const startedAt = useRef(Date.now());
   const completed = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setEntry('');
     setOutcome(null);
     startedAt.current = Date.now();
     completed.current = false;
+    const id = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
   }, [attemptKey]);
 
   const check = () => {
@@ -55,6 +60,7 @@ export function QuizReferenceMode({
         hint="Example: John 3 or Jn 3:16"
       >
         <TextInput
+          ref={inputRef}
           id="quiz-reference"
           value={entry}
           onChange={(event) => setEntry(event.target.value)}

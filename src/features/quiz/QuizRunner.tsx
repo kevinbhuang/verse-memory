@@ -19,6 +19,7 @@ import { QuizReferenceMode } from './modes/QuizReferenceMode';
 import { QuizFirstWordsMode } from './modes/QuizFirstWordsMode';
 import { QuizFirstLetterMode } from './modes/QuizFirstLetterMode';
 import { QuizFillBlankMode } from './modes/QuizFillBlankMode';
+import { QuizVoiceMode } from './modes/QuizVoiceMode';
 import { QuizSummary } from './QuizSummary';
 
 const MODE_COMPONENTS: Record<QuizMode, ComponentType<QuizModeProps>> = {
@@ -26,6 +27,7 @@ const MODE_COMPONENTS: Record<QuizMode, ComponentType<QuizModeProps>> = {
   'first-words': QuizFirstWordsMode,
   'first-letter': QuizFirstLetterMode,
   'fill-blank': QuizFillBlankMode,
+  voice: QuizVoiceMode,
 };
 
 export function QuizRunner({ quizId }: { quizId: string }) {

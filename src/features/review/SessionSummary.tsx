@@ -6,7 +6,13 @@ import { getVerse } from '@/data/verses';
 import { MODE_LABELS, formatAccuracy, formatDuration } from '@/utils/format';
 import type { ReviewSession } from '@/types';
 
-export function SessionSummary({ session }: { session: ReviewSession }) {
+export function SessionSummary({
+  session,
+  returnTo = '/quiz',
+}: {
+  session: ReviewSession;
+  returnTo?: string;
+}) {
   const logs = useLiveQuery(
     async () => getDatabase().reviewLogs.bulkGet(session.results),
     [session.results.join(',')],
@@ -19,6 +25,11 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
       ? graded.reduce((sum, log) => sum + (log?.accuracy ?? 0), 0) / graded.length
       : null;
   const totalTime = completed.reduce((sum, log) => sum + (log?.elapsedMs ?? 0), 0);
+  const backLabel = returnTo.startsWith('/flashcards')
+    ? 'Back to flash cards'
+    : returnTo.startsWith('/quiz')
+      ? 'Back to quiz'
+      : 'Back';
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
@@ -67,8 +78,8 @@ export function SessionSummary({ session }: { session: ReviewSession }) {
       </ul>
 
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <ButtonLink to="/practice" variant="primary">
-          Back to practice
+        <ButtonLink to={returnTo} variant="primary">
+          {backLabel}
         </ButtonLink>
         <ButtonLink to="/verses" variant="secondary">
           Library
