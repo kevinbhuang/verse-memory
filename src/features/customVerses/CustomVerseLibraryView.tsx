@@ -96,7 +96,9 @@ export function CustomVerseLibraryView({
                     >
                       {verse.reference}
                     </button>
-                    {needsReview ? <NeedsReviewBadge /> : null}
+                    {progress && needsReview ? (
+                      <NeedsReviewBadge progress={progress} />
+                    ) : null}
                   </div>
                   <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
                     {verse.text}

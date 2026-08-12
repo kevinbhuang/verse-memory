@@ -112,7 +112,10 @@ export default defineConfig(({ mode }) => {
                 );
                 return;
               }
-              const body = await upstream.json();
+              const body = (await upstream.json()) as {
+                passages?: string[];
+                canonical?: string;
+              };
               const passages = body.passages ?? [];
               if (passages.length === 0) {
                 res.statusCode = 404;
