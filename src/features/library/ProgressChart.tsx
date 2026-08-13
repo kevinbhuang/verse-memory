@@ -158,7 +158,7 @@ export function ProgressChart({
                         </span>
                       ) : (
                         <Link
-                          to={`/verses/${verse.id}`}
+                          to={`/flashcards?verse=${verse.id}`}
                           className="block truncate font-serif text-sm font-semibold leading-snug text-ink hover:text-accent hover:underline"
                           title={verse.reference}
                         >

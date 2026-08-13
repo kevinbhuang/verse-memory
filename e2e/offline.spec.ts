@@ -52,7 +52,7 @@ test.describe('installable and offline', () => {
     ).toBeChecked();
 
     // The Scripture itself is bundled, so passages are readable offline.
-    await page.goto('/verses/verse-001');
+    await page.goto('/flashcards?verse=verse-001');
     await expect(page.getByText(/bore you on eagles/)).toBeVisible();
 
     await context.setOffline(false);

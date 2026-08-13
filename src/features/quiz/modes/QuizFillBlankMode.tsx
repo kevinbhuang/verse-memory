@@ -125,8 +125,13 @@ export function QuizFillBlankMode({
               key={`b-${segment.wordIndex}`}
               ref={isFirst ? firstBlankRef : undefined}
               type="text"
+              name={`quiz-fill-blank-${attemptKey}-${segment.wordIndex}`}
               value={values[segment.wordIndex] ?? ''}
               autoFocus={isFirst}
+              autoComplete="vm-no-autofill"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               aria-label={`Blank ${blankIndexes.indexOf(segment.wordIndex) + 1}`}
               onChange={(event) =>
                 setValues((current) => ({

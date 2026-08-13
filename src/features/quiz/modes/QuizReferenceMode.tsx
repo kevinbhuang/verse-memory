@@ -55,12 +55,13 @@ export function QuizReferenceMode({
 
       <Field
         label="Book and chapter"
-        htmlFor="quiz-reference"
+        htmlFor={`quiz-reference-${attemptKey}`}
         hint="Example: John 3 or Jn 3:16"
       >
         <TextInput
           ref={inputRef}
-          id="quiz-reference"
+          id={`quiz-reference-${attemptKey}`}
+          name={`quiz-reference-${attemptKey}`}
           value={entry}
           onChange={(event) => setEntry(event.target.value)}
           onKeyDown={(event) => {

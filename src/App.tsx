@@ -1,11 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthProvider } from '@/hooks/useAuth';
 import { SettingsProvider } from '@/hooks/useSettings';
 import { ToastProvider } from '@/components/ui/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { FlashCardsPage } from '@/pages/FlashCardsPage';
-import { VerseDetailPage } from '@/pages/VerseDetailPage';
 import { QuizPage } from '@/pages/QuizPage';
 import { QuizSessionPage } from '@/pages/QuizSessionPage';
 import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
@@ -17,6 +16,16 @@ import { MorePage } from '@/pages/MorePage';
 import { DtChapterMemoryPage } from '@/pages/DtChapterMemoryPage';
 import { CustomVersesPage } from '@/pages/CustomVersesPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+
+function VerseDetailRedirect() {
+  const { verseId } = useParams();
+  return (
+    <Navigate
+      to={verseId ? `/flashcards?verse=${verseId}` : '/flashcards'}
+      replace
+    />
+  );
+}
 
 export function App() {
   return (
@@ -35,7 +44,7 @@ export function App() {
                 <Route path="/quiz" element={<QuizPage />} />
                 <Route path="/quiz/session" element={<QuizSessionPage />} />
                 <Route path="/verses" element={<LibraryPage />} />
-                <Route path="/verses/:verseId" element={<VerseDetailPage />} />
+                <Route path="/verses/:verseId" element={<VerseDetailRedirect />} />
                 <Route path="/progress-chart" element={<ProgressChartPage />} />
                 <Route path="/friends" element={<FriendsPage />} />
                 <Route

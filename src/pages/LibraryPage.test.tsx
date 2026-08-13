@@ -78,9 +78,11 @@ describe('LibraryPage', { timeout: 15_000 }, () => {
     const references = screen
       .getAllByRole('link')
       .map((link) => link.getAttribute('href'))
-      .filter((href): href is string => Boolean(href?.startsWith('/verses/verse-')));
-    expect(references[0]).toBe('/verses/verse-001');
-    expect(references.at(-1)).toBe('/verses/verse-171');
+      .filter((href): href is string =>
+        Boolean(href?.startsWith('/flashcards?verse=verse-')),
+      );
+    expect(references[0]).toBe('/flashcards?verse=verse-001');
+    expect(references.at(-1)).toBe('/flashcards?verse=verse-171');
   });
 
   it('offers deck and book PDF download controls', async () => {

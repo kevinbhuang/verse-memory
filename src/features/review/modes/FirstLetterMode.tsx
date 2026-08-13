@@ -290,7 +290,7 @@ export function FirstLetterMode({
         inputMode="text"
         autoCapitalize="none"
         autoCorrect="off"
-        autoComplete="off"
+        autoComplete="vm-no-autofill"
         spellCheck={false}
         value=""
         onChange={() => undefined}

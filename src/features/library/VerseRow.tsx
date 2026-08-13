@@ -73,7 +73,7 @@ export function VerseRow({
               {String(verse.order).padStart(3, '0')}
             </span>
             <Link
-              to={`/verses/${verse.id}`}
+              to={`/flashcards?verse=${verse.id}`}
               className="font-serif text-sm font-semibold text-ink hover:text-accent hover:underline"
             >
               {verse.reference}
@@ -129,14 +129,6 @@ export function VerseRow({
                   role="menu"
                   className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-lg"
                 >
-                  <Link
-                    role="menuitem"
-                    to={`/verses/${verse.id}`}
-                    className="block px-3 py-2 text-sm text-ink hover:bg-surface-muted"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Open passage details
-                  </Link>
                   <button
                     role="menuitem"
                     type="button"

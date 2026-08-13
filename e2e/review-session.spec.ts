@@ -47,21 +47,20 @@ test.describe('completing a first-letter review', () => {
 
     await expect(page.getByText(/session complete/i)).toBeVisible();
 
-    await page.goto('/verses/verse-001');
-    await expect(page.getByText('1 recorded review')).toBeVisible();
+    await page.goto('/flashcards?verse=verse-001');
+    await expect(page.getByRole('heading', { name: /exodus 19:4-6/i })).toBeVisible();
   });
 
-  test('keeps the history after a reload', async ({ page }) => {
+  test('keeps the passage after a reload', async ({ page }) => {
     await startFirstLetterSession(page);
     await typeWholePassage(page);
     await page.getByRole('button', { name: /^finish$/i }).click();
     await expect(page.getByText(/session complete/i)).toBeVisible();
 
-    await page.goto('/verses/verse-001');
+    await page.goto('/flashcards?verse=verse-001');
     await page.reload();
 
-    await expect(page.getByText('1 recorded review')).toBeVisible();
-    await expect(page.getByText('First letter').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /exodus 19:4-6/i })).toBeVisible();
   });
 
   test('an incorrect letter does not advance the exercise', async ({ page }) => {

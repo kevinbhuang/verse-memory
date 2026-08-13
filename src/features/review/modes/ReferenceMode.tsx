@@ -97,12 +97,13 @@ export function ReferenceMode({
 
           <Field
             label="Reference"
-            htmlFor="reference-entry"
+            htmlFor={`reference-entry-${attemptKey}`}
             hint="Abbreviations are accepted, for example Jn 3:16 or 1 Cor 13:4-7."
           >
             <TextInput
               ref={inputRef}
-              id="reference-entry"
+              id={`reference-entry-${attemptKey}`}
+              name={`reference-entry-${attemptKey}`}
               value={entry}
               onChange={(event) => setEntry(event.target.value)}
               onKeyDown={(event) => {

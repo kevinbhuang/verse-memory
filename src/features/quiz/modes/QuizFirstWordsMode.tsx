@@ -66,10 +66,14 @@ export function QuizFirstWordsMode({
         </p>
       </div>
 
-      <Field label="First three words" htmlFor="quiz-first-words">
+      <Field
+        label="First three words"
+        htmlFor={`quiz-first-words-${attemptKey}`}
+      >
         <TextInput
           ref={inputRef}
-          id="quiz-first-words"
+          id={`quiz-first-words-${attemptKey}`}
+          name={`quiz-first-words-${attemptKey}`}
           value={entry}
           onChange={(event) => setEntry(event.target.value)}
           onKeyDown={(event) => {

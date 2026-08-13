@@ -107,10 +107,14 @@ export function FullTypingMode({
       </div>
 
       {settings.includeReferenceInGrading ? (
-        <Field label="Reference" htmlFor="full-typing-reference">
+        <Field
+          label="Reference"
+          htmlFor={`full-typing-reference-${attemptKey}`}
+        >
           <TextInput
             ref={referenceRef}
-            id="full-typing-reference"
+            id={`full-typing-reference-${attemptKey}`}
+            name={`full-typing-reference-${attemptKey}`}
             value={referenceText}
             onChange={(event) => setReferenceText(event.target.value)}
             placeholder="e.g. John 3:16"
@@ -121,12 +125,13 @@ export function FullTypingMode({
 
       <Field
         label="Type the passage from memory"
-        htmlFor="full-typing-input"
+        htmlFor={`full-typing-input-${attemptKey}`}
         hint="Line breaks and spacing do not need to match."
       >
         <TextArea
           ref={textAreaRef}
-          id="full-typing-input"
+          id={`full-typing-input-${attemptKey}`}
+          name={`full-typing-input-${attemptKey}`}
           value={attemptText}
           onChange={(event) => setAttemptText(event.target.value)}
           disabled={result !== null}

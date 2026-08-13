@@ -38,11 +38,27 @@ export function Field({
   );
 }
 
+/**
+ * Keeps browsers from offering saved-answer / autocomplete dropdowns.
+ * A non-standard token is used because Chrome often ignores "off".
+ */
+const noSuggest = {
+  autoComplete: 'vm-no-autofill',
+  autoCorrect: 'off',
+  autoCapitalize: 'off',
+  spellCheck: false,
+} as const;
+
 export const TextInput = forwardRef<
   HTMLInputElement,
   InputHTMLAttributes<HTMLInputElement>
 >(({ className, ...props }, ref) => (
-  <input ref={ref} className={clsx(control, className)} {...props} />
+  <input
+    ref={ref}
+    className={clsx(control, className)}
+    {...noSuggest}
+    {...props}
+  />
 ));
 TextInput.displayName = 'TextInput';
 
@@ -53,6 +69,7 @@ export const TextArea = forwardRef<
   <textarea
     ref={ref}
     className={clsx(control, 'min-h-24 resize-y', className)}
+    {...noSuggest}
     {...props}
   />
 ));
