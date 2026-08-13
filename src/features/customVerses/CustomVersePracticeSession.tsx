@@ -98,7 +98,7 @@ export function CustomVersePracticeSession({ verse, mode, onExit }: Props) {
               Practice again
             </Button>
             <Button variant="primary" size="sm" onClick={onExit}>
-              Back to custom verses
+              Back to My Verses
             </Button>
           </div>
         ) : null}

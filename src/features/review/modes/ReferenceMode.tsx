@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { ScriptureText } from '@/components/ScriptureText';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import { matchReference, type ReferenceMatch } from '@/lib/text/reference';
 import { truncate } from '@/utils/format';
 import { suggestRating, type ReviewModeProps } from '../modeTypes';
@@ -22,6 +23,7 @@ export function ReferenceMode({
   const [revealed, setRevealed] = useState(false);
   const startedAt = useRef(Date.now());
   const completed = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setEntry('');
@@ -30,6 +32,12 @@ export function ReferenceMode({
     startedAt.current = Date.now();
     completed.current = false;
   }, [attemptKey, direction]);
+
+  useAutofocus(
+    inputRef,
+    [attemptKey, direction],
+    direction === 'text-to-reference' && outcome === null,
+  );
 
   const finish = (accuracy: number, fullReveal = false) => {
     if (completed.current) return;
@@ -93,6 +101,7 @@ export function ReferenceMode({
             hint="Abbreviations are accepted, for example Jn 3:16 or 1 Cor 13:4-7."
           >
             <TextInput
+              ref={inputRef}
               id="reference-entry"
               value={entry}
               onChange={(event) => setEntry(event.target.value)}

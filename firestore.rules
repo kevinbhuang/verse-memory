@@ -45,6 +45,26 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Shared custom-verse lists (references only; redeemers re-fetch ESV text).
+    match /listCodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.sharedListId is string;
+      allow update, delete: if false;
+    }
+
+    match /sharedLists/{listId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.accessCode is string
+        && request.resource.data.references is list;
+      allow update: if false;
+      allow delete: if signedIn()
+        && resource.data.createdBy == request.auth.uid;
+    }
+
     match /groups/{groupId} {
       // Signed-in read is OK: ids are unguessable; joining still requires the code.
       allow read: if signedIn();

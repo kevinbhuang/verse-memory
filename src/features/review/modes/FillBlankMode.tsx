@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import { chooseBlankIndexes } from '@/lib/text/blanks';
 import { segmentText, tokenize } from '@/lib/text/tokenize';
 import type { WordError } from '@/types';
@@ -42,12 +43,9 @@ export function FillBlankMode({
     setElapsedMs(0);
     startedAt.current = Date.now();
     completed.current = false;
-    // Defer so the input exists after reset / remount.
-    const id = window.requestAnimationFrame(() => {
-      firstBlankRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(id);
   }, [attemptKey, localAttempt]);
+
+  useAutofocus(firstBlankRef, [attemptKey, localAttempt], !checked);
 
   const retry = () => {
     onRetry?.();
@@ -126,13 +124,41 @@ export function FillBlankMode({
 
           const ok = perBlank[segment.wordIndex];
           const isFirst = segment.wordIndex === firstBlankIndex;
+          const typed = (values[segment.wordIndex] ?? '').trim();
+          const expected = segment.text;
+
+          if (checked) {
+            if (ok) {
+              return (
+                <span
+                  key={`b-${segment.wordIndex}`}
+                  className="mx-0.5 border-b-2 border-success px-0.5 font-serif text-success"
+                >
+                  {expected}
+                </span>
+              );
+            }
+            return (
+              <span
+                key={`b-${segment.wordIndex}`}
+                className="mx-0.5 inline-flex flex-wrap items-baseline gap-x-1 border-b-2 border-danger px-0.5 font-serif"
+              >
+                {typed ? (
+                  <span className="text-danger line-through decoration-danger">
+                    {typed}
+                  </span>
+                ) : null}
+                <span className="text-success">{expected}</span>
+              </span>
+            );
+          }
+
           return (
             <input
               key={`b-${segment.wordIndex}`}
               ref={isFirst ? firstBlankRef : undefined}
               type="text"
               value={values[segment.wordIndex] ?? ''}
-              disabled={checked}
               autoFocus={isFirst}
               aria-label={`Blank ${blankIndexes.indexOf(segment.wordIndex) + 1}`}
               onChange={(event) =>
@@ -147,13 +173,7 @@ export function FillBlankMode({
                 event.stopPropagation();
                 check();
               }}
-              className={`mx-0.5 inline-block min-w-[4.5rem] border-b-2 bg-transparent px-1 text-center font-serif outline-none ${
-                checked
-                  ? ok
-                    ? 'border-success text-success'
-                    : 'border-danger text-danger'
-                  : 'border-accent text-ink'
-              }`}
+              className="mx-0.5 inline-block min-w-[4.5rem] border-b-2 border-accent bg-transparent px-1 text-center font-serif text-ink outline-none"
               style={{
                 width: `${Math.max(4.5, segment.text.length * 0.7)}rem`,
               }}
@@ -163,31 +183,23 @@ export function FillBlankMode({
       </div>
 
       {checked ? (
-        <div className="space-y-3">
-          <div className="rounded-lg border border-line bg-surface-muted px-4 py-3 text-sm text-ink-muted">
-            <p className="font-medium text-ink">
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-ink-muted">
+            <span className="font-medium text-ink">
               {formatAccuracy(
                 blankIndexes.length === 0
                   ? 1
                   : Object.values(perBlank).filter(Boolean).length /
                       blankIndexes.length,
-              )}{' '}
-              · {formatDuration(elapsedMs)}
-            </p>
-            {blankIndexes.map((index) =>
-              perBlank[index] ? null : (
-                <p key={index}>
-                  Blank {blankIndexes.indexOf(index) + 1}:{' '}
-                  <span className="font-medium text-ink">
-                    {tokens[index]?.text}
-                  </span>
-                </p>
-              ),
-            )}
+              )}
+            </span>{' '}
+            · {formatDuration(elapsedMs)}
             {Object.values(perBlank).every(Boolean) ? (
-              <p className="font-medium text-success">All blanks correct.</p>
+              <span className="ml-2 font-medium text-success">
+                All blanks correct.
+              </span>
             ) : null}
-          </div>
+          </p>
           {onRetry ? (
             <Button variant="secondary" size="sm" onClick={retry}>
               <RotateCcw className="size-3.5" aria-hidden="true" />

@@ -1,14 +1,23 @@
 import { ButtonLink } from '@/components/ui/Button';
 import { getVerse } from '@/data/verses';
+import { tokenize } from '@/lib/text/tokenize';
 import { quizScore } from '@/services/quizService';
 import type { QuizSession } from '@/types/quiz';
 import { QUIZ_MODE_LABELS } from '@/types/quiz';
 import { formatAccuracy } from '@/utils/format';
 
+function firstThreeWords(text: string): string {
+  return tokenize(text)
+    .slice(0, 3)
+    .map((token) => token.text)
+    .join(' ');
+}
+
 export function QuizSummary({ session }: { session: QuizSession }) {
   const score = quizScore(session);
   const againTo = session.returnPath?.trim() || '/quiz';
   const isCustom = Boolean(session.verseSnapshots);
+  const showFirstWords = session.mode === 'first-words';
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
@@ -35,17 +44,27 @@ export function QuizSummary({ session }: { session: QuizSession }) {
             : getVerse(answer.verseId);
           const reference =
             snapshot?.reference ?? verse?.reference ?? answer.verseId;
+          const text = snapshot?.text ?? verse?.text ?? '';
+          const answerLabel =
+            showFirstWords && text ? firstThreeWords(text) : null;
           return (
             <li
               key={`${answer.verseId}-${answer.elapsedMs}`}
-              className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+              className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
             >
-              <span className="min-w-0 truncate font-medium text-ink">
-                {reference}
+              <span className="min-w-0">
+                <span className="block font-medium text-ink">{reference}</span>
+                {answerLabel ? (
+                  <span className="mt-0.5 block text-ink-muted">
+                    {answerLabel}
+                  </span>
+                ) : null}
               </span>
               <span
                 className={
-                  answer.correct ? 'text-success' : 'text-danger'
+                  answer.correct
+                    ? 'shrink-0 text-success'
+                    : 'shrink-0 text-danger'
                 }
               >
                 {answer.correct ? 'Correct' : 'Missed'}
@@ -61,7 +80,7 @@ export function QuizSummary({ session }: { session: QuizSession }) {
         </ButtonLink>
         {isCustom ? (
           <ButtonLink to={againTo} variant="secondary">
-            Back to custom verses
+            Back to My Verses
           </ButtonLink>
         ) : (
           <ButtonLink to="/verses" variant="secondary">

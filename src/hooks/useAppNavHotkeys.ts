@@ -1,19 +1,15 @@
 import { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { useHotkeys } from '@/hooks/useHotkeys';
 
 /**
  * Global tab shortcuts when not inside a focus-mode session.
  * Digits 1–9 and letters L / C / Q jump between primary tabs.
- * (F / M / N / T / B / P are reserved for Flash Cards / Custom Verses actions.)
- * Hotkey 8 (Add Custom Verses) is only active when signed in with Google.
+ * (F / M / N / T / B / P are reserved for Flash Cards / My Verses actions.)
  */
 export function useAppNavHotkeys() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { configured, user } = useAuth();
-  const showCustomVerses = Boolean(configured && user);
 
   const focusMode =
     location.pathname.startsWith('/review/session') ||
@@ -36,14 +32,12 @@ export function useAppNavHotkeys() {
       '5': '/print',
       '6': '/more',
       '7': '/dt-chapter-memory',
+      '8': '/custom-verses',
       '9': '/friends',
       l: '/verses',
       c: '/progress-chart',
       q: '/quiz',
     };
-    if (showCustomVerses) {
-      shortcuts['8'] = '/custom-verses';
-    }
     return Object.fromEntries(
       Object.entries(shortcuts).map(([key, path]) => [
         key,
@@ -53,7 +47,7 @@ export function useAppNavHotkeys() {
         },
       ]),
     );
-  }, [location.pathname, navigate, showCustomVerses]);
+  }, [location.pathname, navigate]);
 
   useHotkeys(hotkeys, { enabled: !focusMode });
 }

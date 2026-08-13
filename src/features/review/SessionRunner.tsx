@@ -430,6 +430,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           </div>
         ) : mode === 'learn' ? (
           <LearnFlashcardMode
+            key={`${cardKey}:${mode}`}
             verse={verse}
             progress={progress}
             settings={settings}
@@ -441,6 +442,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           />
         ) : ModeComponent ? (
           <ModeComponent
+            key={`${cardKey}:${mode}`}
             verse={verse}
             progress={progress}
             settings={settings}

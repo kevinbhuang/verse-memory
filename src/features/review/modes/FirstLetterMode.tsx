@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { Toggle } from '@/components/ui/Field';
 import { ScriptureText } from '@/components/ScriptureText';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import { useSettings } from '@/hooks/useSettings';
 import { tokenize } from '@/lib/text/tokenize';
 import { heatLevel } from '@/lib/weakWords';
@@ -57,8 +58,9 @@ export function FirstLetterMode({
     setElapsedMs(0);
     startedAt.current = Date.now();
     completedRef.current = false;
-    inputRef.current?.focus();
   }, [attemptKey, localAttempt]);
+
+  useAutofocus(inputRef, [attemptKey, localAttempt], !finished && !fullReveal);
 
   const retry = () => {
     onRetry?.();

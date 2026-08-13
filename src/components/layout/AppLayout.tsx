@@ -14,7 +14,6 @@ import {
 import clsx from 'clsx';
 import { appConfig } from '@/config/app';
 import { useAppNavHotkeys } from '@/hooks/useAppNavHotkeys';
-import { useAuth } from '@/hooks/useAuth';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { Footer } from './Footer';
 import { AppBrand } from './AppBrand';
@@ -56,8 +55,8 @@ const DT_NAV: NavItem = {
 
 const CUSTOM_NAV: NavItem = {
   to: '/custom-verses',
-  label: 'Add Custom Verses',
-  shortLabel: 'Custom',
+  label: 'My Verses',
+  shortLabel: 'My',
   icon: ListPlus,
 };
 
@@ -105,10 +104,8 @@ function NavItemLink({ item }: { item: NavItem }) {
 
 export function AppLayout() {
   const location = useLocation();
-  const { configured, user } = useAuth();
   const { hasJoinedGroup } = useJoinedGroups();
   useAppNavHotkeys();
-  const showCustomVerses = Boolean(configured && user);
   // The active review / quiz screen is deliberately free of navigation chrome.
   const focusMode =
     location.pathname.startsWith('/review/session') ||
@@ -147,7 +144,7 @@ export function AppLayout() {
   const mobileNav = [
     ...PRIMARY_NAV,
     DT_NAV,
-    ...(showCustomVerses ? [CUSTOM_NAV] : []),
+    CUSTOM_NAV,
     MORE_NAV,
     groupsNav,
   ];
@@ -177,7 +174,7 @@ export function AppLayout() {
             />
 
             <NavItemLink item={DT_NAV} />
-            {showCustomVerses ? <NavItemLink item={CUSTOM_NAV} /> : null}
+            <NavItemLink item={CUSTOM_NAV} />
             <NavItemLink item={MORE_NAV} />
           </nav>
 

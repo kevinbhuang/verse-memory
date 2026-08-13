@@ -5,6 +5,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Copy,
+  Download,
   Eye,
   EyeOff,
   Flag,
@@ -12,6 +14,7 @@ import {
   Layers,
   List,
   Plus,
+  Share2,
   TextCursorInput,
   Trash2,
 } from 'lucide-react';
@@ -19,7 +22,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { ScriptureText } from '@/components/ScriptureText';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { ConfirmDialog } from '@/components/ui/Dialog';
+import { ConfirmDialog, Dialog } from '@/components/ui/Dialog';
 import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { LoadingState } from '@/components/ui/EmptyState';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -46,6 +49,10 @@ import {
   type AddDestination,
 } from '@/services/customVerseService';
 import { setDifficult, setMemorized } from '@/services/progressService';
+import {
+  importSharedListByCode,
+  publishSharedList,
+} from '@/services/social/sharedListService';
 import type { CustomList, CustomVerse } from '@/types/customVerse';
 
 const FIRST_LETTER_KEY = 'verse-memory:custom-flashcards-first-letter';
@@ -164,6 +171,13 @@ export function CustomVersesPage() {
   const [deleteListTarget, setDeleteListTarget] = useState<CustomList | null>(
     null,
   );
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importCode, setImportCode] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
   const [firstLetterMode, setFirstLetterMode] = useState(() =>
     readBoolPref(FIRST_LETTER_KEY, false),
@@ -495,6 +509,74 @@ export function CustomVersesPage() {
     navigate('/custom-verses', { replace: true });
   };
 
+  const copyShareCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      notify('Share code copied.', 'success');
+    } catch {
+      notify(`Share code: ${code}`, 'success');
+    }
+  };
+
+  const onShareList = async () => {
+    if (!user || !activeList) return;
+    if (!list.length) {
+      notify('Add at least one passage before sharing.', 'error');
+      return;
+    }
+    setSharing(true);
+    setShareOpen(true);
+    setShareCode(null);
+    try {
+      const snapshot = await publishSharedList({
+        uid: user.uid,
+        name: activeList.name,
+        references: list.map((item) => item.reference),
+      });
+      setShareCode(snapshot.accessCode);
+    } catch (error) {
+      setShareOpen(false);
+      notify(
+        error instanceof Error ? error.message : 'Could not share that list.',
+        'error',
+      );
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const onImportList = async () => {
+    setImporting(true);
+    setImportProgress(null);
+    try {
+      const result = await importSharedListByCode(
+        importCode,
+        (done, total, reference) => {
+          setImportProgress(`Fetching ${done} of ${total}: ${reference}`);
+        },
+      );
+      const parts = [
+        `Imported “${result.list.name}” (${result.batch.added.length} passage${result.batch.added.length === 1 ? '' : 's'}).`,
+      ];
+      if (result.batch.failed.length) {
+        parts.push(`${result.batch.failed.length} could not be fetched.`);
+      }
+      notify(parts.join(' '), result.batch.failed.length ? 'info' : 'success');
+      setImportOpen(false);
+      setImportCode('');
+      writeActiveListPref(result.list.id);
+      navigate(`/custom-verses?list=${result.list.id}`, { replace: true });
+    } catch (error) {
+      notify(
+        error instanceof Error ? error.message : 'Could not import that list.',
+        'error',
+      );
+    } finally {
+      setImporting(false);
+      setImportProgress(null);
+    }
+  };
+
   useHotkeys(
     {
       arrowleft: () => {
@@ -540,11 +622,11 @@ export function CustomVersesPage() {
   if (!configured) {
     return (
       <>
-        <PageHeader title="Add Custom Verses" />
+        <PageHeader title="My Verses" />
         <Card className="mx-auto max-w-lg">
           <CardHeader
             title="Sign-in unavailable"
-            description="Google sign-in is not configured in this environment, so custom verses cannot be used."
+            description="Google sign-in is not configured in this environment, so My Verses cannot be used."
           />
         </Card>
       </>
@@ -554,11 +636,23 @@ export function CustomVersesPage() {
   if (!user) {
     return (
       <>
-        <PageHeader title="Add Custom Verses" />
+        <PageHeader title="My Verses" />
         <Card className="mx-auto max-w-lg">
           <CardHeader
-            title="Sign in required"
-            description="Add Custom Verses is available after you sign in with Google. Your lists stay on this device and can sync with your account."
+            title="Sign in to use My Verses"
+            description={
+              <div className="space-y-2">
+                <p>
+                  Build your own verse lists beyond the main collection—add any
+                  ESV passages you want to memorize, practice with flash cards
+                  and quizzes, and share lists with others via a code.
+                </p>
+                <p>
+                  Sign in with Google to get started. Your lists stay on this
+                  device and can sync with your account.
+                </p>
+              </div>
+            }
           />
           <CardBody>
             <Button
@@ -603,7 +697,7 @@ export function CustomVersesPage() {
   if (customLists === undefined || allCustomVerses === undefined) {
     return (
       <>
-        <PageHeader title="Add Custom Verses" />
+        <PageHeader title="My Verses" />
         <p className="text-sm text-ink-muted">Loading…</p>
       </>
     );
@@ -624,16 +718,43 @@ export function CustomVersesPage() {
         </h1>
         <div className="mt-0.5 flex items-center justify-between gap-3 lg:mt-0">
           <h2 className="min-w-0 font-serif text-lg font-medium tracking-tight text-ink-muted sm:text-xl">
-            Custom Verses
+            My Verses
           </h2>
-          <Button
-            size="sm"
-            variant={showAddPanel ? 'quiet' : 'secondary'}
-            onClick={() => setShowAdd((open) => !open)}
-          >
-            <Plus className="size-3.5" aria-hidden="true" />
-            Add
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setImportOpen(true);
+                setImportCode('');
+                setImportProgress(null);
+              }}
+              title="Import a list with a share code"
+            >
+              <Download className="size-3.5" aria-hidden="true" />
+              Import
+            </Button>
+            {activeList && list.length > 0 ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={sharing}
+                onClick={() => void onShareList()}
+                title="Share this list with a code"
+              >
+                <Share2 className="size-3.5" aria-hidden="true" />
+                Share
+              </Button>
+            ) : null}
+            <Button
+              size="sm"
+              variant={showAddPanel ? 'quiet' : 'secondary'}
+              onClick={() => setShowAdd((open) => !open)}
+            >
+              <Plus className="size-3.5" aria-hidden="true" />
+              Add
+            </Button>
+          </div>
         </div>
 
         {hasLists ? (
@@ -656,7 +777,7 @@ export function CustomVersesPage() {
               </span>
             </div>
             <SegmentedControl
-              aria-label="Custom verses view"
+              aria-label="My Verses view"
               size="sm"
               value={view}
               onChange={setView}
@@ -989,6 +1110,100 @@ export function CustomVersesPage() {
           </Button>
         </div>
       ) : null}
+
+      <Dialog
+        open={shareOpen}
+        onClose={() => {
+          if (!sharing) setShareOpen(false);
+        }}
+        title="Share list"
+        description="Anyone signed in can import a copy with this code. Their progress stays separate."
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              disabled={sharing || !shareCode}
+              onClick={() => {
+                if (shareCode) void copyShareCode(shareCode);
+              }}
+            >
+              <Copy className="size-3.5" aria-hidden="true" />
+              Copy code
+            </Button>
+            <Button
+              variant="primary"
+              disabled={sharing}
+              onClick={() => setShareOpen(false)}
+            >
+              Done
+            </Button>
+          </>
+        }
+      >
+        {sharing || !shareCode ? (
+          <p className="text-sm text-ink-muted">Generating share code…</p>
+        ) : (
+          <p className="font-mono text-3xl font-semibold tracking-[0.2em] text-ink">
+            {shareCode}
+          </p>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={importOpen}
+        onClose={() => {
+          if (!importing) setImportOpen(false);
+        }}
+        title="Import list"
+        description="Enter a 6-letter share code to copy that list onto this device."
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              disabled={importing}
+              onClick={() => setImportOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={importing || importCode.trim().length < 4}
+              onClick={() => void onImportList()}
+            >
+              <Download className="size-3.5" aria-hidden="true" />
+              {importing ? 'Importing…' : 'Import'}
+            </Button>
+          </>
+        }
+      >
+        <Field label="Share code" htmlFor="custom-list-import-code">
+          <TextInput
+            id="custom-list-import-code"
+            value={importCode}
+            onChange={(event) =>
+              setImportCode(event.target.value.toUpperCase())
+            }
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                void onImportList();
+              }
+            }}
+            placeholder="e.g. AB3K7M"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={8}
+            disabled={importing}
+            autoFocus
+          />
+        </Field>
+        {importProgress ? (
+          <p className="mt-2 text-xs text-ink-muted">{importProgress}</p>
+        ) : null}
+      </Dialog>
 
       <ConfirmDialog
         open={deleteTarget !== null}

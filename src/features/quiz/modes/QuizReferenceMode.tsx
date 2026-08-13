@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { ScriptureText } from '@/components/ScriptureText';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import {
   matchBookAndChapter,
   type ReferenceMatch,
@@ -26,11 +27,9 @@ export function QuizReferenceMode({
     setOutcome(null);
     startedAt.current = Date.now();
     completed.current = false;
-    const id = window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(id);
   }, [attemptKey]);
+
+  useAutofocus(inputRef, [attemptKey], outcome === null);
 
   const check = () => {
     if (completed.current) return;

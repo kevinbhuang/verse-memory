@@ -132,11 +132,11 @@ export function MorePage() {
               <span className="text-ink">5</span> Print ·{' '}
               <span className="text-ink">6</span> More ·{' '}
               <span className="text-ink">7</span> DT Chapter Memory ·{' '}
-              <span className="text-ink">8</span> Add Custom Verses (signed in) ·{' '}
+              <span className="text-ink">8</span> My Verses ·{' '}
               <span className="text-ink">9</span> Groups (also L / C / Q). On
-              Flash Cards and Custom Verses, P plays audio on repeat; T / B start
+              Flash Cards and My Verses, P plays audio on repeat; T / B start
               type-first-letter or fill-blank practice; F / M / N / Space handle
-              first-letter cue, Memorized, Needs Review, and show/hide. Custom
+              first-letter cue, Memorized, Needs Review, and show/hide. My
               Verses also has a Quiz view for the selected list.
             </p>
             <p>

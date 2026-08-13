@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Field, TextArea, TextInput } from '@/components/ui/Field';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import { gradeAttempt, type DiffOp, type GradeResult } from '@/lib/text/diff';
 import { matchReference } from '@/lib/text/reference';
 import { formatAccuracy, formatDuration } from '@/utils/format';
@@ -35,6 +36,8 @@ export function FullTypingMode({
   const [result, setResult] = useState<GradeResult | null>(null);
   const [referenceCorrect, setReferenceCorrect] = useState<boolean | null>(null);
   const startedAt = useRef(Date.now());
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const referenceRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setAttemptText('');
@@ -43,6 +46,13 @@ export function FullTypingMode({
     setReferenceCorrect(null);
     startedAt.current = Date.now();
   }, [attemptKey]);
+
+  const focusReferenceFirst = settings.includeReferenceInGrading;
+  useAutofocus(
+    focusReferenceFirst ? referenceRef : textAreaRef,
+    [attemptKey, focusReferenceFirst],
+    result === null,
+  );
 
   const exact = settings.gradingMode === 'exact';
 
@@ -99,6 +109,7 @@ export function FullTypingMode({
       {settings.includeReferenceInGrading ? (
         <Field label="Reference" htmlFor="full-typing-reference">
           <TextInput
+            ref={referenceRef}
             id="full-typing-reference"
             value={referenceText}
             onChange={(event) => setReferenceText(event.target.value)}
@@ -114,13 +125,14 @@ export function FullTypingMode({
         hint="Line breaks and spacing do not need to match."
       >
         <TextArea
+          ref={textAreaRef}
           id="full-typing-input"
           value={attemptText}
           onChange={(event) => setAttemptText(event.target.value)}
           disabled={result !== null}
           rows={8}
           className="min-h-40 font-serif text-base leading-relaxed"
-          autoFocus
+          autoFocus={!focusReferenceFirst}
         />
       </Field>
 

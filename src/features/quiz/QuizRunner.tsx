@@ -191,6 +191,7 @@ export function QuizRunner({
 
       <main className="flex-1 py-6">
         <ModeComponent
+          key={cardKey}
           verse={verse}
           attemptKey={cardKey}
           onComplete={onModeComplete}

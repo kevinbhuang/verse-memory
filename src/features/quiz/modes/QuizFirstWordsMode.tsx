@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import { tokenize } from '@/lib/text/tokenize';
 import type { QuizModeProps } from '../quizModeTypes';
 
@@ -27,11 +28,9 @@ export function QuizFirstWordsMode({
     setCorrect(false);
     startedAt.current = Date.now();
     completed.current = false;
-    const id = window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(id);
   }, [attemptKey]);
+
+  useAutofocus(inputRef, [attemptKey], !checked);
 
   const check = () => {
     if (completed.current) return;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAutofocus } from '@/hooks/useAutofocus';
 import { chooseBlankIndexes } from '@/lib/text/blanks';
 import { segmentText, tokenize } from '@/lib/text/tokenize';
 import type { QuizModeProps } from '../quizModeTypes';
@@ -36,11 +37,9 @@ export function QuizFillBlankMode({
     setPerBlank({});
     startedAt.current = Date.now();
     completed.current = false;
-    const id = window.requestAnimationFrame(() => {
-      firstBlankRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(id);
   }, [attemptKey]);
+
+  useAutofocus(firstBlankRef, [attemptKey], !checked);
 
   const check = () => {
     if (completed.current) return;
@@ -92,13 +91,41 @@ export function QuizFillBlankMode({
 
           const ok = perBlank[segment.wordIndex];
           const isFirst = segment.wordIndex === firstBlankIndex;
+          const typed = (values[segment.wordIndex] ?? '').trim();
+          const expected = segment.text;
+
+          if (checked) {
+            if (ok) {
+              return (
+                <span
+                  key={`b-${segment.wordIndex}`}
+                  className="mx-0.5 border-b-2 border-success px-0.5 font-serif text-success"
+                >
+                  {expected}
+                </span>
+              );
+            }
+            return (
+              <span
+                key={`b-${segment.wordIndex}`}
+                className="mx-0.5 inline-flex flex-wrap items-baseline gap-x-1 border-b-2 border-danger px-0.5 font-serif"
+              >
+                {typed ? (
+                  <span className="text-danger line-through decoration-danger">
+                    {typed}
+                  </span>
+                ) : null}
+                <span className="text-success">{expected}</span>
+              </span>
+            );
+          }
+
           return (
             <input
               key={`b-${segment.wordIndex}`}
               ref={isFirst ? firstBlankRef : undefined}
               type="text"
               value={values[segment.wordIndex] ?? ''}
-              disabled={checked}
               autoFocus={isFirst}
               aria-label={`Blank ${blankIndexes.indexOf(segment.wordIndex) + 1}`}
               onChange={(event) =>
@@ -113,13 +140,7 @@ export function QuizFillBlankMode({
                 event.stopPropagation();
                 check();
               }}
-              className={`mx-0.5 inline-block min-w-[4.5rem] border-b-2 bg-transparent px-1 text-center font-serif outline-none ${
-                checked
-                  ? ok
-                    ? 'border-success text-success'
-                    : 'border-danger text-danger'
-                  : 'border-accent text-ink'
-              }`}
+              className="mx-0.5 inline-block min-w-[4.5rem] border-b-2 border-accent bg-transparent px-1 text-center font-serif text-ink outline-none"
               style={{ width: `${Math.max(4.5, segment.text.length * 0.7)}rem` }}
             />
           );
@@ -127,19 +148,9 @@ export function QuizFillBlankMode({
       </div>
 
       {checked ? (
-        <div className="rounded-lg border border-line bg-surface-muted px-4 py-3 text-sm text-ink-muted">
-          {blankIndexes.map((index) =>
-            perBlank[index] ? null : (
-              <p key={index}>
-                Blank {blankIndexes.indexOf(index) + 1}:{' '}
-                <span className="font-medium text-ink">{tokens[index]?.text}</span>
-              </p>
-            ),
-          )}
-          {Object.values(perBlank).every(Boolean) ? (
-            <p className="font-medium text-success">All blanks correct.</p>
-          ) : null}
-        </div>
+        Object.values(perBlank).every(Boolean) ? (
+          <p className="text-sm font-medium text-success">All blanks correct.</p>
+        ) : null
       ) : (
         <Button variant="primary" onClick={check}>
           <Check className="size-4" aria-hidden="true" />
