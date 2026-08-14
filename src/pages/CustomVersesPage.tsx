@@ -396,6 +396,19 @@ export function CustomVersesPage() {
     );
   };
 
+  const navigatePractice = (verseId: string) => {
+    if (!activeListId || !practiceMode) return;
+    setSearchParams(
+      {
+        list: activeListId,
+        practice: verseId,
+        mode: practiceMode,
+        verse: verseId,
+      },
+      { replace: true },
+    );
+  };
+
   const onAdd = async () => {
     setAdding(true);
     setAddProgress(null);
@@ -688,7 +701,9 @@ export function CustomVersesPage() {
     return (
       <CustomVersePracticeSession
         verse={practiceVerse}
+        list={list}
         mode={practiceMode}
+        onNavigate={navigatePractice}
         onExit={exitPractice}
       />
     );
@@ -1024,7 +1039,7 @@ export function CustomVersesPage() {
               title="Type first letter (T)"
             >
               <Keyboard className="size-3.5" aria-hidden="true" />
-              First letter
+              Type first letter (T)
             </Button>
             <Button
               size="sm"
@@ -1033,7 +1048,7 @@ export function CustomVersesPage() {
               title="Fill in the blank (B)"
             >
               <TextCursorInput className="size-3.5" aria-hidden="true" />
-              Fill blank
+              Fill in the blank (B)
             </Button>
             {progress ? (
               <>
