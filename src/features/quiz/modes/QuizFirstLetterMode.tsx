@@ -10,6 +10,7 @@ export function QuizFirstLetterMode({
   verse,
   attemptKey,
   onComplete,
+  onRetry,
 }: QuizModeProps) {
   const handleComplete = (result: ModeResult) => {
     const accuracy = result.accuracy ?? 0;
@@ -28,6 +29,7 @@ export function QuizFirstLetterMode({
       wordStats={[]}
       onComplete={handleComplete}
       attemptKey={attemptKey}
+      onRetry={onRetry}
     />
   );
 }

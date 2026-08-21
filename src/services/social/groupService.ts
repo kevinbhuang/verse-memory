@@ -330,6 +330,61 @@ export async function setGroupGoal(
   return next;
 }
 
+/** Leader renames the group and refreshes membership indexes. */
+export async function renameGroup(
+  groupId: string,
+  leaderUid: string,
+  name: string,
+): Promise<MemoryGroup> {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) {
+    throw new Error('Enter a group name (at least 2 characters).');
+  }
+  if (trimmed.length > 60) {
+    throw new Error('Group name is too long.');
+  }
+
+  const db = requireDb();
+  const group = await getGroup(groupId);
+  if (!group) throw new Error('Group not found.');
+  if (group.createdBy !== leaderUid) {
+    throw new Error('Only the group creator can rename the group.');
+  }
+  if (group.name === trimmed) return group;
+
+  const now = new Date().toISOString();
+  const next: MemoryGroup = {
+    ...group,
+    name: trimmed,
+    updatedAt: now,
+  };
+  await setDoc(groupRef(db, groupId), next, { merge: true });
+
+  const membersSnap = await getDocs(
+    collection(db, 'groups', groupId, 'members'),
+  );
+  await Promise.all(
+    membersSnap.docs.map(async (docSnap) => {
+      const member = parseMember(
+        docSnap.id,
+        docSnap.data() as Record<string, unknown>,
+      );
+      if (!member) return;
+      if (member.status === 'left' || member.status === 'rejected') return;
+      await writeMembershipIndex(
+        db,
+        docSnap.id,
+        next,
+        member.role,
+        member.status,
+        now,
+      );
+    }),
+  );
+
+  return next;
+}
+
 export async function lookupGroupByAccessCode(
   code: string,
 ): Promise<MemoryGroup | null> {

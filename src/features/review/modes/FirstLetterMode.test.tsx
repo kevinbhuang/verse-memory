@@ -163,6 +163,45 @@ describe('FirstLetterMode', () => {
     expect(onComplete.mock.calls[0][0].fullRevealUsed).toBe(true);
   });
 
+  it('reveals trailing punctuation as soon as the preceding word is typed', async () => {
+    const { user } = setup();
+    const withPunct = tokens.findIndex((token, i) => {
+      if (i >= tokens.length - 1) return false;
+      const gap = verse.text.slice(token.end, tokens[i + 1]!.start);
+      return /[.!?;:,]/.test(gap);
+    });
+    expect(withPunct).toBeGreaterThanOrEqual(0);
+
+    const punctGap = verse.text.slice(
+      tokens[withPunct]!.end,
+      tokens[withPunct + 1]!.start,
+    );
+    const punctMark = punctGap.match(/[.!?;:,]/)?.[0];
+    expect(punctMark).toBeTruthy();
+
+    await user.type(typingArea(), letters.slice(0, withPunct + 1).join(''));
+
+    expect(visibleText()).toContain(tokens[withPunct]!.text);
+    expect(visibleText()).toContain(punctMark!);
+    // Next word should not be revealed yet.
+    expect(visibleText()).not.toContain(
+      `${tokens[withPunct]!.text}${punctGap}${tokens[withPunct + 1]!.text}`,
+    );
+  });
+
+  it('highlights missed words in the passage after completion', async () => {
+    const { user } = setup();
+    const wrong = letters[1] === 'z' ? 'q' : 'z';
+
+    await user.type(typingArea(), letters[0]);
+    await user.type(typingArea(), wrong);
+    await user.type(typingArea(), letters.slice(1).join(''));
+
+    const missed = document.querySelector(`[data-word-index="${1}"]`);
+    expect(missed).toBeTruthy();
+    expect(missed?.className).toMatch(/bg-(warning|brand|danger)-soft/);
+  });
+
   it('reports which words were missed', async () => {
     const { user, onComplete } = setup();
     const wrong = letters[1] === 'z' ? 'q' : 'z';

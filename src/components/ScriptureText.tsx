@@ -16,17 +16,29 @@ export type ScriptureTextProps = {
   currentWordIndex?: number;
   /** Subtle background tint per word, from the weak-word statistics. */
   heat?: ReadonlyMap<number, HeatLevel>;
+  /**
+   * `subtle` = parchment weak-word tint (default).
+   * `alert` = yellow → orange → red for session miss feedback.
+   */
+  heatTone?: 'subtle' | 'alert';
   onWordClick?: (wordIndex: number) => void;
   wordButtonLabel?: (wordIndex: number) => string;
   size?: 'base' | 'small';
   className?: string;
 };
 
-const heatStyles: Record<HeatLevel, string> = {
+const subtleHeatStyles: Record<HeatLevel, string> = {
   0: '',
   1: 'bg-heat-1',
   2: 'bg-heat-2',
   3: 'bg-heat-3',
+};
+
+const alertHeatStyles: Record<HeatLevel, string> = {
+  0: '',
+  1: 'bg-warning-soft text-warning',
+  2: 'bg-brand-soft text-brand-strong',
+  3: 'bg-danger-soft text-danger',
 };
 
 /**
@@ -44,12 +56,14 @@ export function ScriptureText({
   visibleUpTo,
   currentWordIndex,
   heat,
+  heatTone = 'subtle',
   onWordClick,
   wordButtonLabel,
   size = 'base',
   className,
 }: ScriptureTextProps) {
   const segments = useMemo(() => segmentText(text), [text]);
+  const heatStyles = heatTone === 'alert' ? alertHeatStyles : subtleHeatStyles;
 
   return (
     <p

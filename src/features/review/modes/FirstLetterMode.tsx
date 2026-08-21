@@ -76,6 +76,41 @@ export function FirstLetterMode({
     return map;
   }, [wordStats]);
 
+  /** Per-word miss counts from this attempt (wrong keys + hints). */
+  const sessionMissHeat = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const mistake of mistakes) {
+      counts.set(
+        mistake.wordIndex,
+        (counts.get(mistake.wordIndex) ?? 0) + 1,
+      );
+    }
+    for (const wordIndex of hintedWords) {
+      counts.set(wordIndex, (counts.get(wordIndex) ?? 0) + 1);
+    }
+    const map = new Map<number, ReturnType<typeof heatLevel>>();
+    for (const [wordIndex, count] of counts) {
+      const level = count >= 3 ? 3 : count === 2 ? 2 : 1;
+      map.set(wordIndex, level as 1 | 2 | 3);
+    }
+    return map;
+  }, [hintedWords, mistakes]);
+
+  const mostMissedLabels = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const mistake of mistakes) {
+      counts.set(
+        mistake.wordIndex,
+        (counts.get(mistake.wordIndex) ?? 0) + 1,
+      );
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+      .slice(0, 6)
+      .map(([wordIndex]) => tokens[wordIndex]?.text)
+      .filter(Boolean);
+  }, [mistakes, tokens]);
+
   const finish = useCallback(
     (options: { revealed: boolean; reachedIndex: number }) => {
       if (completedRef.current) return;
@@ -208,19 +243,22 @@ export function FirstLetterMode({
     }
   };
 
-  // Once the last word is in, the canonical text is shown whole so its closing
-  // punctuation is not left off; before that it is cut at the last word typed.
+  // Include trailing punctuation/spacing after the last completed word so a
+  // sentence-ending mark appears as soon as that word is typed — not only
+  // after the following word is recalled.
   const revealedText =
     index >= tokens.length
       ? verse.text
       : index === 0
         ? ''
-        : verse.text.slice(0, tokens[index - 1].end);
+        : verse.text.slice(0, tokens[index]!.start);
 
   const upcoming = tokens.slice(index, index + 12);
   const currentToken = tokens[index];
   const progressPercent =
     tokens.length === 0 ? 100 : Math.round((index / tokens.length) * 100);
+  const displayHeat = finished ? sessionMissHeat : heat;
+  const displayHeatTone = finished ? 'alert' : 'subtle';
 
   return (
     <div className="space-y-5">
@@ -258,7 +296,11 @@ export function FirstLetterMode({
             Type the first letter of the first word to begin.
           </p>
         ) : (
-          <ScriptureText text={revealedText} heat={heat} />
+          <ScriptureText
+            text={revealedText}
+            heat={displayHeat}
+            heatTone={displayHeatTone}
+          />
         )}
 
         {!finished && currentToken ? (
@@ -389,14 +431,9 @@ export function FirstLetterMode({
                 `${hintedWords.length} hint${hintedWords.length === 1 ? '' : 's'}`,
               ].join(' \u00b7 ')}
             </p>
-            {mistakes.length > 0 ? (
+            {mostMissedLabels.length > 0 ? (
               <p className="mt-2 text-ink-muted">
-                Most missed:{' '}
-                {[...new Set(mistakes.map((mistake) => mistake.wordIndex))]
-                  .slice(0, 6)
-                  .map((wordIndex) => tokens[wordIndex]?.text)
-                  .filter(Boolean)
-                  .join(', ')}
+                Most missed: {mostMissedLabels.join(', ')}
               </p>
             ) : null}
           </div>

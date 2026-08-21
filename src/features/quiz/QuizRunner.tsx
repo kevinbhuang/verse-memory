@@ -52,25 +52,29 @@ export function QuizRunner({
   const navigate = useNavigate();
   const [session, setSession] = useState<QuizSession | null | undefined>(undefined);
   const [pendingResult, setPendingResult] = useState<QuizModeResult | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   /** Blocks Enter-to-advance until the key is released after checking an answer. */
   const enterArmed = useRef(true);
 
   useEffect(() => {
     setSession(getQuizSession(quizId));
     setPendingResult(null);
+    setRetryNonce(0);
     enterArmed.current = true;
   }, [quizId]);
 
   const verseId = session?.verseIds[session.currentIndex];
   const verse =
     session && verseId ? resolveQuizVerse(session, verseId) : undefined;
-  const cardKey = `${quizId}:${session?.currentIndex ?? 0}:${verseId ?? ''}`;
+  const questionKey = `${quizId}:${session?.currentIndex ?? 0}:${verseId ?? ''}`;
+  const cardKey = `${questionKey}:${retryNonce}`;
   const homePath = session?.returnPath?.trim() || fallbackPath;
 
   useEffect(() => {
     setPendingResult(null);
+    setRetryNonce(0);
     enterArmed.current = true;
-  }, [cardKey]);
+  }, [questionKey]);
 
   useEffect(() => {
     const onKeyUp = (event: KeyboardEvent) => {
@@ -96,6 +100,12 @@ export function QuizRunner({
     // The Enter that submitted the answer must not also advance.
     enterArmed.current = false;
     setPendingResult(result);
+  }, []);
+
+  const retryQuestion = useCallback(() => {
+    setPendingResult(null);
+    setRetryNonce((n) => n + 1);
+    enterArmed.current = true;
   }, []);
 
   const leaveQuiz = useCallback(() => {
@@ -195,6 +205,7 @@ export function QuizRunner({
           verse={verse}
           attemptKey={cardKey}
           onComplete={onModeComplete}
+          onRetry={retryQuestion}
         />
       </main>
 
@@ -206,10 +217,15 @@ export function QuizRunner({
                 ? 'Correct'
                 : `Missed \u00b7 ${formatAccuracy(pendingResult.accuracy)}`}
             </p>
-            <Button variant="primary" onClick={continueAfterAnswer}>
-              {position >= total ? 'See results' : 'Next question'}
-              <span className="ml-1 text-xs opacity-70">(Enter)</span>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={retryQuestion}>
+                Try again
+              </Button>
+              <Button variant="primary" onClick={continueAfterAnswer}>
+                {position >= total ? 'See results' : 'Next question'}
+                <span className="ml-1 text-xs opacity-70">(Enter)</span>
+              </Button>
+            </div>
           </div>
         ) : (
           <p className="text-xs text-ink-muted">Answer to continue.</p>

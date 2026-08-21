@@ -826,12 +826,13 @@ export function CustomVersesPage() {
                 },
               ]}
             />
-            {activeList && (view === 'library' || list.length === 0) ? (
+            {activeList ? (
               <Button
                 size="sm"
                 variant="ghost"
-                className="ml-auto"
+                className="ml-auto text-danger hover:bg-danger-soft hover:text-danger"
                 onClick={() => setDeleteListTarget(activeList)}
+                title={`Delete list “${activeList.name}”`}
               >
                 <Trash2 className="size-3.5" aria-hidden="true" />
                 Delete list

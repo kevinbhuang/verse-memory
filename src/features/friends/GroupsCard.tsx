@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, LoaderCircle, LogIn, Users } from 'lucide-react';
+import { Copy, LoaderCircle, LogIn, Pencil, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
@@ -19,6 +19,7 @@ import {
   listMyGroupMemberships,
   listPendingJoinRequests,
   rejectJoinRequest,
+  renameGroup,
   repairGroupChartAccess,
   requestJoinOfficialGroup,
   requestJoinWithCode,
@@ -66,6 +67,9 @@ export function GroupsCard() {
   >([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [goalBusy, setGoalBusy] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameBusy, setRenameBusy] = useState(false);
 
   const selected = memberships.find((m) => m.groupId === selectedGroupId) ?? null;
   const isLeader = selected?.role === 'leader' && selected.status === 'active';
@@ -131,6 +135,11 @@ export function GroupsCard() {
     if (user) void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per signed-in user
   }, [user?.uid]);
+
+  useEffect(() => {
+    setRenaming(false);
+    setRenameValue('');
+  }, [selectedGroupId]);
 
   useEffect(() => {
     if (!configured || authLoading || !user) {
@@ -496,17 +505,99 @@ export function GroupsCard() {
             {selected ? (
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <h3 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                      {selected.name}
-                    </h3>
-                    {selected.role === 'leader' ? (
-                      <Badge tone="outline">leader</Badge>
-                    ) : null}
-                    {selected.status === 'pending' ? (
-                      <Badge tone="accent">pending</Badge>
-                    ) : null}
-                  </div>
+                  {renaming && isLeader ? (
+                    <form
+                      className="flex flex-wrap items-end gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (!user || !selected) return;
+                        setRenameBusy(true);
+                        void renameGroup(
+                          selected.groupId,
+                          user.uid,
+                          renameValue,
+                        )
+                          .then(async (next) => {
+                            setSelectedGroup(next);
+                            setRenaming(false);
+                            notify(`Renamed to “${next.name}”.`, 'success');
+                            await reload(selected.groupId);
+                          })
+                          .catch((error: unknown) =>
+                            notify(
+                              error instanceof Error
+                                ? error.message
+                                : 'Could not rename group.',
+                              'error',
+                            ),
+                          )
+                          .finally(() => setRenameBusy(false));
+                      }}
+                    >
+                      <Field
+                        label="Group name"
+                        htmlFor="group-rename"
+                        className="min-w-[12rem] flex-1"
+                      >
+                        <TextInput
+                          id="group-rename"
+                          value={renameValue}
+                          onChange={(event) =>
+                            setRenameValue(event.target.value)
+                          }
+                          maxLength={60}
+                          disabled={renameBusy}
+                          autoFocus
+                        />
+                      </Field>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="primary"
+                        disabled={
+                          renameBusy || renameValue.trim().length < 2
+                        }
+                      >
+                        {renameBusy ? 'Saving…' : 'Save'}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={renameBusy}
+                        onClick={() => setRenaming(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <h3 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                        {selected.name}
+                      </h3>
+                      {selected.role === 'leader' ? (
+                        <Badge tone="outline">leader</Badge>
+                      ) : null}
+                      {selected.status === 'pending' ? (
+                        <Badge tone="accent">pending</Badge>
+                      ) : null}
+                      {isLeader ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-1.5"
+                          title="Rename group"
+                          onClick={() => {
+                            setRenameValue(selected.name);
+                            setRenaming(true);
+                          }}
+                        >
+                          <Pencil className="size-3.5" aria-hidden="true" />
+                          <span className="sr-only">Rename group</span>
+                        </Button>
+                      ) : null}
+                    </div>
+                  )}
 
                   {selected.status === 'active' ? (
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
