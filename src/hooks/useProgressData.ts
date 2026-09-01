@@ -19,12 +19,16 @@ export function useAllProgress(): VerseProgress[] | undefined {
   }, []);
 }
 
+/** All stored progress, including custom My Verses IDs that `useAllProgress` drops. */
 export function useProgressMap():
   | Map<string, VerseProgress>
   | undefined {
-  const all = useAllProgress();
-  if (!all) return undefined;
-  return new Map(all.map((record) => [record.verseId, record]));
+  const stored = useLiveQuery(
+    () => getDatabase().progress.toArray(),
+    [],
+  );
+  if (!stored) return undefined;
+  return new Map(stored.map((record) => [record.verseId, record]));
 }
 
 export function useVerseProgress(
