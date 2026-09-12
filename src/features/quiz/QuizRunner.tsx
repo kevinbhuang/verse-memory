@@ -9,10 +9,12 @@ import { getVerse } from '@/data/verses';
 import {
   discardQuizSession,
   getQuizSession,
+  quizReferenceGrade,
   quizScore,
   recordQuizAnswer,
+  setQuizReferenceGrade,
 } from '@/services/quizService';
-import type { QuizMode, QuizSession } from '@/types/quiz';
+import type { QuizMode, QuizReferenceGrade, QuizSession } from '@/types/quiz';
 import { QUIZ_MODE_LABELS } from '@/types/quiz';
 import type { Verse } from '@/types';
 import { formatAccuracy } from '@/utils/format';
@@ -106,6 +108,13 @@ export function QuizRunner({
     setPendingResult(null);
     setRetryNonce((n) => n + 1);
     enterArmed.current = true;
+  }, []);
+
+  const changeReferenceGrade = useCallback((grade: QuizReferenceGrade) => {
+    setSession((current) => {
+      if (!current) return current;
+      return setQuizReferenceGrade(current, grade);
+    });
   }, []);
 
   const leaveQuiz = useCallback(() => {
@@ -206,6 +215,8 @@ export function QuizRunner({
           attemptKey={cardKey}
           onComplete={onModeComplete}
           onRetry={retryQuestion}
+          referenceGrade={quizReferenceGrade(session)}
+          onReferenceGradeChange={changeReferenceGrade}
         />
       </main>
 

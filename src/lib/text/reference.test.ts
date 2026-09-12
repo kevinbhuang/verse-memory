@@ -86,8 +86,21 @@ describe('matchReference', () => {
     expect(result.isCloseMatch).toBe(true);
   });
 
+  it('rejects book and chapter without the verse numbers', () => {
+    const result = matchReference('Job 42', 'Job 42:5-6');
+    expect(result.isMatch).toBe(false);
+    expect(result.isCloseMatch).toBe(true);
+    expect(result.message).toMatch(/verse numbers/i);
+  });
+
   it('rejects a wrong range even when the start verse matches', () => {
     expect(matchReference('Romans 8:38', 'Romans 8:38-39').isMatch).toBe(false);
+  });
+
+  it('rejects a different verse range in the same chapter', () => {
+    const result = matchReference('Job 42:8-9', 'Job 42:5-6');
+    expect(result.isMatch).toBe(false);
+    expect(result.isCloseMatch).toBe(true);
   });
 
   it('rejects nonsense input without throwing', () => {
@@ -101,6 +114,10 @@ describe('matchBookAndChapter', () => {
     expect(matchBookAndChapter('Jn 3:16', 'John 3:16').isMatch).toBe(true);
     expect(matchBookAndChapter('John 4', 'John 3:16').isMatch).toBe(false);
     expect(matchBookAndChapter('Romans 3', 'John 3:16').isMatch).toBe(false);
+  });
+
+  it('ignores a wrong verse range when only the chapter is required', () => {
+    expect(matchBookAndChapter('Job 42:8-9', 'Job 42:5-6').isMatch).toBe(true);
   });
 });
 

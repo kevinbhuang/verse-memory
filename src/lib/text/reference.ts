@@ -245,7 +245,8 @@ export function matchReference(
 }
 
 /**
- * Quiz grading: book and chapter must match. Verse numbers are optional.
+ * Chapter-only quiz grading: book and chapter must match. Verse numbers are
+ * ignored when present.
  */
 export function matchBookAndChapter(
   input: string,

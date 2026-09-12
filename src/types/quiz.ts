@@ -17,7 +17,7 @@ export const QUIZ_MODE_LABELS: Record<QuizMode, string> = {
 };
 
 export const QUIZ_MODE_DESCRIPTIONS: Record<QuizMode, string> = {
-  reference: 'Read the passage, then type the book and chapter.',
+  reference: 'Read the passage, then type the reference.',
   'first-words': 'See the reference, then type the first three words.',
   'first-letter': 'Type the first letter of each word to reveal the passage.',
   'fill-blank': 'Fill in the missing words in the passage.',
@@ -37,6 +37,13 @@ export type QuizVerseSnapshot = {
   text: string;
 };
 
+export const QUIZ_REFERENCE_GRADES = ['chapter-and-verse', 'chapter'] as const;
+
+export type QuizReferenceGrade = (typeof QUIZ_REFERENCE_GRADES)[number];
+
+export const DEFAULT_QUIZ_REFERENCE_GRADE: QuizReferenceGrade =
+  'chapter-and-verse';
+
 export type QuizSession = {
   id: string;
   createdAt: string;
@@ -53,4 +60,9 @@ export type QuizSession = {
   verseSnapshots?: Record<string, QuizVerseSnapshot>;
   /** Where Leave / Quiz again should return (defaults to /quiz). */
   returnPath?: string | null;
+  /**
+   * Reference quizzes only. Defaults to chapter and verse. Stored on the
+   * session so a mid-quiz toggle applies to the remaining questions.
+   */
+  referenceGrade?: QuizReferenceGrade;
 };

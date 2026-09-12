@@ -1,4 +1,5 @@
 import type { Verse } from '@/types';
+import type { QuizReferenceGrade } from '@/types/quiz';
 
 export type QuizModeResult = {
   correct: boolean;
@@ -12,4 +13,7 @@ export type QuizModeProps = {
   onComplete: (result: QuizModeResult) => void;
   /** Clear the scored result and let the reader attempt this question again. */
   onRetry?: () => void;
+  /** Reference quizzes only. Defaults to chapter and verse. */
+  referenceGrade?: QuizReferenceGrade;
+  onReferenceGradeChange?: (grade: QuizReferenceGrade) => void;
 };

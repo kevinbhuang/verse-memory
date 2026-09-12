@@ -7,6 +7,7 @@ import {
   quizScore,
   recordQuizAnswer,
   selectQuizVerseIds,
+  setQuizReferenceGrade,
 } from './quizService';
 
 describe('quizService', () => {
@@ -142,5 +143,32 @@ describe('quizService', () => {
     expect(session!.verseIds).toEqual(['custom-a', 'custom-b']);
     expect(session!.verseSnapshots?.['custom-a']?.reference).toBe('John 3:16');
     expect(session!.returnPath).toBe('/custom-verses?view=quiz');
+  });
+
+  it('keeps a reference-grade toggle after later answers', () => {
+    const session = createQuizSessionFromPassages(
+      [
+        { id: 'custom-a', reference: 'Job 42:5-6', text: 'I had heard of you' },
+        { id: 'custom-b', reference: 'John 3:16', text: 'For God so loved' },
+      ],
+      'reference',
+      'Reference quiz',
+      { shuffle: false },
+    );
+    expect(session).not.toBeNull();
+    expect(session!.referenceGrade).toBeUndefined();
+
+    const toggled = setQuizReferenceGrade(session!, 'chapter');
+    expect(toggled.referenceGrade).toBe('chapter');
+    expect(getQuizSession(toggled.id)?.referenceGrade).toBe('chapter');
+
+    const afterAnswer = recordQuizAnswer(toggled, {
+      verseId: toggled.verseIds[0]!,
+      correct: true,
+      accuracy: 1,
+      elapsedMs: 500,
+    });
+    expect(afterAnswer.referenceGrade).toBe('chapter');
+    expect(getQuizSession(afterAnswer.id)?.referenceGrade).toBe('chapter');
   });
 });

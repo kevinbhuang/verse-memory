@@ -12,7 +12,7 @@ describe('QuizPage', () => {
       await screen.findByRole('heading', { name: /^quiz$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /reference.*book and chapter/i }),
+      screen.getByRole('button', { name: /reference.*type the reference/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /first three words/i }),

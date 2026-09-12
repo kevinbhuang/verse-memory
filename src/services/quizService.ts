@@ -5,9 +5,11 @@ import type { Section, VerseProgress } from '@/types';
 import type {
   QuizAnswer,
   QuizMode,
+  QuizReferenceGrade,
   QuizSession,
   QuizVerseSnapshot,
 } from '@/types/quiz';
+import { DEFAULT_QUIZ_REFERENCE_GRADE } from '@/types/quiz';
 
 const STORAGE_PREFIX = 'verse-memory:quiz:';
 
@@ -176,6 +178,21 @@ export function createQuizSessionFromPassages(
 
 export function saveQuizSession(session: QuizSession): void {
   localStorage.setItem(`${STORAGE_PREFIX}${session.id}`, JSON.stringify(session));
+}
+
+export function quizReferenceGrade(session: QuizSession): QuizReferenceGrade {
+  return session.referenceGrade ?? DEFAULT_QUIZ_REFERENCE_GRADE;
+}
+
+/** Persist the Reference-quiz grading choice for the rest of this session. */
+export function setQuizReferenceGrade(
+  session: QuizSession,
+  referenceGrade: QuizReferenceGrade,
+): QuizSession {
+  if (quizReferenceGrade(session) === referenceGrade) return session;
+  const next: QuizSession = { ...session, referenceGrade };
+  saveQuizSession(next);
+  return next;
 }
 
 export function discardQuizSession(id: string): void {
