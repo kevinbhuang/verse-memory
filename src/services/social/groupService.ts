@@ -149,6 +149,7 @@ async function writeMembershipIndex(
   status: MembershipStatus,
   updatedAt: string,
 ): Promise<void> {
+  invalidateMembershipsCache(uid);
   await setDoc(membershipIndexRef(db, uid, group.id), {
     groupId: group.id,
     name: group.name,
@@ -241,11 +242,15 @@ export async function repairGroupChartAccess(
 
   // Leader repairs full mutual access (needed after earlier approve bugs).
   if (group.createdBy === actingUid) {
+    const pairWrites: Array<Promise<void>> = [];
     for (let i = 0; i < activeUids.length; i += 1) {
       for (let j = i + 1; j < activeUids.length; j += 1) {
-        await grantMutualShare(db, activeUids[i]!, activeUids[j]!, groupId);
+        pairWrites.push(
+          grantMutualShare(db, activeUids[i]!, activeUids[j]!, groupId),
+        );
       }
     }
+    await Promise.all(pairWrites);
   }
 }
 
@@ -504,72 +509,134 @@ export async function requestJoinOfficialGroup(
   return requestJoinGroup(uid, group);
 }
 
-export async function listMyGroupMemberships(
+const MEMBERSHIPS_CACHE_MS = 15_000;
+
+type MembershipsCache = {
+  uid: string;
+  at: number;
+  generation: number;
+  data: GroupMembershipIndex[];
+};
+
+let membershipsGeneration = 0;
+let membershipsCache: MembershipsCache | null = null;
+let membershipsInflight: {
+  uid: string;
+  promise: Promise<GroupMembershipIndex[]>;
+} | null = null;
+
+function invalidateMembershipsCache(uid?: string): void {
+  membershipsGeneration += 1;
+  if (!uid || membershipsCache?.uid === uid) {
+    membershipsCache = null;
+  }
+}
+
+async function fetchMyGroupMemberships(
   uid: string,
 ): Promise<GroupMembershipIndex[]> {
   const db = requireDb();
   const snap = await getDocs(collection(db, 'users', uid, 'groupMemberships'));
-  const list: GroupMembershipIndex[] = [];
 
-  for (const docSnap of snap.docs) {
-    const data = docSnap.data() as Partial<GroupMembershipIndex>;
-    if (!data.groupId || !data.name || !data.status || !data.role) continue;
-
-    let status = data.status;
-    let role = data.role;
-    let accessCode = data.accessCode ?? '';
-    let name = data.name;
-    let updatedAt = data.updatedAt ?? '';
-
-    // Reconcile with the source-of-truth member doc (index can lag after approve).
-    try {
-      const [group, memberSnap] = await Promise.all([
-        getGroup(data.groupId),
-        getDoc(memberRef(db, data.groupId, uid)),
-      ]);
-      if (group) {
-        name = group.name;
-        accessCode = group.accessCode;
+  const list = await Promise.all(
+    snap.docs.map(async (docSnap) => {
+      const data = docSnap.data() as Partial<GroupMembershipIndex>;
+      if (!data.groupId || !data.name || !data.status || !data.role) {
+        return null;
       }
-      if (memberSnap.exists()) {
-        const member = parseMember(
-          uid,
-          memberSnap.data() as Record<string, unknown>,
-        );
-        if (member && member.status !== status) {
-          status = member.status;
-          role = member.role;
-          updatedAt = member.updatedAt || updatedAt;
-          if (group) {
-            await writeMembershipIndex(
-              db,
-              uid,
-              group,
-              role,
-              status,
-              updatedAt || new Date().toISOString(),
-            );
-          }
-        } else if (member) {
-          status = member.status;
-          role = member.role;
+
+      let status = data.status;
+      let role = data.role;
+      let accessCode = data.accessCode ?? '';
+      let name = data.name;
+      let updatedAt = data.updatedAt ?? '';
+
+      // Reconcile with the source-of-truth member doc (index can lag after approve).
+      try {
+        const [group, memberSnap] = await Promise.all([
+          getGroup(data.groupId),
+          getDoc(memberRef(db, data.groupId, uid)),
+        ]);
+        if (group) {
+          name = group.name;
+          accessCode = group.accessCode;
         }
+        if (memberSnap.exists()) {
+          const member = parseMember(
+            uid,
+            memberSnap.data() as Record<string, unknown>,
+          );
+          if (member && member.status !== status) {
+            status = member.status;
+            role = member.role;
+            updatedAt = member.updatedAt || updatedAt;
+            if (group) {
+              await writeMembershipIndex(
+                db,
+                uid,
+                group,
+                role,
+                status,
+                updatedAt || new Date().toISOString(),
+              );
+            }
+          } else if (member) {
+            status = member.status;
+            role = member.role;
+          }
+        }
+      } catch {
+        // Keep indexed values if reconciliation fails (offline / rules).
       }
-    } catch {
-      // Keep indexed values if reconciliation fails (offline / rules).
-    }
 
-    list.push({
-      groupId: data.groupId,
-      name,
-      accessCode,
-      role,
-      status,
-      updatedAt,
-    });
+      return {
+        groupId: data.groupId,
+        name,
+        accessCode,
+        role,
+        status,
+        updatedAt,
+      } satisfies GroupMembershipIndex;
+    }),
+  );
+
+  return list
+    .filter((item): item is GroupMembershipIndex => item !== null)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function listMyGroupMemberships(
+  uid: string,
+  options: { force?: boolean } = {},
+): Promise<GroupMembershipIndex[]> {
+  const force = options.force === true;
+  if (
+    !force &&
+    membershipsCache &&
+    membershipsCache.uid === uid &&
+    Date.now() - membershipsCache.at < MEMBERSHIPS_CACHE_MS
+  ) {
+    return membershipsCache.data;
+  }
+  if (!force && membershipsInflight?.uid === uid) {
+    return membershipsInflight.promise;
   }
 
-  return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const generation = membershipsGeneration;
+  const promise = fetchMyGroupMemberships(uid)
+    .then((data) => {
+      if (generation === membershipsGeneration) {
+        membershipsCache = { uid, at: Date.now(), generation, data };
+      }
+      return data;
+    })
+    .finally(() => {
+      if (membershipsInflight?.promise === promise) {
+        membershipsInflight = null;
+      }
+    });
+  membershipsInflight = { uid, promise };
+  return promise;
 }
 
 export async function listPendingJoinRequests(
@@ -581,22 +648,25 @@ export async function listPendingJoinRequests(
     where('status', '==', 'pending'),
   );
   const snap = await getDocs(q);
-  const results: Array<{ member: GroupMember; profile: UserProfile | null }> =
-    [];
-  for (const docSnap of snap.docs) {
-    const member = parseMember(
-      docSnap.id,
-      docSnap.data() as Record<string, unknown>,
-    );
-    if (!member) continue;
-    results.push({
-      member,
-      profile: await getUserProfile(member.uid),
-    });
-  }
-  return results.sort((a, b) =>
-    b.member.updatedAt.localeCompare(a.member.updatedAt),
+  const results = await Promise.all(
+    snap.docs.map(async (docSnap) => {
+      const member = parseMember(
+        docSnap.id,
+        docSnap.data() as Record<string, unknown>,
+      );
+      if (!member) return null;
+      return {
+        member,
+        profile: await getUserProfile(member.uid),
+      };
+    }),
   );
+  return results
+    .filter(
+      (row): row is { member: GroupMember; profile: UserProfile | null } =>
+        row !== null,
+    )
+    .sort((a, b) => b.member.updatedAt.localeCompare(a.member.updatedAt));
 }
 
 export async function listActiveGroupMembers(groupId: string): Promise<
@@ -615,43 +685,38 @@ export async function listActiveGroupMembers(groupId: string): Promise<
     where('status', '==', 'active'),
   );
   const snap = await getDocs(q);
-  const results: Array<{
-    member: GroupMember;
-    profile: UserProfile | null;
-    memorizedCount: number | null;
-    needsReviewCount: number | null;
-    total: number | null;
-    summary: Awaited<ReturnType<typeof readPublicProgressSummary>>;
-  }> = [];
+  const results = await Promise.all(
+    snap.docs.map(async (docSnap) => {
+      const member = parseMember(
+        docSnap.id,
+        docSnap.data() as Record<string, unknown>,
+      );
+      if (!member) return null;
+      const [profile, summary] = await Promise.all([
+        getUserProfile(member.uid),
+        readPublicProgressSummary(member.uid).catch(() => null),
+      ]);
+      return {
+        member,
+        profile,
+        memorizedCount: summary?.memorizedCount ?? null,
+        needsReviewCount: summary?.needsReviewCount ?? null,
+        total: summary?.total ?? null,
+        summary,
+      };
+    }),
+  );
 
-  for (const docSnap of snap.docs) {
-    const member = parseMember(
-      docSnap.id,
-      docSnap.data() as Record<string, unknown>,
-    );
-    if (!member) continue;
-    const [profile, summary] = await Promise.all([
-      getUserProfile(member.uid),
-      readPublicProgressSummary(member.uid).catch(() => null),
-    ]);
-    results.push({
-      member,
-      profile,
-      memorizedCount: summary?.memorizedCount ?? null,
-      needsReviewCount: summary?.needsReviewCount ?? null,
-      total: summary?.total ?? null,
-      summary,
+  return results
+    .filter((row): row is NonNullable<typeof row> => row !== null)
+    .sort((a, b) => {
+      const memA = a.memorizedCount ?? -1;
+      const memB = b.memorizedCount ?? -1;
+      if (memB !== memA) return memB - memA;
+      const nameA = a.profile?.displayName ?? a.profile?.email ?? a.member.uid;
+      const nameB = b.profile?.displayName ?? b.profile?.email ?? b.member.uid;
+      return nameA.localeCompare(nameB);
     });
-  }
-
-  return results.sort((a, b) => {
-    const memA = a.memorizedCount ?? -1;
-    const memB = b.memorizedCount ?? -1;
-    if (memB !== memA) return memB - memA;
-    const nameA = a.profile?.displayName ?? a.profile?.email ?? a.member.uid;
-    const nameB = b.profile?.displayName ?? b.profile?.email ?? b.member.uid;
-    return nameA.localeCompare(nameB);
-  });
 }
 
 export async function approveJoinRequest(

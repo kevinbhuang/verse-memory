@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Copy, LoaderCircle, LogIn, Pencil, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -20,7 +20,6 @@ import {
   listPendingJoinRequests,
   rejectJoinRequest,
   renameGroup,
-  repairGroupChartAccess,
   requestJoinOfficialGroup,
   requestJoinWithCode,
   resolveOfficialGroup,
@@ -55,6 +54,7 @@ export function GroupsCard() {
   const { notify } = useToast();
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [panelLoading, setPanelLoading] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [memberships, setMemberships] = useState<GroupMembershipIndex[]>([]);
@@ -70,25 +70,91 @@ export function GroupsCard() {
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [renameBusy, setRenameBusy] = useState(false);
+  const selectedGroupIdRef = useRef<string | null>(null);
+  const panelCache = useRef(
+    new Map<
+      string,
+      {
+        group: MemoryGroup | null;
+        members: MemberRow[];
+        pending: Array<{ member: GroupMember; profile: UserProfile | null }>;
+      }
+    >(),
+  );
 
   const selected = memberships.find((m) => m.groupId === selectedGroupId) ?? null;
   const isLeader = selected?.role === 'leader' && selected.status === 'active';
+  selectedGroupIdRef.current = selectedGroupId;
+
+  const applyPanel = useCallback(
+    (
+      groupId: string,
+      panel: {
+        group: MemoryGroup | null;
+        members: MemberRow[];
+        pending: Array<{ member: GroupMember; profile: UserProfile | null }>;
+      },
+    ) => {
+      panelCache.current.set(groupId, panel);
+      if (selectedGroupIdRef.current !== groupId) return;
+      setSelectedGroup(panel.group);
+      setMembers(panel.members);
+      setPending(panel.pending);
+    },
+    [],
+  );
+
+  const loadPanel = useCallback(
+    async (groupId: string, membershipsList: GroupMembershipIndex[]) => {
+      const active = membershipsList.find((m) => m.groupId === groupId);
+      if (active?.status === 'active') {
+        const [groupDoc, memberRows, pendingRows] = await Promise.all([
+          getGroup(groupId).catch(() => null),
+          listActiveGroupMembers(groupId),
+          active.role === 'leader'
+            ? listPendingJoinRequests(groupId)
+            : Promise.resolve([]),
+        ]);
+        applyPanel(groupId, {
+          group: groupDoc,
+          members: memberRows,
+          pending: pendingRows,
+        });
+      } else {
+        const groupDoc = await getGroup(groupId).catch(() => null);
+        applyPanel(groupId, {
+          group: groupDoc,
+          members: [],
+          pending: [],
+        });
+      }
+    },
+    [applyPanel],
+  );
 
   const reload = useCallback(
-    async (focusGroupId?: string | null) => {
+    async (
+      focusGroupId?: string | null,
+      options: { force?: boolean; announce?: boolean } = {},
+    ) => {
       if (!user) return;
       setLoading(true);
       try {
-        const mine = await listMyGroupMemberships(user.uid);
+        const mine = await listMyGroupMemberships(user.uid, {
+          force: options.force,
+        });
+        if (options.force) {
+          if (focusGroupId) panelCache.current.delete(focusGroupId);
+          else panelCache.current.clear();
+        }
         setMemberships(mine);
-        notifyGroupMembershipChanged();
         const preferred =
           (focusGroupId &&
             mine.find((m) => m.groupId === focusGroupId)?.groupId) ||
-          (selectedGroupId &&
+          (selectedGroupIdRef.current &&
             mine.find(
               (m) =>
-                m.groupId === selectedGroupId &&
+                m.groupId === selectedGroupIdRef.current &&
                 (m.status === 'active' || m.status === 'pending'),
             )?.groupId) ||
           mine.find((m) => m.status === 'active')?.groupId ||
@@ -96,39 +162,70 @@ export function GroupsCard() {
           null;
         setSelectedGroupId(preferred);
 
+        if (options.announce) notifyGroupMembershipChanged();
+
         if (preferred) {
-          const active = mine.find((m) => m.groupId === preferred);
-          const groupDoc = await getGroup(preferred).catch(() => null);
-          setSelectedGroup(groupDoc);
-          if (active?.status === 'active') {
-            await repairGroupChartAccess(preferred, user.uid).catch(() => undefined);
-            const [memberRows, pendingRows] = await Promise.all([
-              listActiveGroupMembers(preferred),
-              active.role === 'leader'
-                ? listPendingJoinRequests(preferred)
-                : Promise.resolve([]),
-            ]);
-            setMembers(memberRows);
-            setPending(pendingRows);
+          const cached = panelCache.current.get(preferred);
+          if (cached && !options.force) {
+            applyPanel(preferred, cached);
+            setPanelLoading(false);
+            setLoading(false);
           } else {
-            setMembers([]);
-            setPending([]);
+            setPanelLoading(true);
+            setLoading(false);
+            try {
+              await loadPanel(preferred, mine);
+            } finally {
+              if (selectedGroupIdRef.current === preferred) {
+                setPanelLoading(false);
+              }
+            }
           }
         } else {
           setSelectedGroup(null);
           setMembers([]);
           setPending([]);
+          setLoading(false);
         }
       } catch (error) {
         notify(
           error instanceof Error ? error.message : 'Could not load groups.',
           'error',
         );
-      } finally {
         setLoading(false);
       }
     },
-    [notify, selectedGroupId, user],
+    [applyPanel, loadPanel, notify, user],
+  );
+
+  const selectGroup = useCallback(
+    async (groupId: string) => {
+      if (!user || groupId === selectedGroupIdRef.current) return;
+      setSelectedGroupId(groupId);
+      const cached = panelCache.current.get(groupId);
+      if (cached) {
+        applyPanel(groupId, cached);
+        setPanelLoading(false);
+        return;
+      }
+      setSelectedGroup(null);
+      setMembers([]);
+      setPending([]);
+      setPanelLoading(true);
+      try {
+        await loadPanel(groupId, memberships);
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Could not load group.',
+          'error',
+        );
+      } finally {
+        if (selectedGroupIdRef.current === groupId) {
+          setPanelLoading(false);
+        }
+      }
+    },
+    [applyPanel, loadPanel, memberships, notify, user],
   );
 
   useEffect(() => {
@@ -174,7 +271,7 @@ export function GroupsCard() {
       const group = await createGroup(user.uid, groupName);
       setGroupName('');
       notify(`Group created. Share code ${group.accessCode}.`, 'success');
-      await reload(group.id);
+      await reload(group.id, { force: true, announce: true });
     } catch (error) {
       notify(
         error instanceof Error ? error.message : 'Could not create group.',
@@ -195,7 +292,7 @@ export function GroupsCard() {
         `Requested to join “${group.name}”. Wait for the creator to approve.`,
         'success',
       );
-      await reload(group.id);
+      await reload(group.id, { force: true, announce: true });
     } catch (error) {
       notify(
         error instanceof Error ? error.message : 'Could not join group.',
@@ -218,7 +315,7 @@ export function GroupsCard() {
         `Requested to join “${group.name}”. Kevin will approve your request.`,
         'success',
       );
-      await reload(group.id);
+      await reload(group.id, { force: true, announce: true });
     } catch (error) {
       notify(
         error instanceof Error ? error.message : 'Could not join the A2N group.',
@@ -454,7 +551,7 @@ export function GroupsCard() {
               aria-selected={selected}
               disabled={busy}
               onClick={() => {
-                void reload(m.groupId);
+                void selectGroup(m.groupId);
               }}
               className={
                 selected
@@ -491,7 +588,7 @@ export function GroupsCard() {
       />
       {groupTabs}
       <CardBody className="space-y-5">
-        {loading ? (
+        {loading && !hasJoinedGroup ? (
           <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
             Loading…
@@ -521,7 +618,10 @@ export function GroupsCard() {
                             setSelectedGroup(next);
                             setRenaming(false);
                             notify(`Renamed to “${next.name}”.`, 'success');
-                            await reload(selected.groupId);
+                            await reload(selected.groupId, {
+                              force: true,
+                              announce: true,
+                            });
                           })
                           .catch((error: unknown) =>
                             notify(
@@ -624,7 +724,7 @@ export function GroupsCard() {
                             void leaveGroup(selected.groupId, user.uid)
                               .then(() => {
                                 notify('Left the group.', 'success');
-                                return reload();
+                                return reload(undefined, { force: true, announce: true });
                               })
                               .catch((error: unknown) =>
                                 notify(
@@ -654,7 +754,7 @@ export function GroupsCard() {
                           void cancelJoinRequest(selected.groupId, user.uid)
                             .then(() => {
                               notify('Join request cancelled.', 'success');
-                              return reload();
+                              return reload(undefined, { force: true, announce: true });
                             })
                             .catch((error: unknown) =>
                               notify(
@@ -707,7 +807,7 @@ export function GroupsCard() {
                                 )
                                   .then(() => {
                                     notify('Approved.', 'success');
-                                    return reload();
+                                    return reload(undefined, { force: true, announce: true });
                                   })
                                   .catch((error: unknown) =>
                                     notify(
@@ -735,7 +835,7 @@ export function GroupsCard() {
                                 )
                                   .then(() => {
                                     notify('Rejected.', 'success');
-                                    return reload();
+                                    return reload(undefined, { force: true, announce: true });
                                   })
                                   .catch((error: unknown) =>
                                     notify(
@@ -758,40 +858,50 @@ export function GroupsCard() {
                 ) : null}
 
                 {selected.status === 'active' ? (
-                  <GroupLeaderboard
-                    members={members}
-                    currentUid={user.uid}
-                    group={selectedGroup}
-                    isLeader={Boolean(isLeader)}
-                    goalBusy={goalBusy}
-                    onSaveGoal={async (goal) => {
-                      if (!user || !selected) return;
-                      setGoalBusy(true);
-                      try {
-                        const next = await setGroupGoal(
-                          selected.groupId,
-                          user.uid,
-                          goal,
-                        );
-                        setSelectedGroup(next);
-                        notify(
-                          goal == null
-                            ? 'Group goal cleared.'
-                            : `Group goal set to ${goal}.`,
-                          'success',
-                        );
-                      } catch (error) {
-                        notify(
-                          error instanceof Error
-                            ? error.message
-                            : 'Could not save goal.',
-                          'error',
-                        );
-                      } finally {
-                        setGoalBusy(false);
-                      }
-                    }}
-                  />
+                  panelLoading ? (
+                    <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+                      <LoaderCircle
+                        className="size-4 animate-spin"
+                        aria-hidden="true"
+                      />
+                      Loading…
+                    </p>
+                  ) : (
+                    <GroupLeaderboard
+                      members={members}
+                      currentUid={user.uid}
+                      group={selectedGroup}
+                      isLeader={Boolean(isLeader)}
+                      goalBusy={goalBusy}
+                      onSaveGoal={async (goal) => {
+                        if (!user || !selected) return;
+                        setGoalBusy(true);
+                        try {
+                          const next = await setGroupGoal(
+                            selected.groupId,
+                            user.uid,
+                            goal,
+                          );
+                          setSelectedGroup(next);
+                          notify(
+                            goal == null
+                              ? 'Group goal cleared.'
+                              : `Group goal set to ${goal}.`,
+                            'success',
+                          );
+                        } catch (error) {
+                          notify(
+                            error instanceof Error
+                              ? error.message
+                              : 'Could not save goal.',
+                            'error',
+                          );
+                        } finally {
+                          setGoalBusy(false);
+                        }
+                      }}
+                    />
+                  )
                 ) : null}
               </div>
             ) : null}
