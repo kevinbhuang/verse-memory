@@ -20,11 +20,20 @@ export type GroupBadge = {
   description: string;
 };
 
+export type CrownTallies = {
+  byBook: Record<string, number>;
+  bySection: Record<string, number>;
+  otCount: number;
+  ntCount: number;
+};
+
 export type LeaderboardPersonInput = {
   uid: string;
   displayName: string;
   isLeader: boolean;
   summary: PublicProgressSummary | null;
+  /** Precomputed crowns; used when the member doc has counts but no verse map. */
+  crownTallies?: CrownTallies | null;
 };
 
 export type LeaderboardEntry = {
@@ -56,6 +65,28 @@ type MemberTallies = {
   ntCount: number;
 };
 
+/** Book / section / testament counts from a full public-progress verse map. */
+export function talliesFromSummary(
+  summary: PublicProgressSummary,
+): CrownTallies {
+  const byBook: Record<string, number> = {};
+  const bySection: Record<string, number> = {};
+  let otCount = 0;
+  let ntCount = 0;
+
+  for (const verse of verses) {
+    const flags = summary.verses[verse.id];
+    if (!flags?.memorized) continue;
+    bySection[verse.section] = (bySection[verse.section] ?? 0) + 1;
+    if (OT_SECTIONS.has(verse.section)) otCount += 1;
+    else ntCount += 1;
+    const book = bookFromReference(verse.reference);
+    if (book) byBook[book] = (byBook[book] ?? 0) + 1;
+  }
+
+  return { byBook, bySection, otCount, ntCount };
+}
+
 function tallyMember(person: LeaderboardPersonInput): MemberTallies {
   const total = person.summary?.total ?? verses.length;
   if (!person.summary) {
@@ -75,41 +106,28 @@ function tallyMember(person: LeaderboardPersonInput): MemberTallies {
     };
   }
 
-  const byBook: Record<string, number> = {};
-  const bySection: Record<string, number> = {};
-  let otCount = 0;
-  let ntCount = 0;
-  let memorizedCount = 0;
-  let needsReviewCount = 0;
-
-  for (const verse of verses) {
-    const flags = person.summary.verses[verse.id];
-    if (!flags) continue;
-    if (flags.needsReview) needsReviewCount += 1;
-    if (!flags.memorized) continue;
-    memorizedCount += 1;
-
-    bySection[verse.section] = (bySection[verse.section] ?? 0) + 1;
-    if (OT_SECTIONS.has(verse.section)) otCount += 1;
-    else ntCount += 1;
-
-    const book = bookFromReference(verse.reference);
-    if (book) byBook[book] = (byBook[book] ?? 0) + 1;
-  }
+  const fromVerses =
+    Object.keys(person.summary.verses).length > 0
+      ? talliesFromSummary(person.summary)
+      : null;
+  const tallies = person.crownTallies ??
+    fromVerses ?? {
+      byBook: {},
+      bySection: {},
+      otCount: 0,
+      ntCount: 0,
+    };
 
   return {
     uid: person.uid,
     displayName: person.displayName,
     isLeader: person.isLeader,
-    memorizedCount: person.summary.memorizedCount || memorizedCount,
-    needsReviewCount: person.summary.needsReviewCount || needsReviewCount,
+    memorizedCount: person.summary.memorizedCount,
+    needsReviewCount: person.summary.needsReviewCount,
     weeklyDelta: person.summary.weeklyDelta ?? 0,
     total,
     synced: true,
-    byBook,
-    bySection,
-    otCount,
-    ntCount,
+    ...tallies,
   };
 }
 

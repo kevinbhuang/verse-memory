@@ -16,6 +16,7 @@ import {
   getGroup,
   leaveGroup,
   listActiveGroupMembers,
+  hydrateActiveGroupMembers,
   listMyGroupMemberships,
   listPendingJoinRequests,
   rejectJoinRequest,
@@ -26,9 +27,9 @@ import {
   setGroupGoal,
   type GroupMembershipIndex,
   type GroupMember,
+  type ActiveGroupMemberRow,
   type MemoryGroup,
 } from '@/services/social/groupService';
-import type { PublicProgressSummary } from '@/services/social/publicProgressService';
 import { GroupLeaderboard } from '@/features/friends/GroupLeaderboard';
 
 function displayLabel(profile: UserProfile | null): string {
@@ -37,14 +38,7 @@ function displayLabel(profile: UserProfile | null): string {
   return 'Someone';
 }
 
-type MemberRow = {
-  member: GroupMember;
-  profile: UserProfile | null;
-  memorizedCount: number | null;
-  needsReviewCount: number | null;
-  total: number | null;
-  summary: PublicProgressSummary | null;
-};
+type MemberRow = ActiveGroupMemberRow;
 
 /**
  * Create / join memory groups via access code; leader approves joiners.
@@ -108,18 +102,37 @@ export function GroupsCard() {
     async (groupId: string, membershipsList: GroupMembershipIndex[]) => {
       const active = membershipsList.find((m) => m.groupId === groupId);
       if (active?.status === 'active') {
-        const [groupDoc, memberRows, pendingRows] = await Promise.all([
+        const [groupDoc, memberRows] = await Promise.all([
           getGroup(groupId).catch(() => null),
           listActiveGroupMembers(groupId),
-          active.role === 'leader'
-            ? listPendingJoinRequests(groupId)
-            : Promise.resolve([]),
         ]);
         applyPanel(groupId, {
           group: groupDoc,
           members: memberRows,
-          pending: pendingRows,
+          pending: [],
         });
+        if (active.role === 'leader') {
+          void listPendingJoinRequests(groupId)
+            .then((pendingRows) => {
+              const cached = panelCache.current.get(groupId);
+              applyPanel(groupId, {
+                group: cached?.group ?? groupDoc,
+                members: cached?.members ?? memberRows,
+                pending: pendingRows,
+              });
+            })
+            .catch(() => undefined);
+        }
+        if (memberRows.some((row) => !row.profile || row.summary == null)) {
+          void hydrateActiveGroupMembers(groupId, memberRows, (hydrated) => {
+            const cached = panelCache.current.get(groupId);
+            applyPanel(groupId, {
+              group: cached?.group ?? groupDoc,
+              members: hydrated,
+              pending: cached?.pending ?? [],
+            });
+          }).catch(() => undefined);
+        }
       } else {
         const groupDoc = await getGroup(groupId).catch(() => null);
         applyPanel(groupId, {
@@ -142,6 +155,7 @@ export function GroupsCard() {
       try {
         const mine = await listMyGroupMemberships(user.uid, {
           force: options.force,
+          reconcile: options.force,
         });
         if (options.force) {
           if (focusGroupId) panelCache.current.delete(focusGroupId);

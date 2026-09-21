@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/Field';
 import {
   buildGroupLeaderboard,
+  type CrownTallies,
   type LeaderboardPersonInput,
 } from '@/services/social/groupLeaderboard';
 import type { PublicProgressSummary } from '@/services/social/publicProgressService';
@@ -34,6 +35,7 @@ export function GroupLeaderboard({
     member: GroupMember;
     profile: UserProfile | null;
     summary: PublicProgressSummary | null;
+    crownTallies?: CrownTallies | null;
   }>;
   currentUid: string;
   group: MemoryGroup | null;
@@ -42,11 +44,12 @@ export function GroupLeaderboard({
   goalBusy?: boolean;
 }) {
   const people: LeaderboardPersonInput[] = members.map(
-    ({ member, profile, summary }) => ({
+    ({ member, profile, summary, crownTallies }) => ({
       uid: member.uid,
       displayName: displayLabel(profile),
       isLeader: member.role === 'leader',
       summary,
+      crownTallies,
     }),
   );
   const entries = buildGroupLeaderboard(people);

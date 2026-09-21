@@ -10,13 +10,21 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { getFirestoreDb } from '@/lib/firebase';
+import { verses } from '@/data/verses';
 import { appConfig } from '@/config/app';
 import {
   getUserProfile,
   lookupUidByEmail,
   type UserProfile,
 } from './profileService';
-import { readPublicProgressSummary } from './publicProgressService';
+import {
+  readPublicProgressSummary,
+  type PublicProgressSummary,
+} from './publicProgressService';
+import {
+  talliesFromSummary,
+  type CrownTallies,
+} from './groupLeaderboard';
 
 export type GroupRole = 'leader' | 'member';
 export type MembershipStatus = 'pending' | 'active' | 'rejected' | 'left';
@@ -38,6 +46,27 @@ export type GroupMember = {
   status: MembershipStatus;
   createdAt: string;
   updatedAt: string;
+  displayName?: string | null;
+  email?: string | null;
+  memorizedCount?: number;
+  needsReviewCount?: number;
+  weeklyDelta?: number;
+  total?: number;
+  byBook?: Record<string, number>;
+  bySection?: Record<string, number>;
+  otCount?: number;
+  ntCount?: number;
+  progressUpdatedAt?: string;
+};
+
+export type ActiveGroupMemberRow = {
+  member: GroupMember;
+  profile: UserProfile | null;
+  memorizedCount: number | null;
+  needsReviewCount: number | null;
+  total: number | null;
+  summary: PublicProgressSummary | null;
+  crownTallies: CrownTallies | null;
 };
 
 export type GroupMembershipIndex = {
@@ -125,6 +154,15 @@ function parseGroup(
   };
 }
 
+function parseNumberRecord(value: unknown): Record<string, number> | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const out: Record<string, number> = {};
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof entry === 'number' && Number.isFinite(entry)) out[key] = entry;
+  }
+  return out;
+}
+
 function parseMember(
   uid: string,
   data: Record<string, unknown>,
@@ -132,13 +170,102 @@ function parseMember(
   if (typeof data.role !== 'string' || typeof data.status !== 'string') {
     return null;
   }
-  return {
+  const member: GroupMember = {
     uid,
     role: data.role as GroupRole,
     status: data.status as MembershipStatus,
     createdAt: typeof data.createdAt === 'string' ? data.createdAt : '',
     updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : '',
   };
+  if (typeof data.displayName === 'string') member.displayName = data.displayName;
+  else if (data.displayName === null) member.displayName = null;
+  if (typeof data.email === 'string') member.email = data.email;
+  else if (data.email === null) member.email = null;
+  if (typeof data.memorizedCount === 'number') {
+    member.memorizedCount = data.memorizedCount;
+  }
+  if (typeof data.needsReviewCount === 'number') {
+    member.needsReviewCount = data.needsReviewCount;
+  }
+  if (typeof data.weeklyDelta === 'number') member.weeklyDelta = data.weeklyDelta;
+  if (typeof data.total === 'number') member.total = data.total;
+  if (typeof data.otCount === 'number') member.otCount = data.otCount;
+  if (typeof data.ntCount === 'number') member.ntCount = data.ntCount;
+  if (typeof data.progressUpdatedAt === 'string') {
+    member.progressUpdatedAt = data.progressUpdatedAt;
+  }
+  const byBook = parseNumberRecord(data.byBook);
+  if (byBook) member.byBook = byBook;
+  const bySection = parseNumberRecord(data.bySection);
+  if (bySection) member.bySection = bySection;
+  return member;
+}
+
+async function memberIdentityFields(
+  uid: string,
+): Promise<{ displayName: string | null; email: string | null }> {
+  const profile = await getUserProfile(uid).catch(() => null);
+  return {
+    displayName: profile?.displayName ?? null,
+    email: profile?.email ?? null,
+  };
+}
+
+function profileFromMember(member: GroupMember): UserProfile | null {
+  if (!member.displayName && !member.email) return null;
+  return {
+    uid: member.uid,
+    email: member.email ?? '',
+    displayName: member.displayName ?? null,
+    photoURL: null,
+    updatedAt: member.progressUpdatedAt ?? member.updatedAt,
+  };
+}
+
+function summaryFromMember(member: GroupMember): PublicProgressSummary | null {
+  if (typeof member.memorizedCount !== 'number') return null;
+  return {
+    updatedAt: member.progressUpdatedAt ?? member.updatedAt,
+    memorizedCount: member.memorizedCount,
+    needsReviewCount: member.needsReviewCount ?? 0,
+    weeklyDelta: member.weeklyDelta ?? 0,
+    total: member.total ?? verses.length,
+    verses: {},
+  };
+}
+
+function crownTalliesFromMember(member: GroupMember): CrownTallies | null {
+  if (typeof member.memorizedCount !== 'number') return null;
+  return {
+    byBook: member.byBook ?? {},
+    bySection: member.bySection ?? {},
+    otCount: member.otCount ?? 0,
+    ntCount: member.ntCount ?? 0,
+  };
+}
+
+function rowFromMember(member: GroupMember): ActiveGroupMemberRow {
+  return {
+    member,
+    profile: profileFromMember(member),
+    memorizedCount: member.memorizedCount ?? null,
+    needsReviewCount: member.needsReviewCount ?? null,
+    total: member.total ?? null,
+    summary: summaryFromMember(member),
+    crownTallies: crownTalliesFromMember(member),
+  };
+}
+
+function compareMemberRows(
+  a: ActiveGroupMemberRow,
+  b: ActiveGroupMemberRow,
+): number {
+  const memA = a.memorizedCount ?? -1;
+  const memB = b.memorizedCount ?? -1;
+  if (memB !== memA) return memB - memA;
+  const nameA = a.profile?.displayName ?? a.profile?.email ?? a.member.uid;
+  const nameB = b.profile?.displayName ?? b.profile?.email ?? b.member.uid;
+  return nameA.localeCompare(nameB);
 }
 
 async function writeMembershipIndex(
@@ -283,6 +410,7 @@ export async function createGroup(
     goalMemorizedTotal: null,
   };
 
+  const identity = await memberIdentityFields(uid);
   await setDoc(groupRef(db, groupId), group);
   await setDoc(codeRef(db, accessCode), { groupId, createdAt: now });
   await setDoc(memberRef(db, groupId, uid), {
@@ -291,6 +419,7 @@ export async function createGroup(
     status: 'active',
     createdAt: now,
     updatedAt: now,
+    ...identity,
   } satisfies GroupMember);
   await writeMembershipIndex(db, uid, group, 'leader', 'active', now);
 
@@ -425,6 +554,7 @@ export async function requestJoinGroup(
   }
 
   const now = new Date().toISOString();
+  const identity = await memberIdentityFields(uid);
   const member: GroupMember = {
     uid,
     role: 'member',
@@ -433,6 +563,7 @@ export async function requestJoinGroup(
       ? ((existing.data() as { createdAt?: string }).createdAt ?? now)
       : now,
     updatedAt: now,
+    ...identity,
   };
   await setDoc(memberRef(db, group.id, uid), member);
   await writeMembershipIndex(db, uid, group, 'member', 'pending', now);
@@ -534,6 +665,7 @@ function invalidateMembershipsCache(uid?: string): void {
 
 async function fetchMyGroupMemberships(
   uid: string,
+  reconcile: boolean,
 ): Promise<GroupMembershipIndex[]> {
   const db = requireDb();
   const snap = await getDocs(collection(db, 'users', uid, 'groupMemberships'));
@@ -552,41 +684,43 @@ async function fetchMyGroupMemberships(
       let updatedAt = data.updatedAt ?? '';
 
       // Reconcile with the source-of-truth member doc (index can lag after approve).
-      try {
-        const [group, memberSnap] = await Promise.all([
-          getGroup(data.groupId),
-          getDoc(memberRef(db, data.groupId, uid)),
-        ]);
-        if (group) {
-          name = group.name;
-          accessCode = group.accessCode;
-        }
-        if (memberSnap.exists()) {
-          const member = parseMember(
-            uid,
-            memberSnap.data() as Record<string, unknown>,
-          );
-          if (member && member.status !== status) {
-            status = member.status;
-            role = member.role;
-            updatedAt = member.updatedAt || updatedAt;
-            if (group) {
-              await writeMembershipIndex(
-                db,
-                uid,
-                group,
-                role,
-                status,
-                updatedAt || new Date().toISOString(),
-              );
-            }
-          } else if (member) {
-            status = member.status;
-            role = member.role;
+      if (reconcile) {
+        try {
+          const [group, memberSnap] = await Promise.all([
+            getGroup(data.groupId),
+            getDoc(memberRef(db, data.groupId, uid)),
+          ]);
+          if (group) {
+            name = group.name;
+            accessCode = group.accessCode;
           }
+          if (memberSnap.exists()) {
+            const member = parseMember(
+              uid,
+              memberSnap.data() as Record<string, unknown>,
+            );
+            if (member && member.status !== status) {
+              status = member.status;
+              role = member.role;
+              updatedAt = member.updatedAt || updatedAt;
+              if (group) {
+                await writeMembershipIndex(
+                  db,
+                  uid,
+                  group,
+                  role,
+                  status,
+                  updatedAt || new Date().toISOString(),
+                );
+              }
+            } else if (member) {
+              status = member.status;
+              role = member.role;
+            }
+          }
+        } catch {
+          // Keep indexed values if reconciliation fails (offline / rules).
         }
-      } catch {
-        // Keep indexed values if reconciliation fails (offline / rules).
       }
 
       return {
@@ -607,9 +741,10 @@ async function fetchMyGroupMemberships(
 
 export async function listMyGroupMemberships(
   uid: string,
-  options: { force?: boolean } = {},
+  options: { force?: boolean; reconcile?: boolean } = {},
 ): Promise<GroupMembershipIndex[]> {
   const force = options.force === true;
+  const reconcile = options.reconcile === true;
   if (
     !force &&
     membershipsCache &&
@@ -623,7 +758,7 @@ export async function listMyGroupMemberships(
   }
 
   const generation = membershipsGeneration;
-  const promise = fetchMyGroupMemberships(uid)
+  const promise = fetchMyGroupMemberships(uid, reconcile)
     .then((data) => {
       if (generation === membershipsGeneration) {
         membershipsCache = { uid, at: Date.now(), generation, data };
@@ -655,9 +790,10 @@ export async function listPendingJoinRequests(
         docSnap.data() as Record<string, unknown>,
       );
       if (!member) return null;
+      const cached = profileFromMember(member);
       return {
         member,
-        profile: await getUserProfile(member.uid),
+        profile: cached ?? (await getUserProfile(member.uid)),
       };
     }),
   );
@@ -669,54 +805,151 @@ export async function listPendingJoinRequests(
     .sort((a, b) => b.member.updatedAt.localeCompare(a.member.updatedAt));
 }
 
-export async function listActiveGroupMembers(groupId: string): Promise<
-  Array<{
-    member: GroupMember;
-    profile: UserProfile | null;
-    memorizedCount: number | null;
-    needsReviewCount: number | null;
-    total: number | null;
-    summary: Awaited<ReturnType<typeof readPublicProgressSummary>>;
-  }>
-> {
+/**
+ * One members query. Names/counts come from denormalized fields on the
+ * member docs so the leaderboard can paint without N profile/summary reads.
+ */
+export async function listActiveGroupMembers(
+  groupId: string,
+): Promise<ActiveGroupMemberRow[]> {
   const db = requireDb();
   const q = query(
     collection(db, 'groups', groupId, 'members'),
     where('status', '==', 'active'),
   );
   const snap = await getDocs(q);
-  const results = await Promise.all(
-    snap.docs.map(async (docSnap) => {
+  return snap.docs
+    .map((docSnap) => {
       const member = parseMember(
         docSnap.id,
         docSnap.data() as Record<string, unknown>,
       );
-      if (!member) return null;
-      const [profile, summary] = await Promise.all([
-        getUserProfile(member.uid),
-        readPublicProgressSummary(member.uid).catch(() => null),
-      ]);
-      return {
-        member,
-        profile,
-        memorizedCount: summary?.memorizedCount ?? null,
-        needsReviewCount: summary?.needsReviewCount ?? null,
-        total: summary?.total ?? null,
-        summary,
-      };
-    }),
-  );
+      return member ? rowFromMember(member) : null;
+    })
+    .filter((row): row is ActiveGroupMemberRow => row !== null)
+    .sort(compareMemberRows);
+}
 
-  return results
-    .filter((row): row is NonNullable<typeof row> => row !== null)
-    .sort((a, b) => {
-      const memA = a.memorizedCount ?? -1;
-      const memB = b.memorizedCount ?? -1;
-      if (memB !== memA) return memB - memA;
-      const nameA = a.profile?.displayName ?? a.profile?.email ?? a.member.uid;
-      const nameB = b.profile?.displayName ?? b.profile?.email ?? b.member.uid;
-      return nameA.localeCompare(nameB);
-    });
+function rowNeedsHydration(row: ActiveGroupMemberRow): boolean {
+  return !row.profile || row.summary == null;
+}
+
+async function writeMemberBoardFields(
+  groupId: string,
+  uid: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  const db = requireDb();
+  await setDoc(memberRef(db, groupId, uid), payload, { merge: true }).catch(
+    () => undefined,
+  );
+}
+
+/**
+ * Fill missing names/counts from profile + publicProgress (does not block
+ * first paint). Writes denormalized fields back so the next visit is one query.
+ */
+export async function hydrateActiveGroupMembers(
+  groupId: string,
+  rows: ActiveGroupMemberRow[],
+  onProgress?: (rows: ActiveGroupMemberRow[]) => void,
+): Promise<ActiveGroupMemberRow[]> {
+  if (!rows.some(rowNeedsHydration)) return rows;
+
+  let current = rows;
+
+  if (current.some((row) => !row.profile)) {
+    current = (
+      await Promise.all(
+        current.map(async (row) => {
+          if (row.profile) return row;
+          const profile = await getUserProfile(row.member.uid);
+          if (profile) {
+            void writeMemberBoardFields(groupId, row.member.uid, {
+              displayName: profile.displayName,
+              email: profile.email,
+            });
+          }
+          return { ...row, profile };
+        }),
+      )
+    ).sort(compareMemberRows);
+    onProgress?.(current);
+  }
+
+  if (current.some((row) => row.summary == null)) {
+    current = (
+      await Promise.all(
+        current.map(async (row) => {
+          if (row.summary != null) return row;
+          const summary = await readPublicProgressSummary(row.member.uid).catch(
+            () => null,
+          );
+          if (!summary) return row;
+          const crownTallies = talliesFromSummary(summary);
+          void writeMemberBoardFields(groupId, row.member.uid, {
+            displayName: row.profile?.displayName ?? null,
+            email: row.profile?.email ?? null,
+            memorizedCount: summary.memorizedCount,
+            needsReviewCount: summary.needsReviewCount,
+            weeklyDelta: summary.weeklyDelta,
+            total: summary.total,
+            byBook: crownTallies.byBook,
+            bySection: crownTallies.bySection,
+            otCount: crownTallies.otCount,
+            ntCount: crownTallies.ntCount,
+            progressUpdatedAt: summary.updatedAt,
+          });
+          return {
+            ...row,
+            summary,
+            memorizedCount: summary.memorizedCount,
+            needsReviewCount: summary.needsReviewCount,
+            total: summary.total,
+            crownTallies,
+          };
+        }),
+      )
+    ).sort(compareMemberRows);
+    onProgress?.(current);
+  }
+
+  return current;
+}
+
+/**
+ * Copy the owner's latest board stats onto every group membership doc so
+ * other members can render the leaderboard from a single query.
+ */
+export async function syncMemberLeaderboardStats(
+  uid: string,
+  summary: PublicProgressSummary,
+): Promise<void> {
+  const mine = await listMyGroupMemberships(uid);
+  const active = mine.filter((item) => item.status === 'active');
+  if (active.length === 0) return;
+
+  const db = requireDb();
+  const identity = await memberIdentityFields(uid);
+  const tallies = talliesFromSummary(summary);
+  const payload = {
+    ...identity,
+    memorizedCount: summary.memorizedCount,
+    needsReviewCount: summary.needsReviewCount,
+    weeklyDelta: summary.weeklyDelta,
+    total: summary.total,
+    byBook: tallies.byBook,
+    bySection: tallies.bySection,
+    otCount: tallies.otCount,
+    ntCount: tallies.ntCount,
+    progressUpdatedAt: summary.updatedAt,
+  };
+
+  await Promise.all(
+    active.map((item) =>
+      setDoc(memberRef(db, item.groupId, uid), payload, { merge: true }),
+    ),
+  );
 }
 
 export async function approveJoinRequest(

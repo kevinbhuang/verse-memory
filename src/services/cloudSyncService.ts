@@ -9,6 +9,7 @@ import {
 } from '@/services/backupService';
 import { getDataStore } from '@/repositories';
 import { writePublicProgressSummary } from '@/services/social/publicProgressService';
+import { syncMemberLeaderboardStats } from '@/services/social/groupService';
 
 const META_KEY = 'verse-memory:cloud-sync-meta';
 const PUSH_DEBOUNCE_MS = 3000;
@@ -179,6 +180,13 @@ async function pullFromCloud(uid: string, cloud: CloudProgressDoc): Promise<void
   }
 }
 
+async function publishShareableProgress(uid: string): Promise<void> {
+  const summary = await writePublicProgressSummary(uid);
+  if (summary) {
+    await syncMemberLeaderboardStats(uid, summary).catch(() => undefined);
+  }
+}
+
 async function pushToCloud(uid: string): Promise<void> {
   const backup = await buildBackup();
   // Prefer the newest local progress stamp so LWW compares apples-to-apples.
@@ -190,7 +198,7 @@ async function pushToCloud(uid: string): Promise<void> {
     lastSyncedCloudUpdatedAt: updatedAt,
     lastLocalPushAt: updatedAt,
   });
-  await writePublicProgressSummary(uid);
+  await publishShareableProgress(uid);
 }
 
 /**
@@ -223,7 +231,7 @@ export async function runCloudSync(uid: string): Promise<void> {
 
     if (decision === 'pull' && cloud) {
       await pullFromCloud(uid, cloud);
-      await writePublicProgressSummary(uid);
+      await publishShareableProgress(uid);
     } else if (decision === 'push') {
       await pushToCloud(uid);
     } else if (cloud) {
@@ -233,9 +241,9 @@ export async function runCloudSync(uid: string): Promise<void> {
         lastLocalPushAt: readMeta().lastLocalPushAt,
       });
       // Keep the shareable summary fresh even when backup LWW is a noop.
-      await writePublicProgressSummary(uid);
+      await publishShareableProgress(uid);
     } else {
-      await writePublicProgressSummary(uid);
+      await publishShareableProgress(uid);
     }
 
     setStatus('synced');

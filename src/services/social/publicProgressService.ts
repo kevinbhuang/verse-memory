@@ -76,12 +76,15 @@ function summaryRef(uid: string) {
 }
 
 /** Write shareable summary from local Dexie progress (owner only). */
-export async function writePublicProgressSummary(uid: string): Promise<void> {
+export async function writePublicProgressSummary(
+  uid: string,
+): Promise<PublicProgressSummary | null> {
   const ref = summaryRef(uid);
-  if (!ref) return;
+  if (!ref) return null;
   const progressList = await getDataStore().progress.all();
   const summary = buildPublicProgressSummary(progressList);
   await setDoc(ref, summary);
+  return summary;
 }
 
 export async function readPublicProgressSummary(

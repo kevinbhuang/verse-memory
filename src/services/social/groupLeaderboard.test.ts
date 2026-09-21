@@ -72,4 +72,60 @@ describe('buildGroupLeaderboard', () => {
     ).toBe(true);
     expect(board[1]?.rank).toBe(2);
   });
+
+  it('awards crowns from denormalized tallies without a verse map', () => {
+    const johnVerses = verses.filter((v) => v.reference.startsWith('John '));
+    const board = buildGroupLeaderboard([
+      {
+        uid: 'a',
+        displayName: 'Alex',
+        isLeader: true,
+        summary: {
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          memorizedCount: 2,
+          needsReviewCount: 0,
+          total: verses.length,
+          weeklyDelta: 1,
+          verses: {},
+        },
+        crownTallies: {
+          byBook: { John: 2 },
+          bySection: { Gospels: 2 },
+          otCount: 0,
+          ntCount: 2,
+        },
+      },
+      {
+        uid: 'b',
+        displayName: 'Blake',
+        isLeader: false,
+        summary: {
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          memorizedCount: 5,
+          needsReviewCount: 0,
+          total: verses.length,
+          weeklyDelta: 0,
+          verses: {},
+        },
+        crownTallies: {
+          byBook: { John: johnVerses.length },
+          bySection: { Gospels: johnVerses.length },
+          otCount: 0,
+          ntCount: johnVerses.length,
+        },
+      },
+    ]);
+
+    expect(board[0]?.uid).toBe('b');
+    expect(board[0]?.synced).toBe(true);
+    expect(board[0]?.memorizedCount).toBe(5);
+    expect(board[0]?.badges.some((b) => b.id === 'collection-crown')).toBe(
+      true,
+    );
+    expect(
+      board[0]?.badges.some((b) => b.label.startsWith('King of John')),
+    ).toBe(true);
+    expect(board[1]?.synced).toBe(true);
+    expect(board[1]?.memorizedCount).toBe(2);
+  });
 });

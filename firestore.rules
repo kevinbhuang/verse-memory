@@ -76,12 +76,13 @@ service cloud.firestore {
       allow delete: if isGroupCreator(groupId);
 
       match /members/{uid} {
+        // Active member docs are readable without extra get()s so listing a
+        // large group is one query. Group ids are unguessable; pending
+        // joiners stay private to self + creator.
         allow read: if signedIn() && (
-          isGroupCreator(groupId)
-          || request.auth.uid == uid
-          || (isActiveMember(groupId, request.auth.uid)
-              && resource.data.status == 'active')
-          || (isGroupCreator(groupId) && resource.data.status == 'pending')
+          request.auth.uid == uid
+          || resource.data.status == 'active'
+          || isGroupCreator(groupId)
         );
 
         // Creator adds themselves as leader, or someone requests to join.
@@ -105,6 +106,17 @@ service cloud.firestore {
             && resource.data.status in ['pending', 'active']
             && request.resource.data.status in ['left', 'rejected']
             && request.resource.data.uid == uid)
+          ||
+          // Any active member may copy name + board stats onto an active
+          // member doc (never role/status). First viewer backfills the group.
+          (isActiveMember(groupId, request.auth.uid)
+            && resource.data.status == 'active'
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly([
+                   'displayName', 'email', 'memorizedCount', 'needsReviewCount',
+                   'weeklyDelta', 'total', 'byBook', 'bySection', 'otCount',
+                   'ntCount', 'progressUpdatedAt'
+                 ]))
         );
 
         allow delete: if isGroupCreator(groupId) || request.auth.uid == uid;
