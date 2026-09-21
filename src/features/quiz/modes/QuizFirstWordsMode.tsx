@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
+import { ScriptureText } from '@/components/ScriptureText';
 import { useAutofocus } from '@/hooks/useAutofocus';
 import { tokenize } from '@/lib/text/tokenize';
 import type { QuizModeProps } from '../quizModeTypes';
@@ -13,7 +14,6 @@ export function QuizFirstWordsMode({
   onComplete,
 }: QuizModeProps) {
   const expected = useMemo(() => tokenize(verse.text).slice(0, 3), [verse.text]);
-  const expectedLabel = expected.map((token) => token.text).join(' ');
 
   const [entry, setEntry] = useState('');
   const [checked, setChecked] = useState(false);
@@ -90,17 +90,21 @@ export function QuizFirstWordsMode({
       </Field>
 
       {checked ? (
-        <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
-            correct
-              ? 'border-success/40 bg-success-soft text-success'
-              : 'border-danger/40 bg-danger-soft text-danger'
-          }`}
-          role="status"
-        >
-          <p className="font-medium">{correct ? 'Correct.' : 'Not quite.'}</p>
-          <p className="mt-1 opacity-90">Answer: {expectedLabel}</p>
-        </div>
+        <>
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              correct
+                ? 'border-success/40 bg-success-soft text-success'
+                : 'border-danger/40 bg-danger-soft text-danger'
+            }`}
+            role="status"
+          >
+            <p className="font-medium">{correct ? 'Correct.' : 'Not quite.'}</p>
+          </div>
+          <div className="rounded-xl border border-line bg-surface px-5 py-6">
+            <ScriptureText text={verse.text} />
+          </div>
+        </>
       ) : (
         <Button variant="primary" onClick={check} disabled={entry.trim() === ''}>
           <Check className="size-4" aria-hidden="true" />
