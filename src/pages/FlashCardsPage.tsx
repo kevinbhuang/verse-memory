@@ -265,8 +265,7 @@ export function FlashCardsPage() {
       <PageHeader
         title="Flash Cards"
         actions={
-          <div className="flex flex-col items-end gap-1.5 pb-0.5">
-            <p className="text-sm text-ink-muted tabular-nums">{positionLabel}</p>
+          <div className="flex flex-wrap items-center justify-end gap-x-2.5 gap-y-1 pb-0.5">
             <button
               type="button"
               role="switch"
@@ -290,6 +289,7 @@ export function FlashCardsPage() {
               </span>
               Memorized only
             </button>
+            <p className="text-sm text-ink-muted tabular-nums">{positionLabel}</p>
           </div>
         }
         className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4"
@@ -333,14 +333,18 @@ export function FlashCardsPage() {
           {settings.showSectionLabels ? (
             <p className="mt-1 text-sm text-ink-muted">{verse.section}</p>
           ) : null}
-          <VerseAudioControls
-            text={verse.text}
-            reference={verse.reference}
-            passageKey={verse.id}
-            className="mt-3"
-            enableRepeatHotkey
-          />
-          <SelfTestRecorder passageKey={verse.id} className="mt-1.5" />
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <VerseAudioControls
+              text={verse.text}
+              reference={verse.reference}
+              passageKey={verse.id}
+              enableRepeatHotkey
+            />
+            <span className="text-xs text-ink-subtle/50" aria-hidden="true">
+              ·
+            </span>
+            <SelfTestRecorder passageKey={verse.id} />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
