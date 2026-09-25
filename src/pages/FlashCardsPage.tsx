@@ -9,23 +9,27 @@ import {
   Keyboard,
   TextCursorInput,
 } from 'lucide-react';
+import clsx from 'clsx';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ScriptureText } from '@/components/ScriptureText';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { useHotkeys } from '@/hooks/useHotkeys';
 import { useSettings } from '@/hooks/useSettings';
-import { useVerseProgress } from '@/hooks/useProgressData';
+import { useAllProgress, useVerseProgress } from '@/hooks/useProgressData';
 import { verses } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { setDifficult, setMemorized } from '@/services/progressService';
 import { createSession } from '@/services/sessionService';
 import type { ReviewMode } from '@/types';
 import { VerseAudioControls } from '@/features/review/VerseAudioControls';
+import { SelfTestRecorder } from '@/features/flashcards/SelfTestRecorder';
 
 const FIRST_LETTER_KEY = 'verse-memory:flashcards-first-letter';
 const REVEALED_KEY = 'verse-memory:flashcards-revealed';
 const CUE_HIDDEN_KEY = 'verse-memory:flashcards-cue-hidden';
+const MEMORIZED_ONLY_KEY = 'verse-memory:flashcards-memorized-only';
 
 function readBoolPref(key: string, fallback: boolean): boolean {
   try {
@@ -76,11 +80,26 @@ export function FlashCardsPage() {
   const [cueHidden, setCueHidden] = useState(() =>
     readBoolPref(CUE_HIDDEN_KEY, false),
   );
+  const [memorizedOnly, setMemorizedOnly] = useState(() =>
+    readBoolPref(MEMORIZED_ONLY_KEY, false),
+  );
 
+  const allProgress = useAllProgress();
   const verse = verses[index] ?? verses[0]!;
   const progress = useVerseProgress(verse.id);
-  const canGoPrev = index > 0;
-  const canGoNext = index < verses.length - 1;
+  const deck = useMemo(() => {
+    if (!memorizedOnly) return verses;
+    if (!allProgress) return verses;
+    const memorized = new Set(
+      allProgress.filter((item) => item.isMemorized).map((item) => item.verseId),
+    );
+    return verses.filter((item) => memorized.has(item.id));
+  }, [allProgress, memorizedOnly]);
+  const deckIndex = deck.findIndex((item) => item.id === verse.id);
+  const emptyFilteredDeck =
+    memorizedOnly && Boolean(allProgress) && deck.length === 0;
+  const canGoPrev = deckIndex > 0;
+  const canGoNext = deckIndex >= 0 && deckIndex < deck.length - 1;
   const showingFirstLetters = !revealed && firstLetterMode && !cueHidden;
 
   useEffect(() => {
@@ -100,13 +119,29 @@ export function FlashCardsPage() {
     writeBoolPref(CUE_HIDDEN_KEY, cueHidden);
   }, [cueHidden]);
 
-  const goTo = (nextIndex: number) => {
-    const clamped = Math.min(Math.max(nextIndex, 0), verses.length - 1);
-    setIndex(clamped);
-    const target = verses[clamped];
-    if (target) {
-      navigate(`/flashcards?verse=${target.id}`, { replace: true });
-    }
+  useEffect(() => {
+    writeBoolPref(MEMORIZED_ONLY_KEY, memorizedOnly);
+  }, [memorizedOnly]);
+
+  useEffect(() => {
+    if (!memorizedOnly || !allProgress || deck.length === 0) return;
+    if (deck.some((item) => item.id === verse.id)) return;
+    const target = deck[0]!;
+    const nextIndex = verses.findIndex((item) => item.id === target.id);
+    if (nextIndex < 0) return;
+    setIndex(nextIndex);
+    navigate(`/flashcards?verse=${target.id}`, { replace: true });
+  }, [allProgress, deck, memorizedOnly, navigate, verse.id]);
+
+  const goToDeckIndex = (nextDeckIndex: number) => {
+    if (deck.length === 0) return;
+    const clamped = Math.min(Math.max(nextDeckIndex, 0), deck.length - 1);
+    const target = deck[clamped];
+    if (!target) return;
+    const nextIndex = verses.findIndex((item) => item.id === target.id);
+    if (nextIndex < 0) return;
+    setIndex(nextIndex);
+    navigate(`/flashcards?verse=${target.id}`, { replace: true });
   };
 
   /**
@@ -197,10 +232,10 @@ export function FlashCardsPage() {
 
   useHotkeys({
     arrowleft: () => {
-      if (canGoPrev) goTo(index - 1);
+      if (canGoPrev) goToDeckIndex(deckIndex - 1);
     },
     arrowright: () => {
-      if (canGoNext) goTo(index + 1);
+      if (canGoNext) goToDeckIndex(deckIndex + 1);
     },
     space: () => toggleVisibility(),
     enter: () => toggleVisibility(),
@@ -214,32 +249,66 @@ export function FlashCardsPage() {
     },
     m: () => toggleMemorized(),
     n: () => toggleNeedsReview(),
-  });
+  }, { enabled: !emptyFilteredDeck });
 
-  const positionLabel = useMemo(
-    () => `Passage ${index + 1} of ${verses.length}`,
-    [index],
-  );
+  const positionLabel = useMemo(() => {
+    if (emptyFilteredDeck) return 'No memorized passages';
+    if (memorizedOnly) {
+      const current = deckIndex >= 0 ? deckIndex + 1 : 1;
+      return `Passage ${current} of ${deck.length}`;
+    }
+    return `Passage ${index + 1} of ${verses.length}`;
+  }, [deck.length, deckIndex, emptyFilteredDeck, index, memorizedOnly]);
 
   return (
     <>
       <PageHeader
         title="Flash Cards"
         actions={
-          <p className="pb-0.5 text-sm text-ink-muted tabular-nums">
-            {positionLabel}
-          </p>
+          <div className="flex flex-col items-end gap-1.5 pb-0.5">
+            <p className="text-sm text-ink-muted tabular-nums">{positionLabel}</p>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={memorizedOnly}
+              onClick={() => setMemorizedOnly((on) => !on)}
+              className="inline-flex items-center gap-1.5 text-xs text-ink-subtle hover:text-ink-muted"
+            >
+              <span
+                className={clsx(
+                  'relative h-3.5 w-6 rounded-full transition-colors',
+                  memorizedOnly ? 'bg-brand' : 'bg-surface-sunken',
+                )}
+                aria-hidden="true"
+              >
+                <span
+                  className={clsx(
+                    'absolute top-0.5 size-2.5 rounded-full bg-white shadow-sm transition-[left,right]',
+                    memorizedOnly ? 'right-0.5 left-auto' : 'left-0.5 right-auto',
+                  )}
+                />
+              </span>
+              Memorized only
+            </button>
+          </div>
         }
         className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4"
       />
 
       <div className="mx-auto w-full max-w-2xl space-y-5">
+        {emptyFilteredDeck ? (
+          <EmptyState
+            title="No memorized passages yet"
+            description="Mark a passage memorized, or turn off Memorized only to see all 171."
+          />
+        ) : (
+          <>
         <div className="flex items-center justify-between gap-2">
           <Button
             variant="secondary"
             size="sm"
             disabled={!canGoPrev}
-            onClick={() => goTo(index - 1)}
+            onClick={() => goToDeckIndex(deckIndex - 1)}
             aria-label="Previous passage"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
@@ -249,7 +318,7 @@ export function FlashCardsPage() {
             variant="secondary"
             size="sm"
             disabled={!canGoNext}
-            onClick={() => goTo(index + 1)}
+            onClick={() => goToDeckIndex(deckIndex + 1)}
             aria-label="Next passage"
           >
             Next
@@ -271,6 +340,7 @@ export function FlashCardsPage() {
             className="mt-3"
             enableRepeatHotkey
           />
+          <SelfTestRecorder passageKey={verse.id} className="mt-1.5" />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -363,6 +433,8 @@ export function FlashCardsPage() {
             )}
           </Button>
         </div>
+          </>
+        )}
       </div>
     </>
   );

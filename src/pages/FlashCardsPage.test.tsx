@@ -4,16 +4,19 @@ import { requireVerse } from '@/data/verses';
 import { firstLetterSkeleton } from '@/lib/text/tokenize';
 import { getDataStore } from '@/repositories';
 import { renderWithProviders, visibleText } from '@/test/render';
+import { setMemorized } from '@/services/progressService';
 import { FlashCardsPage } from './FlashCardsPage';
 
 const first = requireVerse('verse-001');
 const second = requireVerse('verse-002');
+const third = requireVerse('verse-003');
 
 describe('FlashCardsPage', () => {
   beforeEach(() => {
     localStorage.removeItem('verse-memory:flashcards-first-letter');
     localStorage.removeItem('verse-memory:flashcards-revealed');
     localStorage.removeItem('verse-memory:flashcards-cue-hidden');
+    localStorage.removeItem('verse-memory:flashcards-memorized-only');
   });
 
   it('starts on the first passage with the verse shown', async () => {
@@ -218,5 +221,59 @@ describe('FlashCardsPage', () => {
       expect(session.fixedMode).toBe('fill-blank');
       expect(session.verseIds).toEqual([first.id]);
     });
+  });
+
+  it('offers a self-test recorder on each card', async () => {
+    renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    expect(
+      screen.getByRole('button', { name: /record to self-test/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('can limit the deck to memorized passages', async () => {
+    await setMemorized(first.id, true);
+    await setMemorized(third.id, true);
+
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: `/flashcards?verse=${first.id}`,
+    });
+
+    await screen.findByText(first.reference);
+    const filter = await screen.findByRole('switch', {
+      name: /memorized only/i,
+    });
+    expect(filter).toHaveAttribute('aria-checked', 'false');
+
+    await user.click(filter);
+    await waitFor(() => expect(filter).toHaveAttribute('aria-checked', 'true'));
+    expect(await screen.findByText(/passage 1 of 2/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /next passage/i }));
+    expect(await screen.findByText(third.reference)).toBeInTheDocument();
+    expect(screen.queryByText(second.reference)).not.toBeInTheDocument();
+  });
+
+  it('shows an empty state when Memorized only is on and nothing is marked', async () => {
+    const { user } = renderWithProviders(<FlashCardsPage />, {
+      route: '/flashcards',
+    });
+
+    await screen.findByText(first.reference);
+    await user.click(screen.getByRole('switch', { name: /memorized only/i }));
+
+    expect(
+      await screen.findByText(/no memorized passages yet/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /next passage/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('switch', { name: /memorized only/i }));
+    expect(await screen.findByText(first.reference)).toBeInTheDocument();
+    expect(screen.getByText(/passage 1 of 171/i)).toBeInTheDocument();
   });
 });
